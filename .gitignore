@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+venv/
+
+# Mac junk
+.DS_Store
+
+# Streamlit secrets (local only)
+.streamlit/secrets.toml
+
+# Large / transient directories (do not commit these)
+data/
+logs/
+
+# Git junk
+.git/
