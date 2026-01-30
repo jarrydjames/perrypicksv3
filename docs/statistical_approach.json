@@ -1,0 +1,237 @@
+{
+  "project_name": "PerryPicks NBA Prediction System",
+  "version": "v3",
+  "models": {
+    "halftime": {
+      "name": "Halftime Prediction Model",
+      "description": "Predicts game outcomes (total, margin) at end of 2nd quarter",
+      "input_state": "End of 2nd quarter (halftime)",
+      "prediction_target": "Final game outcomes (total points, margin)"
+    },
+    "q3": {
+      "name": "Q3 Prediction Model",
+      "description": "Predicts game outcomes (total, margin) at end of 3rd quarter",
+      "input_state": "End of 3rd quarter",
+      "prediction_target": "Final game outcomes (total points, margin)"
+    }
+  },
+  "feature_engineering": {
+    "approach": "Team-level performance statistics derived from first N quarters",
+    "features": {
+      "efficiency": [
+        "efg - Effective Field Goal Percentage (FGM / (FGA + 0.44*3PA))",
+        "ftr - Free Throw Rate (FTA / FGA)",
+        "tpar - True Shooting Percentage (2P% * 0.65 + 3P% * 0.35)"
+      ],
+      "possessions": [
+        "poss_1h - Estimated possessions in first half",
+        "ppp_1h - Points per possession in first half"
+      ],
+      "play_style": [
+        "orbp - Offensive Rebound Percentage",
+        "tor - Turnover Rate"
+      ],
+      "behavioral": [
+        "n_2pt - Number of 2-point attempts",
+        "n_3pt - Number of 3-point attempts",
+        "n_turnover - Number of turnovers",
+        "n_rebound - Number of rebounds",
+        "n_foul - Number of fouls",
+        "n_timeout - Number of timeouts"
+      ]
+    },
+    "feature_count": "33-35",
+    "data_sources": {
+      "box_scores": "NBA Box Score API (player/team statistics)",
+      "play_by_play": "NBA Play-by-Play API (action counts, scoring events)"
+    }
+  },
+  "model_architecture": {
+    "type": "Two-Head Gradient Boosting Models",
+    "description": "Separate models for total and margin predictions",
+    "heads": {
+      "total": "Predicts final total points (home + away)",
+      "margin": "Predicts final margin (home - away)"
+    },
+    "base_models": [
+      "Ridge Regression (baseline linear model)",
+      "Random Forest (non-linear ensemble)",
+      "Gradient Boosting Trees (non-linear ensemble, primary production model)"
+    ],
+    "hyperparameters": {
+      "ridge": {
+        "alpha": 2.0,
+        "feature_version_halftime": "v1",
+        "feature_version_q3": "v3_q3"
+      },
+      "random_forest": {
+        "n_estimators": 100,
+        "max_depth": null,
+        "min_samples_split": 2
+      },
+      "gradient_boosting": {
+        "max_depth": 6,
+        "learning_rate": 0.05,
+        "n_estimators": 100,
+        "min_samples_leaf": 30,
+        "subsample": 0.8
+      }
+    }
+  },
+  "training_methodology": {
+    "dataset_split": {
+      "approach": "Walk-forward backtest (temporal cross-validation)",
+      "train_min": 500,
+      "test_size": 200,
+      "step_size": 200,
+      "description": "Simulates real-world scenario: train on past games, predict future games"
+    },
+    "loss_functions": {
+      "primary": "Mean Squared Error (MSE)",
+      "quantile": "Quantile loss (for prediction intervals)"
+    },
+    "regularization": {
+      "ridge": "L2 penalty on coefficients",
+      "tree_based": "Tree depth limits, min samples per leaf, subsampling"
+    }
+  },
+  "uncertainty_quantification": {
+    "approach": "Two methods for prediction intervals",
+    "method_1": {
+      "name": "Gaussian with Residual Sigma",
+      "description": "Normal distribution approximation using residual standard deviation",
+      "formula": "PI = [mu - z*sigma, mu + z*sigma]",
+      "z_score": 1.28155,
+      "advantages": "Fast, assumes normality",
+      "limitations": "Assumes symmetric errors, may underestimate tails"
+    },
+    "method_2": {
+      "name": "Quantile Regression",
+      "description": "Direct estimation of quantiles via quantile loss",
+      "models": ["10th percentile model (lower bound)", "90th percentile model (upper bound)"],
+      "advantages": "Non-parametric, handles asymmetric errors",
+      "limitations": "Slower, requires two separate models"
+    },
+    "covariance_estimation": {
+      "approach": "Joint model for total and margin residuals",
+      "model": "HistGradientBoostingRegressor (multi-output simulation)",
+      "output": "2x2 covariance matrix",
+      "usage": "Accounts for correlation between total and margin predictions"
+    }
+  },
+  "calibration": {
+    "approach": "Residual-based quantile estimation",
+    "procedure": [
+      "1. Train models on training data",
+      "2. Predict on training data",
+      "3. Compute residuals (actual - predicted)",
+      "4. Estimate q10 and q90 quantiles of residuals",
+      "5. Use quantiles to adjust prediction intervals"
+    ],
+    "formula": {
+      "adjusted_lower": "prediction + resid_q10",
+      "adjusted_upper": "prediction + resid_q90"
+    },
+    "coverage_target": 0.8,
+    "advantages": "Empirically calibrated to actual prediction errors",
+    "limitations": "Assumes stationarity of error distribution"
+  },
+  "evaluation_metrics": {
+    "point_prediction": ["MAE - Mean Absolute Error", "RMSE - Root Mean Squared Error"],
+    "interval_quality": [
+      "Coverage - Proportion of actuals within prediction interval",
+      "Width - Average interval width (narrower is better)",
+      "Target: 80% coverage with minimal width"
+    ],
+    "probability_calibration": ["Brier Score - Mean squared probability error", "ECE - Expected Calibration Error"],
+    "betting_performance": ["ROI - Return on Investment", "Edge Threshold - Minimum expected value", "Max Drawdown"]
+  },
+  "data_sources": {
+    "nba_api": {
+      "box_scores": "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_{gid}.json",
+      "play_by_play": "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_{gid}.json"
+    },
+    "market_data": {
+      "source": "The Odds API",
+      "endpoint": "https://api.the-odds-api.com/v4/sports/basketball_nba/odds",
+      "data": ["Total line (over/under)", "Spread line (home/away)", "Moneyline odds"]
+    }
+  },
+  "statistical_assumptions": {
+    "independence": "Games are independent observations",
+    "stationarity": "Statistical relationships stable over time",
+    "normality": "Prediction errors approximately normal (for method 1 intervals)",
+    "temporal_ordering": "Training games precede test games (walk-forward)"
+  },
+  "potential_improvements": {
+    "feature_engineering": [
+      "Lag features (team performance in recent games)",
+      "Rolling averages (last 5/10/20 games)",
+      "Rest days between games",
+      "Home/away streak indicators",
+      "Injury-adjusted lineup projections",
+      "Matchup history (head-to-head records)"
+    ],
+    "model_architecture": [
+      "Ensemble averaging (combine predictions from multiple models)",
+      "Stacking (meta-learner to combine base models)",
+      "Neural networks (deep learning for non-linear patterns)",
+      "Time-series models (LSTM, Transformer for temporal dependencies)"
+    ],
+    "uncertainty_quantification": [
+      "Bayesian methods (Gaussian Processes, Bayesian NN)",
+      "Monte Carlo Dropout (deep learning uncertainty)",
+      "Bootstrap ensembles (resampling for intervals)",
+      "Heteroscedastic models (error variance depends on input)"
+    ],
+    "validation": [
+      "Nested cross-validation (hyperparameter tuning)",
+      "Leave-one-season-out (generalization to new seasons)",
+      "Synthetic validation (historical seasons as test)"
+    ],
+    "data_quality": [
+      "Real-time data integration (in-game updates)",
+      "Outlier detection and handling",
+      "Missing data imputation strategies",
+      "Feature importance analysis (dimensionality reduction)"
+    ]
+  },
+  "known_limitations": {
+    "sample_size": {
+      "halftime": "2796 games (2023-24 season)",
+      "q3": "100 games (limited by API rate limits)",
+      "impact": "Small samples reduce model generalization"
+    },
+    "feature_leakage": {
+      "risk": "Using full-game features (market lines) for halftime predictions",
+      "mitigation": "Only use first-half features for halftime model",
+      "status": "Evaluated in backtests with drop_market_priors flag"
+    },
+    "rate_limits": {
+      "nba_cdn": "403 Forbidden errors on repeated requests",
+      "impact": "Slows dataset building, prevents full historical data collection",
+      "mitigation": "Caching, rate limiting, retry logic"
+    }
+  },
+  "rigor_assessment": {
+    "strengths": [
+      "Walk-forward backtest (realistic evaluation)",
+      "Two-head architecture (joint modeling of total/margin)",
+      "Uncertainty quantification (prediction intervals)",
+      "Empirical calibration (residual-based adjustment)",
+      "Multiple model types (diversity of approaches)",
+      "Feature engineering based on basketball analytics (efg, ppp, tor)"
+    ],
+    "weaknesses": [
+      "Small Q3 sample (100 games) limits statistical validity",
+      "No temporal features (no lagged performance)",
+      "No lineup/injury data (only team-level stats)",
+      "Limited feature interaction analysis (no SHAP/Permutation Importance)",
+      "No formal hypothesis testing (no significance metrics)"
+    ],
+    "compliance": {
+      "halftime": "PRODUCTION READY (2796 games, validated in v2)",
+      "q3": "PROTOTYPE (100 games, needs 2000+ for production)"
+    }
+  }
+}
