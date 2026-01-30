@@ -103,8 +103,8 @@ def train_q3_models(
         q10_margin = q_model(0.10).fit(X, y_margin)
         q90_margin = q_model(0.90).fit(X, y_margin)
         
-        # Joint model for residual covariance (same as halftime)
-        joint = Pipeline(
+        # Joint model for residual covariance (train separately for each target)
+        joint_total = Pipeline(
             [
                 ("imputer", SimpleImputer(strategy="median")),
                 (
@@ -118,11 +118,28 @@ def train_q3_models(
                     ),
                 ),
             ]
-        ).fit(X, np.vstack([y_total, y_margin]).T)
+        ).fit(X, y_total)
         
-        joint_pred = joint.predict(X)
-        res_t = y_total - joint_pred[:, 0]
-        res_m = y_margin - joint_pred[:, 1]
+        joint_margin = Pipeline(
+            [
+                ("imputer", SimpleImputer(strategy="median")),
+                (
+                    "model",
+                    HistGradientBoostingRegressor(
+                        max_depth=6,
+                        learning_rate=0.05,
+                        max_iter=500,
+                        min_samples_leaf=30,
+                        random_state=0,
+                    ),
+                ),
+            ]
+        ).fit(X, y_margin)
+        
+        joint_pred_t = joint_total.predict(X)
+        joint_pred_m = joint_margin.predict(X)
+        res_t = y_total - joint_pred_t
+        res_m = y_margin - joint_pred_m
         cov = np.cov(np.vstack([res_t, res_m]))  # 2x2
         
         # Save model (same structure as halftime)
@@ -131,7 +148,7 @@ def train_q3_models(
             "model_version": m.version,
             "feature_version": m.feature_version,
             "features": feats,
-            "joint": {"model": joint, "residual_cov": cov.tolist()},
+            "joint": {"model_total": joint_total, "model_margin": joint_margin, "residual_cov": cov.tolist()},
             "total": {
                 "model": heads.total.model,
                 "residual_sigma": heads.total.residual_sigma,

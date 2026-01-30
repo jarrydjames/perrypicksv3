@@ -15,16 +15,17 @@ def main():
     # Q3 dataset (same structure as halftime dataset)
     df = pd.read_parquet("data/processed/q3_team_v2.parquet").dropna()
     
-    # Load Q3 trained models
-    obj_t = joblib.load("models_v3/q3/q3_total_twohead.joblib")
-    obj_m = joblib.load("models_v3/q3/q3_margin_twohead.joblib")
+    # Load Q3 trained models (using gbt as default)
+    obj = joblib.load("models_v3/q3/gbt_twohead.joblib")
     
-    Xt = df[obj_t["features"]]
-    Xm = df[obj_m["features"]]
+    # Extract features (same for both total and margin)
+    features = obj["features"]
+    Xt = df[features]
+    Xm = df[features]
     
     # Predict on training data to get residuals
-    pred_t = obj_t["model"].predict(Xt)
-    pred_m = obj_m["model"].predict(Xm)
+    pred_t = obj["total"]["model"].predict(Xt)
+    pred_m = obj["margin"]["model"].predict(Xm)
     
     # Compute residuals
     resid_t = df["q3_total"].values - pred_t
