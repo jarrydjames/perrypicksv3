@@ -283,9 +283,10 @@ SCAN_INTERVAL_SECONDS=60
 - [ ] Add odds API call logging (src/odds/odds_api.py)
 
 ### Phase 2: Q3 Additions
-- [ ] Create Q3 model stub (src/modeling/q3_model.py)
-- [ ] Add Q3 training pipeline hooks (src/build_dataset_q3.py)
-- [ ] Update runtime predictor for Q3 flag (src/predict_from_gameid_v3_runtime.py)
+- [x] Create Q3 model stub (src/modeling/q3_model.py)
+- [x] Add Q3 training pipeline hooks (src/build_dataset_q3.py, src/train_q3_model.py)
+- [x] Update runtime predictor for Q3 flag (src/predict_from_gameid_v3_runtime.py)
+- [x] Add Q3 calibration script (src/calibrate_intervals_q3.py)
 
 ### Phase 3: Tracking Overhaul
 - [ ] Enhance tracking snapshot schema (src/storage/sqlite_store.py)
