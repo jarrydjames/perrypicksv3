@@ -1,0 +1,16 @@
+{
+  "phase": "Phase 1 - Data Integrity",
+  "action": "Remove market priors to prevent data leakage",
+  "removed_features": [
+    "market_total_line",
+    "market_home_spread_line",
+    "market_home_team_total_line",
+    "market_away_team_total_line"
+  ],
+  "reason": "Market priors contain final game information not available at halftime prediction time",
+  "impact": "Removing these features will produce honest model performance metrics",
+  "dataset_files": {
+    "original": "data/processed/halftime_training_23_24.parquet",
+    "leakage_free": "data/processed/halftime_training_23_24_leakage_free.parquet"
+  }
+}

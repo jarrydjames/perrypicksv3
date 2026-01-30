@@ -1,0 +1,27 @@
+{
+  "phase": "Phase 1: Data Integrity Fixes",
+  "current_dataset": "halftime_training_23_24.parquet",
+  "dataset_size": 2796,
+  "total_features": 32,
+  "market_priors": {
+    "found": [
+      "market_total_line",
+      "market_home_spread_line",
+      "market_home_team_total_line",
+      "market_away_team_total_line"
+    ],
+    "count": 4
+  },
+  "leakage_risk_features": {
+    "found": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h2_total",
+      "h2_margin"
+    ],
+    "count": 6
+  },
+  "target_clean_features": 28
+}
