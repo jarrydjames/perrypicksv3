@@ -20,3 +20,5 @@ logs/
 
 # Git junk
 .git/
+# Environment variables (local only)
+.env

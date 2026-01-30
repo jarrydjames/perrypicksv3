@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+import logging
 import os
 from dataclasses import dataclass
 from typing import Any, Dict, Optional
+    
+logger = logging.getLogger(__name__)
 
 import requests
 
@@ -39,6 +42,12 @@ class OddsAPIMarketSnapshot:
 
 class OddsAPIError(RuntimeError):
     pass
+
+
+
+def _log_odds_call(reason: str, endpoint: str, **kwargs) -> None:
+    """Log odds API call with reason + endpoint + params."""
+    logger.info(f"Odds API call - Reason: {reason}, Endpoint: {endpoint}, Params: {kwargs}")
 
 
 def get_api_key() -> str:
@@ -107,6 +116,7 @@ def fetch_nba_odds_snapshot(
     }
 
     def _do_request(p: Dict[str, Any]) -> requests.Response:
+        _log_odds_call(reason="fresh_request", endpoint=url, **p)
         return requests.get(url, params=p, timeout=timeout_s)
 
     r = _do_request(params)

@@ -1,5 +1,6 @@
 import re
 from datetime import datetime, timezone
+import pytz
 
 import streamlit as st
 
@@ -277,7 +278,8 @@ with st.container():
 
             from src.data.scoreboard import fetch_scoreboard, format_game_label
 
-            st.session_state.setdefault("pp_pick_date", _dt.date.today())
+            TZ = pytz.timezone(os.getenv("TZ", "America/Chicago"))
+            st.session_state.setdefault("pp_pick_date", datetime.now(TZ).date())
             # Streamlit: don't pass both `value=` and a `key=` with session_state pre-set.
             pick_date = st.date_input("Date", key="pp_pick_date")
 
@@ -291,7 +293,14 @@ with st.container():
                 st.info("No games found for this date (or NBA CDN is being cranky).")
             else:
                 labels = [format_game_label(g) for g in games]
-                idx = st.selectbox("Games", list(range(len(games))), format_func=lambda i: labels[i])
+                idx = st.selectbox(
+                    "Games",
+                    list(range(len(games))),
+                    format_func=lambda i: labels[i],
+                    key="pp_game_idx",
+                    index=st.session_state.get("pp_game_idx", 0),
+                )
+                st.session_state["pp_game_idx"] = idx
                 chosen = games[int(idx)]
 
                 if st.button("Use selected game", width="stretch"):

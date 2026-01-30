@@ -90,6 +90,69 @@ class SQLiteStore:
 
                 CREATE INDEX IF NOT EXISTS idx_snapshots_game_ts ON snapshots(game_id, ts_utc);
                 CREATE INDEX IF NOT EXISTS idx_bets_game_ts ON bets(game_id, created_ts_utc);
+
+                -- Enhanced tracking snapshots (period, clock, scores)
+                CREATE TABLE IF NOT EXISTS tracking_snapshots (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  game_id TEXT NOT NULL,
+                  ts_utc TEXT NOT NULL,
+                  period INTEGER,
+                  clock TEXT,
+                  home_score INTEGER,
+                  away_score INTEGER,
+                  prediction_json TEXT NOT NULL,
+                  UNIQUE(game_id, ts_utc),
+                  FOREIGN KEY(game_id) REFERENCES games(game_id)
+                );
+                CREATE INDEX IF NOT EXISTS idx_tracking_game_ts ON tracking_snapshots(game_id, ts_utc);
+
+                -- Odds cache (persistent)
+                CREATE TABLE IF NOT EXISTS odds_cache (
+                  cache_key TEXT PRIMARY KEY,
+                  home TEXT NOT NULL,
+                  away TEXT NOT NULL,
+                  response_json TEXT NOT NULL,
+                  created_ts_utc TEXT NOT NULL,
+                  expires_at_utc TEXT NOT NULL
+                );
+                CREATE INDEX IF NOT EXISTS idx_odds_cache_expires ON odds_cache(expires_at_utc);
+
+                -- Picks posted (for automation)
+                CREATE TABLE IF NOT EXISTS picks_posted (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  game_id TEXT NOT NULL,
+                  event TEXT NOT NULL,
+                  posted_ts_utc TEXT NOT NULL,
+                  picks_json TEXT NOT NULL,
+                  UNIQUE(game_id, event),
+                  FOREIGN KEY(game_id) REFERENCES games(game_id)
+                );
+                CREATE INDEX IF NOT EXISTS idx_picks_game_event ON picks_posted(game_id, event);
+
+                -- Discord messages (for replies)
+                CREATE TABLE IF NOT EXISTS discord_messages (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  game_id TEXT NOT NULL,
+                  event TEXT NOT NULL,
+                  message_id TEXT NOT NULL,
+                  posted_ts_utc TEXT NOT NULL,
+                  UNIQUE(game_id, event),
+                  FOREIGN KEY(game_id) REFERENCES games(game_id)
+                );
+                CREATE INDEX IF NOT EXISTS idx_discord_game_event ON discord_messages(game_id, event);
+
+                -- Grading results
+                CREATE TABLE IF NOT EXISTS grading_results (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  game_id TEXT NOT NULL,
+                  bet_id TEXT NOT NULL,
+                  event TEXT NOT NULL,
+                  hit BOOLEAN NOT NULL,
+                  graded_ts_utc TEXT NOT NULL,
+                  FOREIGN KEY(game_id) REFERENCES games(game_id),
+                  FOREIGN KEY(bet_id) REFERENCES bets(bet_id)
+                );
+                CREATE INDEX IF NOT EXISTS idx_grading_game ON grading_results(game_id);
                 """
             )
 
