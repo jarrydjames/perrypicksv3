@@ -1,0 +1,9 @@
+streamlit
+requests
+pandas
+numpy
+scikit-learn
+joblib
+pyarrow
+streamlit-autorefresh
+pypdf
