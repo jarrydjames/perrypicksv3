@@ -541,7 +541,22 @@ if gid is None:
 # -----------------------------
 def run_prediction(fetch_odds: bool = True):  # ← False by default to save API calls
 
+    # Check if we need to create a new prediction
     pred = st.session_state.get("last_pred") or {}
+    pred_game_id = pred.get("game_id") if isinstance(pred, dict) else None
+    
+    # Create new prediction if:
+    # 1. No prediction exists (pred is empty)
+    # 2. Prediction is for a different game
+    # 3. Prediction is incomplete (missing home_name/away_name)
+    if not pred or not isinstance(pred, dict) or pred_game_id != gid or not pred.get("home_name") or not pred.get("away_name"):
+        try:
+            # Create new prediction with full data structure
+            pred = predict_game(game_input, use_binned_intervals=True, fetch_odds=False)
+            st.session_state["last_pred"] = pred
+        except Exception as e:
+            st.error(f"Failed to create prediction: {repr(e)}")
+            raise
     status = pred.get("status", {}) or {}
     period = status.get("period")
     clock = status.get("gameClock")
