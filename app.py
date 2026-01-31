@@ -794,7 +794,7 @@ if manual_refresh:
             # Ensure p is a dict (might be string from previous error)
             if not isinstance(p, dict):
                 st.warning("Prediction data not available. Please run a prediction first.")
-                st.stop()
+                # DEBUG: Let error propagate to see full traceback
             
             home_name = str(p.get("home_name") or "").strip()
             away_name = str(p.get("away_name") or "").strip()
@@ -802,9 +802,10 @@ if manual_refresh:
             # Skip odds fetch if team names are empty
             if not home_name or not away_name:
                 st.info("Team names not found in prediction. Skipping odds auto-fill.")
-                st.stop()
+                st.warning(f"DEBUG: home_name='{home_name}', away_name='{away_name}'")
+                    # DEBUG: Let error propagate
 
-            enable_team_totals = False
+                # DEBUG: Let error propagate
             try:
                 # Free plan doesn’t support team_totals; keep this off unless you upgrade.
                 enable_team_totals = bool(st.secrets.get("ODDS_API_ENABLE_TEAM_TOTALS", False))
