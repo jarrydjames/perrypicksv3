@@ -538,6 +538,14 @@ def run_prediction(fetch_odds: bool = True):  # ← False by default to save API
     min_rem = minutes_remaining(period, clock)
 
     # Derive SD from bands80 (q10/q90-like)
+    # Ensure pred is a dict (might be string from previous error)
+    if not isinstance(pred, dict):
+        st.error("Invalid prediction data.")
+        raise ValueError("pred is not a dict")
+        # Ensure pred is a dict (might be string from previous error)
+    if not isinstance(pred, dict):
+        st.error("Invalid prediction data.")
+        raise ValueError("pred is not a dict")
     bands = pred.get("bands80", {}) or {}
     (t_lo, t_hi) = bands.get("final_total", (None, None))
     (m_lo, m_hi) = bands.get("final_margin", (None, None))
@@ -704,6 +712,10 @@ if refresh_odds and st.session_state.last_pred is not None:
     # Just refresh odds without re-running predictions
     try:
         p = st.session_state.last_pred or {}
+        # Ensure p is a dict, not a string (from previous error)
+        if not isinstance(p, dict):
+            st.warning("Previous prediction failed. Please refresh predictions first.")
+            st.stop()
         home_name = str(p.get("home_name") or "").strip()
         away_name = str(p.get("away_name") or "").strip()
         
