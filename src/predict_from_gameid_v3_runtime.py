@@ -111,6 +111,7 @@ def predict_from_game_id(
     game_input: str,
     *,
     eval_at_q3: bool = True,
+    fetch_odds: bool = True,  # ← NEW: Control odds fetching
 ) -> Dict[str, Any]:
     """
     Main prediction entry point - evaluates at game state and compares to odds.
@@ -253,22 +254,45 @@ def predict_from_game_id(
     cache = PersistentOddsCache()
     odds = cache.get(home_tri, away_tri)
     
-    if odds is None:
-        # Cache miss - fetch from API
+    # Only fetch odds if requested (fetch_odds parameter)
+    # Also skip odds for completed games
+    if fetch_odds:
+        # Get game status from prediction result to skip completed games
+        # This prevents fetching odds for games that are already finished
+        game_status = None
         try:
-            odds = fetch_nba_odds_snapshot(
-                home_name=home_name,
-                away_name=away_name,
-            )
-            # Store in cache
-            cache.set(home_tri, away_tri, odds)
-        except OddsAPIError as e:
-            # Odds not available (game completed, not yet scheduled, or API error)
-            # Log the error but continue with predictions
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.warning(f"Odds not available for {away_name} @ {home_name}: {e}")
-            odds = None
+            # Try to get status from the result (set by Q3 or halftime model)
+            # Both Q3 and halftime models set "status" in result
+            status = result.get("status", {}) or {}
+            game_status = status.get("gameStatus")
+        except Exception:
+            game_status = None
+        
+        # Only fetch odds if game is not completed
+        if game_status != "Final":
+            if odds is None:
+                # Cache miss - fetch from API
+                try:
+                    odds = fetch_nba_odds_snapshot(
+                        home_name=home_name,
+                        away_name=away_name,
+                    )
+                    # Store in cache
+                    cache.set(home_tri, away_tri, odds)
+                except OddsAPIError as e:
+                    # Odds not available (game completed, not yet scheduled, or API error)
+                    # Log the error but continue with predictions
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.warning(f"Odds not available for {away_name} @ {home_name}: {e}")
+                    odds = None
+            else:
+                # Cache hit but game is completed - invalidate and don't return odds
+                odds = None
+                result["odds_warning"] = "Game completed - odds not fetched"
+    else:
+        # fetch_odds=False - odds not requested, use None
+        odds = None
     
     # Attach odds to result (or None if not available)
     if odds is not None:

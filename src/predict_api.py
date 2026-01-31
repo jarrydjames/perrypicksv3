@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict
 
 
-def predict_game(game_input: str, use_binned_intervals: bool = True) -> Dict[str, Any]:
+def predict_game(game_input: str, use_binned_intervals: bool = True, fetch_odds: bool = True) -> Dict[str, Any]:
     """
     Single public entrypoint used by app.py.
 
@@ -21,4 +21,4 @@ def predict_game(game_input: str, use_binned_intervals: bool = True) -> Dict[str
     # `use_binned_intervals` kept for backwards compatibility; runtime predictor
     # already bakes in model-specific sigmas.
     _ = use_binned_intervals
-    return predict_from_game_id(game_input)
+    return predict_from_game_id(game_input, fetch_odds=fetch_odds)

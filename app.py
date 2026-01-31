@@ -346,6 +346,7 @@ with st.container():
         )
 
         manual_refresh = st.button("🔄 Refresh now", width="stretch")
+        refresh_odds = st.button("📊 Refresh odds only", width="stretch", help="Refresh odds from API without re-running predictions")
 
     # Auto refresh hook
     if st.session_state.auto_refresh and HAS_AUTOREFRESH:
@@ -527,8 +528,8 @@ if gid is None:
 # -----------------------------
 # Run prediction (manual refresh or initial load)
 # -----------------------------
-def run_prediction():
-    pred = predict_game(game_input)
+def run_prediction(fetch_odds: bool = True):  # ← False by default to save API calls
+    pred = predict_game(game_input, fetch_odds=fetch_odds)
 
     status = pred.get("status", {}) or {}
     period = status.get("period")
@@ -698,15 +699,75 @@ def run_prediction():
     st.session_state.pred_history.append({"ts": now_utc_iso(), "pred": pred})
 
 
+# Handle odds-only refresh (separate from prediction refresh)
+if refresh_odds and st.session_state.last_pred is not None:
+    # Just refresh odds without re-running predictions
+    try:
+        p = st.session_state.last_pred or {}
+        home_name = str(p.get("home_name") or "").strip()
+        away_name = str(p.get("away_name") or "").strip()
+        
+        enable_team_totals = False
+        try:
+            enable_team_totals = bool(st.secrets.get("ODDS_API_ENABLE_TEAM_TOTALS", False))
+        except Exception:
+            enable_team_totals = False
+        
+        snap = get_cached_nba_odds(
+            home_name=home_name,
+            away_name=away_name,
+            preferred_book="draftkings",
+            include_team_totals=enable_team_totals,
+            ttl_seconds=120,
+        )
+        
+        # Update autofill payload with fresh odds
+        st.session_state["_pp_autofill_odds"] = {
+            "total_line": snap.total_points,
+            "odds_over": str(snap.total_over_odds) if snap.total_over_odds is not None else None,
+            "odds_under": str(snap.total_under_odds) if snap.total_under_odds is not None else None,
+            "spread_line_home": snap.spread_home,
+            "odds_home": str(snap.spread_home_odds) if snap.spread_home_odds is not None else None,
+            "odds_away": str(snap.spread_away_odds) if snap.spread_away_odds is not None else None,
+            "moneyline_home": str(snap.moneyline_home) if snap.moneyline_home is not None else None,
+            "moneyline_away": str(snap.moneyline_away) if snap.moneyline_away is not None else None,
+            "team_total_home": snap.team_total_home,
+            "odds_team_over_home": str(snap.team_total_home_over_odds) if snap.team_total_home_over_odds is not None else None,
+            "odds_team_under_home": str(snap.team_total_home_under_odds) if snap.team_total_home_under_odds is not None else None,
+            "team_total_away": snap.team_total_away,
+            "odds_team_over_away": str(snap.team_total_away_over_odds) if snap.team_total_away_over_odds is not None else None,
+            "odds_team_under_away": str(snap.team_total_away_under_odds) if snap.team_total_away_under_odds is not None else None,
+            "status": (
+                f"Odds refreshed from Odds API ({snap.bookmaker or 'draftkings'})."
+                + (
+                    " Team totals not available via your Odds API endpoint/plan."
+                    if (
+                        enable_team_totals
+                        and (snap.team_total_home is None and snap.team_total_away is None)
+                    )
+                    else ""
+                )
+            ),
+        }
+        st.success("Odds refreshed successfully!")
+        st.rerun()
+    except OddsAPIError as e:
+        st.error(f"Odds refresh failed: {e}")
+    except Exception as e:
+        st.error(f"Odds refresh failed (unexpected): {repr(e)}")
+
 if manual_refresh or st.session_state.last_pred is None:
     try:
-        run_prediction()
+        # For initial load and prediction-only refresh, skip odds to save API calls
+        # Odds can be refreshed separately with the manual refresh button
+        run_prediction(fetch_odds=False)
     except Exception as e:
         st.error(f"Prediction failed: {repr(e)}")
         st.stop()
 
 # If user explicitly clicked refresh, attempt a cheap odds autofill.
 # We fetch AFTER prediction so we know the matchup teams.
+# NOTE: Only fetch odds on explicit refresh, not on prediction-only runs (fetch_odds=False)
 if manual_refresh:
     once_key = f"_pp_odds_autofill_rerun:{gid}:{st.session_state.get('last_pred', {}).get('status', {}).get('gameClock')}"
     if not st.session_state.get(once_key):
