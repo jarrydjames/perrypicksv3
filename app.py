@@ -302,7 +302,7 @@ with st.container():
             else:
                 labels = [format_game_label(g) for g in games]
                 # Clamp saved index to valid range
-                saved_idx = st.session_state.get("pp_game_idx", 0)
+                saved_idx = int(st.session_state.get("pp_game_idx", 0) or 0)
                 if saved_idx >= len(games):
                     saved_idx = 0
                 
