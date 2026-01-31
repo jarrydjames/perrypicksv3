@@ -137,9 +137,6 @@ def predict_from_game_id(
         # Extract Q3 scores (from box score periods 1-3)
         q3_home, q3_away = third_quarter_score(game)
         
-        # Extract Q3 behavior counts (from PBP periods 1-3)
-        beh_q3 = behavior_counts_q3(pbp)
-        
         # Extract possession/PPP features (from PBP)
         poss_features = game_possessions_first_half(pbp.to_dict("records"), home_tri=home_tri, away_tri=away_tri)
         
@@ -154,16 +151,6 @@ def predict_from_game_id(
             "q3_away": q3_away,
             "q3_total": q3_home + q3_away,
             "q3_margin": q3_home - q3_away,
-            
-            # Q3 behavior counts
-            "q3_events": beh_q3["q3_events"],
-            "q3_n_2pt": beh_q3["q3_n_2pt"],
-            "q3_n_3pt": beh_q3["q3_n_3pt"],
-            "q3_n_turnover": beh_q3["q3_n_turnover"],
-            "q3_n_rebound": beh_q3["q3_n_rebound"],
-            "q3_n_foul": beh_q3["q3_n_foul"],
-            "q3_n_timeout": beh_q3["q3_n_timeout"],
-            "q3_n_sub": beh_q3["q3_n_sub"],
         }
         
         # Add possession/PPP features (these also include rate features)
