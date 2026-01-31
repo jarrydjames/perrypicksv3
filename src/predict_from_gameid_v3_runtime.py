@@ -30,12 +30,7 @@ from src.predict_from_gameid_v2 import (
     fetch_pbp_df,
 )
 
-# Q3-specific feature extraction
-from src.build_dataset_q3 import (
-    sum_first3,
-    third_quarter_score,
-    behavior_counts_q3,
-)
+
 
 # Possession/PPP features
 from src.features.pbp_possessions import game_possessions_first_half
@@ -43,6 +38,55 @@ from src.features.pbp_possessions import game_possessions_first_half
 # Odds fetching
 from src.odds.odds_api import OddsAPIMarketSnapshot, fetch_nba_odds_snapshot
 from src.odds.persistent_cache import PersistentOddsCache
+
+
+# Q3 helper functions (copied from build_dataset_q3 to avoid tqdm dependency)
+# Q3 helper functions (copied from build_dataset_q3 to avoid tqdm dependency)
+
+# Q3 helper functions (copied from build_dataset_q3 to avoid tqdm dependency)
+def sum_first3(periods):
+    """Sum scores from periods 1-3."""
+    s = 0
+    for p in (periods or []):
+        period_num = int(p.get("period", 0))
+        if 1 <= period_num <= 3:
+            for key in ("score", "points", "pts"):
+                if key in p and p[key] is not None:
+                    s += int(p[key])
+                    break
+    return s
+
+
+def third_quarter_score(game):
+    """Extract home and away scores after Q3."""
+    home = game.get("homeTeam", {}) or {}
+    away = game.get("awayTeam", {}) or {}
+    return sum_first3(home.get("periods")), sum_first3(away.get("periods"))
+
+
+def behavior_counts_q3(pbp) -> dict:
+    """
+    Count action types in first 3 quarters.
+    
+    Same structure as behavior_counts_1h, but filters to periods 1-3.
+    """
+    import pandas as pd
+    q3 = pbp[pbp["period"].astype(int) <= 3].copy()
+    at = q3.get("actionType", pd.Series([""] * len(q3))).astype(str).fillna("")
+    
+    def c(prefix):
+        return int(at.str.startswith(prefix).sum())
+    
+    return {
+        "q3_events": int(len(q3)),
+        "q3_n_2pt": c("2pt"),
+        "q3_n_3pt": c("3pt"),
+        "q3_n_turnover": c("turnover"),
+        "q3_n_rebound": c("rebound"),
+        "q3_n_foul": c("foul"),
+        "q3_n_timeout": c("timeout"),
+        "q3_n_sub": c("substitution"),
+    }
 
 
 def extract_gid_safe(s: str) -> Optional[str]:
