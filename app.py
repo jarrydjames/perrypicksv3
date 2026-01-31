@@ -1,3 +1,12 @@
+import os
+import sys
+
+# Fix: Add project root to sys.path for Streamlit Cloud
+# This ensures imports like 'from src.data.scoreboard' work in all environments
+_project_root = os.path.dirname(os.path.abspath(__file__))
+if _project_root not in sys.path:
+    sys.path.insert(0, _project_root)
+
 import re
 from datetime import datetime, timezone
 import pytz
@@ -23,6 +32,7 @@ from src.ui.tracking import SnapshotThrottle, get_store, maybe_record_snapshot, 
 from src.odds.streamlit_cache import get_cached_nba_odds
 from src.odds.odds_api import OddsAPIError
 from src.ui.log_monitor import render_log_monitor
+from src.data.scoreboard import fetch_scoreboard, format_game_label
 
 # -----------------------------
 # Page + Theme UX
@@ -275,8 +285,6 @@ with st.container():
         # Optional: pick a game without leaving the app.
         with st.expander("Pick game by date (no more nba.com copy/paste)", expanded=False):
             import datetime as _dt
-
-            from src.data.scoreboard import fetch_scoreboard, format_game_label
 
             TZ = pytz.timezone(os.getenv("TZ", "America/Chicago"))
             st.session_state.setdefault("pp_pick_date", datetime.now(TZ).date())
