@@ -212,8 +212,8 @@ def predict_from_game_id(
         # Note: Need to fetch team names for odds matching
         from src.predict_from_gameid_v2_ci import _safe_team_name
         
-        home_name = _safe_team_name(home, "Home")
-        away_name = _safe_team_name(away, "Away")
+        q3_home_name = _safe_team_name(home, "Home")
+        q3_away_name = _safe_team_name(away, "Away")
         
         result = {
             "game_id": game_id,
@@ -222,8 +222,8 @@ def predict_from_game_id(
             "period": pred.period,
             "clock": pred.clock,
             "home_win_prob": pred.home_win_prob,
-            "home_name": home_name,
-            "away_name": away_name,
+            "home_name": q3_home_name,
+            "away_name": q3_away_name,
             "margin": {
                 "mu": pred.margin_mean,
                 "sd": pred.margin_sd,
