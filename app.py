@@ -301,8 +301,14 @@ with st.container():
                 st.info("No games found for this date (or NBA CDN is being cranky).")
             else:
                 labels = [format_game_label(g) for g in games]
-                # Clamp saved index to valid range
-                saved_idx = int(st.session_state.get("pp_game_idx", 0) or 0)
+                # Handle corrupted session_state (game label string instead of int)
+                saved_val = st.session_state.get("pp_game_idx", 0)
+                # If saved value is a string (game label), reset to default
+                if isinstance(saved_val, str):
+                    saved_val = 0
+                saved_idx = int(saved_val or 0)
+                
+                # Clamp to valid range
                 if saved_idx >= len(games):
                     saved_idx = 0
                 
