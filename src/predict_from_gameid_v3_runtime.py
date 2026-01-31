@@ -143,6 +143,13 @@ def predict_from_game_id(
         # Extract team info
         home = game.get("homeTeam", {}) or {}
         away = game.get("awayTeam", {}) or {}
+        
+        # Validate that team data exists
+        if not home or not away:
+            import logging
+            logging.error(f"Game data missing team information. homeTeam={home}, awayTeam={away}")
+            raise ValueError(f"Invalid game data: Missing team information for game {game_id}")
+        
         # Get tri-codes for feature extraction
         home_tri = home.get("teamTricode", "HOME")
         away_tri = away.get("teamTricode", "AWAY")

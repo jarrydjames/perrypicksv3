@@ -142,6 +142,13 @@ def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True) -> 
     # Status + names
     home_team = game.get("homeTeam") or {}
     away_team = game.get("awayTeam") or {}
+    
+    # Validate that team data exists
+    if not home_team or not away_team:
+        import logging
+        logging.error(f"Game data missing team information. homeTeam={home_team}, awayTeam={away_team}")
+        raise ValueError(f"Invalid game data: Missing team information for game {gid}")
+    
     home_name = _safe_team_name(home_team, "Home")
     away_name = _safe_team_name(away_team, "Away")
     status = _extract_status(game)
