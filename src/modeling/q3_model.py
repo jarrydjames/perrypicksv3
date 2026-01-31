@@ -114,22 +114,25 @@ class Q3Model:
         X = np.array([[features.get(f, 0.0) for f in feature_names]])
         
         # Get trained heads
+        # Note: gbt_twohead.joblib has nested structure: {"total": {"model": ...}, "margin": {"model": ...}}
+        # We use gbt_twohead.joblib["total"]["model"] for total predictions
+        # And ridge_twohead.joblib["margin"]["model"] for margin predictions
         total_head = TrainedHead(
             features=list(feature_names),
-            model=self.total_model.get("model"),
-            residual_sigma=self.total_model.get("residual_sigma", 2.0),
+            model=self.total_model.get("total", {}).get("model"),
+            residual_sigma=self.total_model.get("total", {}).get("residual_sigma", 2.0),
         )
         margin_head = TrainedHead(
             features=list(feature_names),
-            model=self.margin_model.get("model"),
-            residual_sigma=self.margin_model.get("residual_sigma", 2.0),
+            model=self.margin_model.get("margin", {}).get("model"),
+            residual_sigma=self.margin_model.get("margin", {}).get("residual_sigma", 2.0),
         )
         
         # Extract quantile models separately (not part of TrainedHead)
-        total_q10_model = self.total_model.get("q10_model")
-        total_q90_model = self.total_model.get("q90_model")
-        margin_q10_model = self.margin_model.get("q10_model")
-        margin_q90_model = self.margin_model.get("q90_model")
+        total_q10_model = self.total_model.get("total", {}).get("q10_model")
+        total_q90_model = self.total_model.get("total", {}).get("q90_model")
+        margin_q10_model = self.margin_model.get("margin", {}).get("q10_model")
+        margin_q90_model = self.margin_model.get("margin", {}).get("q90_model")
         
         # Predict means
         # Check if main models exist (should never be None, but defensive)
@@ -184,7 +187,7 @@ class Q3Model:
             total_q10=total_q10,
             total_q90=total_q90,
             model_name="Q3 Two-Head",
-            feature_version=self.total_model.get("feature_version", "v3_q3"),
+            feature_version=self.total_model.get("feature_version") or self.margin_model.get("feature_version") or "v3_q3",
         )
     
     def calibrate(
