@@ -222,6 +222,7 @@ def predict_from_game_id(
         q3_home_name = _safe_team_name(home, "Home")
         q3_away_name = _safe_team_name(away, "Away")
         
+        # Build result with comprehensive error handling
         result = {
             "game_id": game_id,
             "model_used": "Q3",
@@ -243,7 +244,7 @@ def predict_from_game_id(
                 "q10": pred.total_q10,
                 "q90": pred.total_q90,
             },
-            "status": "Q3_PREDICTION",
+            "status": {"gameStatus": "Q3_PREDICTION"},
         }
     else:
         # Halftime model (v2) - unchanged behavior
@@ -291,7 +292,7 @@ def predict_from_game_id(
                     # Log the error but continue with predictions
                     import logging
                     logger = logging.getLogger(__name__)
-                    logger.warning(f"Odds not available for {result.get('away_name', 'AWAY')} @ {result.get('home_name', 'HOME')}: {e}")
+                    logger.warning(f"Odds not available for {result.get("away_name", "AWAY")} @ {result.get("home_name", "HOME")}: {e}")
                     odds = None
             else:
                 # Cache hit but game is completed - invalidate and don't return odds
@@ -318,7 +319,7 @@ def predict_from_game_id(
         result["odds_warning"] = None
     else:
         result["odds"] = None
-        result["odds_warning"] = f"Odds not available for {away_name} @ {home_name}. The game may have completed or odds are not yet posted. Predictions are still available."
+        result["odds_warning"] = f"Odds not available for {away_tri} @ {home_tri}. The game may have completed or odds are not yet posted. Predictions are still available."
     
     # TODO: Add bet recommendations (same as v2)
     # For now, return prediction + odds
