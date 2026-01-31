@@ -48,6 +48,9 @@ def sum_first3(periods):
     """Sum scores from periods 1-3."""
     s = 0
     for p in (periods or []):
+        # Skip if p is not a dict (handles string periods, etc.)
+        if not isinstance(p, dict):
+            continue
         period_val = p.get("period", 0)
         # Handle various types: string ("1", "Q1"), int, float
         try:
