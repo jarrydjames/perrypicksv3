@@ -142,8 +142,12 @@ def predict_from_game_id(
         # Extract team info
         home = game.get("homeTeam", {}) or {}
         away = game.get("awayTeam", {}) or {}
+        # Get tri-codes for feature extraction
         home_tri = home.get("teamTricode", "HOME")
         away_tri = away.get("teamTricode", "AWAY")
+        # Get full names for odds API matching
+        home_name = home.get("teamName", home.get("name", home_tri))
+        away_name = away.get("teamName", away.get("name", away_tri))
         
         # Extract Q3 scores (from box score periods 1-3)
         q3_home, q3_away = third_quarter_score(game)
@@ -253,8 +257,8 @@ def predict_from_game_id(
         # Cache miss - fetch from API
         try:
             odds = fetch_nba_odds_snapshot(
-                home_name=home_tri,
-                away_name=away_tri,
+                home_name=home_name,
+                away_name=away_name,
             )
             # Store in cache
             cache.set(home_tri, away_tri, odds)
@@ -263,7 +267,7 @@ def predict_from_game_id(
             # Log the error but continue with predictions
             import logging
             logger = logging.getLogger(__name__)
-            logger.warning(f"Odds not available for {away_tri} @ {home_tri}: {e}")
+            logger.warning(f"Odds not available for {away_name} @ {home_name}: {e}")
             odds = None
     
     # Attach odds to result (or None if not available)
@@ -283,7 +287,7 @@ def predict_from_game_id(
         result["odds_warning"] = None
     else:
         result["odds"] = None
-        result["odds_warning"] = f"Odds not available for {away_tri} @ {home_tri}. The game may have completed or odds are not yet posted. Predictions are still available."
+        result["odds_warning"] = f"Odds not available for {away_name} @ {home_name}. The game may have completed or odds are not yet posted. Predictions are still available."
     
     # TODO: Add bet recommendations (same as v2)
     # For now, return prediction + odds
