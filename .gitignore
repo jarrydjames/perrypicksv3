@@ -15,10 +15,14 @@ venv/
 .streamlit/secrets.toml
 
 # Large / transient directories (do not commit these)
-data/
+./data/
 logs/
+
+# Explicitly allow src/data/ package (needed for scoreboard import)
+!src/data/
 
 # Git junk
 .git/
+
 # Environment variables (local only)
 .env
