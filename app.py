@@ -369,6 +369,11 @@ with st.container():
     st.markdown('<div class="pp-card">', unsafe_allow_html=True)
     st.subheader("Market lines (optional)")
 
+    # Check if odds warning exists (e.g., game completed)
+    last_pred = st.session_state.last_pred
+    if last_pred and last_pred.get("odds_warning"):
+        st.warning(last_pred["odds_warning"])
+
     odds_status = st.session_state.get("_pp_odds_status")
     if odds_status:
         if str(odds_status).lower().startswith("odds auto-fill failed"):

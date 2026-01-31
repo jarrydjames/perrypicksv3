@@ -125,26 +125,39 @@ def predict_from_game_id(
     
     if odds is None:
         # Cache miss - fetch from API
-        odds = fetch_nba_odds_snapshot(
-            home_name=home_tri,
-            away_name=away_tri,
-        )
-        # Store in cache
-        cache.set(home_tri, away_tri, odds)
+        try:
+            odds = fetch_nba_odds_snapshot(
+                home_name=home_tri,
+                away_name=away_tri,
+            )
+            # Store in cache
+            cache.set(home_tri, away_tri, odds)
+        except OddsAPIError as e:
+            # Odds not available (game completed, not yet scheduled, or API error)
+            # Log the error but continue with predictions
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"Odds not available for {away_tri} @ {home_tri}: {e}")
+            odds = None
     
-    # Attach odds to result
-    result["odds"] = {
-        "total_points": odds.total_points,
-        "total_over_odds": odds.total_over_odds,
-        "total_under_odds": odds.total_under_odds,
-        "spread_home": odds.spread_home,
-        "spread_home_odds": odds.spread_home_odds,
-        "spread_away_odds": odds.spread_away_odds,
-        "moneyline_home": odds.moneyline_home,
-        "moneyline_away": odds.moneyline_away,
-        "bookmaker": odds.bookmaker,
-        "last_update": odds.last_update,
-    }
+    # Attach odds to result (or None if not available)
+    if odds is not None:
+        result["odds"] = {
+            "total_points": odds.total_points,
+            "total_over_odds": odds.total_over_odds,
+            "total_under_odds": odds.total_under_odds,
+            "spread_home": odds.spread_home,
+            "spread_home_odds": odds.spread_home_odds,
+            "spread_away_odds": odds.spread_away_odds,
+            "moneyline_home": odds.moneyline_home,
+            "moneyline_away": odds.moneyline_away,
+            "bookmaker": odds.bookmaker,
+            "last_update": odds.last_update,
+        }
+        result["odds_warning"] = None
+    else:
+        result["odds"] = None
+        result["odds_warning"] = f"Odds not available for {away_tri} @ {home_tri}. The game may have completed or odds are not yet posted. Predictions are still available."
     
     # TODO: Add bet recommendations (same as v2)
     # For now, return prediction + odds
