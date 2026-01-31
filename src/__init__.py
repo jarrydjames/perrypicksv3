@@ -15,6 +15,16 @@ from src.statistical import (
     compute_paired_differentials,
     run_statistical_tests,
 )
+from src.conformal import (
+    conformalized_quantile_regression,
+    predict_intervals,
+    evaluate_coverage,
+    validate_coverage,
+    validate_uncertainty_report,
+    compute_calibration_error,
+    ConformalUncertaintyReport,
+    run_conformal_uncertainty,
+)
 
 __all__ = [
     # Version
@@ -35,4 +45,13 @@ __all__ = [
     "StatisticalTestReport",
     "compute_paired_differentials",
     "run_statistical_tests",
+    # Conformal Uncertainty
+    "conformalized_quantile_regression",
+    "predict_intervals",
+    "evaluate_coverage",
+    "validate_coverage",
+    "validate_uncertainty_report",
+    "compute_calibration_error",
+    "ConformalUncertaintyReport",
+    "run_conformal_uncertainty",
 ]
