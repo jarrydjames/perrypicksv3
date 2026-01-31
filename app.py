@@ -916,16 +916,18 @@ with g1:
         st.markdown(f"**Score now:** {home_name} {live_home} – {live_away} {away_name}")
         st.caption(f"Margin now ({home_name}): {live_margin:+d}")
 
-    per = pred["_derived"].get("period")
-    mmss = pred["_derived"].get("clock_mmss")
+    # Safely access _derived (may not exist if prediction just created)
+    derived = pred.get("_derived", {})
+    per = derived.get("period")
+    mmss = derived.get("clock_mmss")
     if per and mmss:
         st.markdown(
             f"<div style='font-size:34px;font-weight:900;line-height:1.0'>{mmss}</div>"
             f"<div class='pp-muted'>Q{per}</div>",
             unsafe_allow_html=True,
         )
-    elif pred["_derived"]["min_remaining"] is not None:
-        st.markdown(f"<span class='pp-muted'>Minutes remaining: {pred['_derived']['min_remaining']:.1f}</span>", unsafe_allow_html=True)
+    elif derived.get("min_remaining") is not None:
+        st.markdown(f"<span class='pp-muted'>Minutes remaining: {derived['min_remaining']:.1f}</span>", unsafe_allow_html=True)
 
 with g2:
     # 2H total is in pred["text"], but we also have normal/bands. Use bands80 h2_total if present.
