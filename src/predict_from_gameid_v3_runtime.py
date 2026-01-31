@@ -34,7 +34,7 @@ def extract_gid_safe(s: str) -> Optional[str]:
 def predict_from_game_id(
     game_input: str,
     *,
-    eval_at_q3: bool = False,
+    eval_at_q3: bool = True,
 ) -> Dict[str, Any]:
     """
     Main prediction entry point - evaluates at game state and compares to odds.
