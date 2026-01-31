@@ -9,7 +9,7 @@ from typing import Optional
 import streamlit as st
 
 
-@dataclass(frozen=True)
+@dataclass
 class LogFileInfo:
     path: str
     size_bytes: int
