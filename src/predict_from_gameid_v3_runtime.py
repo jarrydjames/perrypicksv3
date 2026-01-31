@@ -30,6 +30,16 @@ from src.predict_from_gameid_v2 import (
     fetch_pbp_df,
 )
 
+# Q3-specific feature extraction
+from src.build_dataset_q3 import (
+    sum_first3,
+    third_quarter_score,
+    behavior_counts_q3,
+)
+
+# Possession/PPP features
+from src.features.pbp_possessions import game_possessions_first_half
+
 # Odds fetching
 from src.odds.odds_api import OddsAPIMarketSnapshot, fetch_nba_odds_snapshot
 from src.odds.persistent_cache import PersistentOddsCache
@@ -71,29 +81,67 @@ def predict_from_game_id(
         # Fetch game data for feature extraction
         game = fetch_box(game_id)
         
-        # Extract features from game data (same as v2 halftime model)
-        h1_home, h1_away = first_half_score(game)
-        
-        # Fetch play-by-play data for behavior counts
+        # Fetch play-by-play data for Q3 feature extraction
         pbp = fetch_pbp_df(game_id)
-        beh = behavior_counts_1h(pbp)
         
-        # Extract team stats from box score
+        # Extract team info
         home = game.get("homeTeam", {}) or {}
         away = game.get("awayTeam", {}) or {}
+        home_tri = home.get("teamTricode", "HOME")
+        away_tri = away.get("teamTricode", "AWAY")
+        
+        # Extract Q3 scores (from box score periods 1-3)
+        q3_home, q3_away = third_quarter_score(game)
+        
+        # Extract Q3 behavior counts (from PBP periods 1-3)
+        beh_q3 = behavior_counts_q3(pbp)
+        
+        # Extract possession/PPP features (from PBP)
+        poss_features = game_possessions_first_half(pbp.to_dict("records"), home_tri=home_tri, away_tri=away_tri)
+        
+        # Extract team stats from box score
         ht = team_totals_from_box_team(home)
         at = team_totals_from_box_team(away)
         
-        # Build features dict (same as v2)
+        # Build features dict (all 35 features that model expects)
         features = {
-            "h1_home": h1_home,
-            "h1_away": h1_away,
-            "h1_total": h1_home + h1_away,
-            "h1_margin": h1_home - h1_away,
+            # Q3 scores
+            "q3_home": q3_home,
+            "q3_away": q3_away,
+            "q3_total": q3_home + q3_away,
+            "q3_margin": q3_home - q3_away,
+            
+            # Q3 behavior counts
+            "q3_events": beh_q3["q3_events"],
+            "q3_n_2pt": beh_q3["q3_n_2pt"],
+            "q3_n_3pt": beh_q3["q3_n_3pt"],
+            "q3_n_turnover": beh_q3["q3_n_turnover"],
+            "q3_n_rebound": beh_q3["q3_n_rebound"],
+            "q3_n_foul": beh_q3["q3_n_foul"],
+            "q3_n_timeout": beh_q3["q3_n_timeout"],
+            "q3_n_sub": beh_q3["q3_n_sub"],
         }
-        features.update(beh)
-        features.update(add_rate_features("home", ht, at))
-        features.update(add_rate_features("away", at, ht))
+        
+        # Add possession/PPP features (these also include rate features)
+        features.update(poss_features)
+        
+        # Add H1 scores (for compatibility with training data)
+        h1_home, h1_away = first_half_score(game)
+        features["h1_home"] = h1_home
+        features["h1_away"] = h1_away
+        features["h1_total"] = h1_home + h1_away
+        features["h1_margin"] = h1_home - h1_away
+        
+        # Add H1 behavior counts (for compatibility)
+        beh_h1 = behavior_counts_1h(pbp)
+        for k, v in beh_h1.items():
+            features[k] = v
+        
+        # Add market line features (set to defaults if not available)
+        features["market_total_line"] = 0.0
+        features["market_home_spread_line"] = 0.0
+        features["market_home_team_total_line"] = 0.0
+        features["market_away_team_total_line"] = 0.0
         
         # Get Q3 model and predict
         q3_model = get_q3_model()
@@ -101,7 +149,7 @@ def predict_from_game_id(
         # For now, assume end-of-Q3 (period=4, clock=12:00)
         # TODO: Dynamically fetch current period/clock from live data
         pred = q3_model.predict(
-            features=features,  # Use extracted features!
+            features=features,  # All 35 features!
             period=4,
             clock="PT12M00.00S",
             game_id=game_id,
