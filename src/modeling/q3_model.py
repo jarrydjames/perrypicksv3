@@ -136,10 +136,26 @@ class Q3Model:
         margin_mean = margin_head.model.predict(X)[0]
         
         # Predict quantiles for intervals
-        total_q10 = total_q10_model.predict(X)[0]
-        total_q90 = total_q90_model.predict(X)[0]
-        margin_q10 = margin_q10_model.predict(X)[0]
-        margin_q90 = margin_q90_model.predict(X)[0]
+        # Check if quantile models exist (may be None if not trained)
+        if total_q10_model is not None:
+            total_q10 = total_q10_model.predict(X)[0]
+        else:
+            total_q10 = total_mean - 8.0  # Fallback
+        
+        if total_q90_model is not None:
+            total_q90 = total_q90_model.predict(X)[0]
+        else:
+            total_q90 = total_mean + 8.0  # Fallback
+        
+        if margin_q10_model is not None:
+            margin_q10 = margin_q10_model.predict(X)[0]
+        else:
+            margin_q10 = 0.0  # Fallback
+        
+        if margin_q90_model is not None:
+            margin_q90 = margin_q90_model.predict(X)[0]
+        else:
+            margin_q90 = 0.0  # Fallback
         
         # Compute home win prob from margin
         margin_sd = margin_head.residual_sigma
