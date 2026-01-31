@@ -36,7 +36,7 @@ from src.predict_from_gameid_v2 import (
 from src.features.pbp_possessions import game_possessions_first_half
 
 # Odds fetching
-from src.odds.odds_api import OddsAPIMarketSnapshot, fetch_nba_odds_snapshot
+from src.odds.odds_api import OddsAPIMarketSnapshot, OddsAPIError, fetch_nba_odds_snapshot
 from src.odds.persistent_cache import PersistentOddsCache
 
 
