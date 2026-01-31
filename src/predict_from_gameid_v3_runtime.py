@@ -48,11 +48,19 @@ def sum_first3(periods):
     """Sum scores from periods 1-3."""
     s = 0
     for p in (periods or []):
-        period_num = int(p.get("period", 0))
+        period_val = p.get("period", 0)
+        # Handle various types: string ("1", "Q1"), int, float
+        try:
+            period_num = int(float(period_val))
+        except (ValueError, TypeError):
+            period_num = 0
         if 1 <= period_num <= 3:
             for key in ("score", "points", "pts"):
                 if key in p and p[key] is not None:
-                    s += int(p[key])
+                    try:
+                        s += float(p[key])
+                    except (ValueError, TypeError):
+                        s += 0
                     break
     return s
 
