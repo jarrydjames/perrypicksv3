@@ -791,8 +791,18 @@ if manual_refresh:
     if not st.session_state.get(once_key):
         try:
             p = st.session_state.last_pred or {}
+            # Ensure p is a dict (might be string from previous error)
+            if not isinstance(p, dict):
+                st.warning("Prediction data not available. Please run a prediction first.")
+                st.stop()
+            
             home_name = str(p.get("home_name") or "").strip()
             away_name = str(p.get("away_name") or "").strip()
+            
+            # Skip odds fetch if team names are empty
+            if not home_name or not away_name:
+                st.info("Team names not found in prediction. Skipping odds auto-fill.")
+                st.stop()
 
             enable_team_totals = False
             try:
