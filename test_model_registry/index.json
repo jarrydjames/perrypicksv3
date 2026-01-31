@@ -1,0 +1,60 @@
+{
+  "91feaa3b97861363": {
+    "model_id": "91feaa3b97861363",
+    "model_name": "ridge_regression",
+    "version": "v1.0.0",
+    "created_at": "2026-01-31T02:32:01.327237+00:00",
+    "updated_at": "2026-01-31T02:32:01.327237+00:00",
+    "hyperparameters": {
+      "alpha": 2.0,
+      "solver": "auto"
+    },
+    "metrics": {
+      "mae": 9.53,
+      "rmse": 12.34,
+      "r2": 0.65
+    },
+    "dataset_info": {
+      "n_samples": 10000,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin"
+    ],
+    "target": "h2_total",
+    "model_type": "ridge",
+    "is_baseline": true,
+    "is_deployed": true,
+    "tags": [
+      "baseline",
+      "ridge"
+    ],
+    "notes": "Initial baseline Ridge regression model.",
+    "lineage": {
+      "parent_model_ids": [],
+      "dataset_checksum": "0b8b8bffc5916f58",
+      "transformations": [
+        {
+          "name": "standard_scaler",
+          "parameters": {
+            "with_mean": true,
+            "with_std": true
+          },
+          "timestamp": "2026-01-31T02:32:01.327284+00:00"
+        }
+      ],
+      "training_config": {
+        "epochs": 100,
+        "batch_size": 32
+      },
+      "comparison_model_ids": [],
+      "deployment_history": []
+    },
+    "file_path": "test_model_registry/models/91feaa3b97861363.pkl"
+  }
+}

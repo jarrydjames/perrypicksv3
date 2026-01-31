@@ -25,6 +25,13 @@ from src.conformal import (
     ConformalUncertaintyReport,
     run_conformal_uncertainty,
 )
+from src.registry import (
+    ModelMetadata,
+    ModelRegistry,
+    ModelRegistryExtended,
+    ModelLineage,
+    LineageGraph,
+)
 
 __all__ = [
     # Version
@@ -54,4 +61,10 @@ __all__ = [
     "compute_calibration_error",
     "ConformalUncertaintyReport",
     "run_conformal_uncertainty",
+    # Model Registry
+    "ModelMetadata",
+    "ModelRegistry",
+    "ModelRegistryExtended",
+    "ModelLineage",
+    "LineageGraph",
 ]
