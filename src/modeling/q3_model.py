@@ -74,8 +74,8 @@ class Q3Model:
         if self._loaded:
             return True
         
-        total_path = self.models_dir / "q3_total_twohead.joblib"
-        margin_path = self.models_dir / "q3_margin_twohead.joblib"
+        total_path = self.models_dir / "gbt_twohead.joblib"  # Fixed: was q3_total_twohead.joblib
+        margin_path = self.models_dir / "ridge_twohead.joblib"  # Fixed: was q3_margin_twohead.joblib
         
         if not total_path.exists() or not margin_path.exists():
             return False
