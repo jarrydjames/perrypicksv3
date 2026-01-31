@@ -21,6 +21,9 @@ def parse_american_odds(x) -> int:
     if isinstance(x, float):
         return int(round(x))
     s = str(x).strip()
+    # Handle empty or whitespace-only strings early
+    if not s or s.isspace():
+        raise ValueError(f"Invalid odds: {x!r}")
     if s.startswith("+"):
         s = s[1:].strip()
     if s == "":
