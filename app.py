@@ -538,15 +538,11 @@ def run_prediction(fetch_odds: bool = True):  # ← False by default to save API
 
     # Derive SD from bands80 (q10/q90-like)
     # Ensure pred is a dict (might be string from previous error)
-    if not isinstance(pred, dict):
-        st.error("Invalid prediction data.")
-        raise ValueError("pred is not a dict")
+
     
     pred = st.session_state.get("last_pred") or {}
         # Ensure pred is a dict (might be string from previous error)
-    if not isinstance(pred, dict):
-        st.error("Invalid prediction data.")
-        raise ValueError("pred is not a dict")
+
     
     pred = st.session_state.get("last_pred") or {}
     bands = pred.get("bands80", {}) or {}
