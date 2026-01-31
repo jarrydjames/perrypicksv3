@@ -74,6 +74,16 @@ def predict_from_game_id(
             return result
         
         # Format Q3 prediction into v2-compatible structure
+        # Note: Need to fetch team names for odds matching
+        from src.predict_from_gameid_v2 import fetch_box
+        from src.predict_from_gameid_v2_ci import _safe_team_name
+        
+        game = fetch_box(game_id)
+        home_team = game.get("homeTeam") or {}
+        away_team = game.get("awayTeam") or {}
+        home_name = _safe_team_name(home_team, "Home")
+        away_name = _safe_team_name(away_team, "Away")
+        
         result = {
             "game_id": game_id,
             "model_used": "Q3",
@@ -81,6 +91,8 @@ def predict_from_game_id(
             "period": pred.period,
             "clock": pred.clock,
             "home_win_prob": pred.home_win_prob,
+            "home_name": home_name,
+            "away_name": away_name,
             "margin": {
                 "mu": pred.margin_mean,
                 "sd": pred.margin_sd,
@@ -103,8 +115,9 @@ def predict_from_game_id(
     
     # Fetch and integrate odds (same as v2)
     # Extract team names from prediction result
-    home_tri = result.get("home_tri", "HOME")
-    away_tri = result.get("away_tri", "AWAY")
+    # Note: predict_from_gameid_v2_ci returns "home_name" and "away_name", not "home_tri"/"away_tri"
+    home_tri = result.get("home_name", "HOME")
+    away_tri = result.get("away_name", "AWAY")
     
     # Use persistent cache to minimize API calls
     cache = PersistentOddsCache()
