@@ -801,11 +801,12 @@ if manual_refresh:
             
             # Skip odds fetch if team names are empty
             if not home_name or not away_name:
+                st.error(f"DEBUG: Team names empty! home_name='{home_name}', away_name='{away_name}'")
+                st.error(f"DEBUG: Prediction dict keys: {list(p.keys()) if isinstance(p, dict) else 'Not a dict'}")
+                st.error(f"DEBUG: Full prediction: {p}")
                 st.info("Team names not found in prediction. Skipping odds auto-fill.")
-                st.warning(f"DEBUG: home_name='{home_name}', away_name='{away_name}'")
-                    # DEBUG: Let error propagate
-
-                # DEBUG: Let error propagate
+                st.stop()  # Stop to prevent odds API call with empty names
+            
             try:
                 # Free plan doesn’t support team_totals; keep this off unless you upgrade.
                 enable_team_totals = bool(st.secrets.get("ODDS_API_ENABLE_TEAM_TOTALS", False))
