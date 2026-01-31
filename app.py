@@ -529,7 +529,6 @@ if gid is None:
 # Run prediction (manual refresh or initial load)
 # -----------------------------
 def run_prediction(fetch_odds: bool = True):  # ← False by default to save API calls
-    pred = predict_game(game_input, fetch_odds=fetch_odds)
 
     status = pred.get("status", {}) or {}
     period = status.get("period")
