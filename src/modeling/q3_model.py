@@ -115,10 +115,12 @@ class Q3Model:
         
         # Get trained heads
         total_head = TrainedHead(
+            features=list(feature_names),
             model=self.total_model.get("model"),
             residual_sigma=self.total_model.get("residual_sigma", 2.0),
         )
         margin_head = TrainedHead(
+            features=list(feature_names),
             model=self.margin_model.get("model"),
             residual_sigma=self.margin_model.get("residual_sigma", 2.0),
         )
