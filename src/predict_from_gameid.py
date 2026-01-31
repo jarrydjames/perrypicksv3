@@ -43,13 +43,24 @@ def first_half_score_from_box(game: dict):
     ap = away.get("periods", []) or []
 
     def sum_first2(periods):
+        """Sum scores from periods 1-2."""
         s = 0
-        for p in periods:
-            if int(p.get("period", 0)) in (1, 2):
+        for p in (periods or []):
+            # Skip if p is not a dict (handles string periods, etc.)
+            if not isinstance(p, dict):
+                continue
+            try:
+                period_num = int(float(p.get("period", 0)))
+            except (ValueError, TypeError):
+                period_num = 0
+            if period_num in (1, 2):
                 # score key varies; try common ones
                 for key in ("score", "points", "pts"):
                     if key in p and p[key] is not None:
-                        s += int(p[key])
+                        try:
+                            s += float(p[key])
+                        except (ValueError, TypeError):
+                            s += 0
                         break
         return s
 

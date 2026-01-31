@@ -26,12 +26,23 @@ def fetch_pbp_df(gid: str) -> pd.DataFrame:
     return pd.DataFrame(data["game"]["actions"])
 
 def sum_first2(periods):
+    """Sum scores from periods 1-2."""
     s = 0
     for p in (periods or []):
-        if int(p.get("period", 0)) in (1, 2):
+        # Skip if p is not a dict (handles string periods, etc.)
+        if not isinstance(p, dict):
+            continue
+        try:
+            period_num = int(float(p.get("period", 0)))
+        except (ValueError, TypeError):
+            period_num = 0
+        if period_num in (1, 2):
             for key in ("score", "points", "pts"):
                 if key in p and p[key] is not None:
-                    s += int(p[key])
+                    try:
+                        s += float(p[key])
+                    except (ValueError, TypeError):
+                        s += 0
                     break
     return s
 
