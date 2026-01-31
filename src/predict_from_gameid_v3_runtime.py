@@ -16,8 +16,19 @@ from typing import Any, Dict, Optional
 # Halftime model (v2 - unchanged)
 from src.predict_from_gameid_v2_ci import predict_from_game_id as predict_halftime
 
+import pandas as pd
+
 # Q3 model (v3 - new)
 from src.modeling.q3_model import Q3Model, get_q3_model, Q3Prediction
+
+# Feature extraction from game data (v2)
+from src.predict_from_gameid_v2 import (
+    first_half_score,
+    behavior_counts_1h,
+    team_totals_from_box_team,
+    add_rate_features,
+    fetch_pbp_df,
+)
 
 # Odds fetching
 from src.odds.odds_api import OddsAPIMarketSnapshot, fetch_nba_odds_snapshot
@@ -55,13 +66,42 @@ def predict_from_game_id(
     # Choose model based on eval_at_q3 flag
     if eval_at_q3:
         # Q3 model (v3) - evaluate at end-of-Q3 state
+        from src.predict_from_gameid_v2 import fetch_box
+        
+        # Fetch game data for feature extraction
+        game = fetch_box(game_id)
+        
+        # Extract features from game data (same as v2 halftime model)
+        h1_home, h1_away = first_half_score(game)
+        
+        # Fetch play-by-play data for behavior counts
+        pbp = fetch_pbp_df(game_id)
+        beh = behavior_counts_1h(pbp)
+        
+        # Extract team stats from box score
+        home = game.get("homeTeam", {}) or {}
+        away = game.get("awayTeam", {}) or {}
+        ht = team_totals_from_box_team(home)
+        at = team_totals_from_box_team(away)
+        
+        # Build features dict (same as v2)
+        features = {
+            "h1_home": h1_home,
+            "h1_away": h1_away,
+            "h1_total": h1_home + h1_away,
+            "h1_margin": h1_home - h1_away,
+        }
+        features.update(beh)
+        features.update(add_rate_features("home", ht, at))
+        features.update(add_rate_features("away", at, ht))
+        
+        # Get Q3 model and predict
         q3_model = get_q3_model()
         
-        # Get game state to determine period/clock
         # For now, assume end-of-Q3 (period=4, clock=12:00)
         # TODO: Dynamically fetch current period/clock from live data
         pred = q3_model.predict(
-            features={},  # TODO: extract features from live data
+            features=features,  # Use extracted features!
             period=4,
             clock="PT12M00.00S",
             game_id=game_id,
@@ -75,14 +115,10 @@ def predict_from_game_id(
         
         # Format Q3 prediction into v2-compatible structure
         # Note: Need to fetch team names for odds matching
-        from src.predict_from_gameid_v2 import fetch_box
         from src.predict_from_gameid_v2_ci import _safe_team_name
         
-        game = fetch_box(game_id)
-        home_team = game.get("homeTeam") or {}
-        away_team = game.get("awayTeam") or {}
-        home_name = _safe_team_name(home_team, "Home")
-        away_name = _safe_team_name(away_team, "Away")
+        home_name = _safe_team_name(home, "Home")
+        away_name = _safe_team_name(away, "Away")
         
         result = {
             "game_id": game_id,
