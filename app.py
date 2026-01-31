@@ -555,10 +555,7 @@ def run_prediction(fetch_odds: bool = True):  # ← False by default to save API
             pred = predict_game(game_input, use_binned_intervals=True, fetch_odds=False)
             st.session_state["last_pred"] = pred
         except Exception as e:
-            import traceback
             st.error(f"Failed to create prediction: {repr(e)}")
-            st.error("Full traceback:")
-            st.code(traceback.format_exc())
             raise
     status = pred.get("status", {}) or {}
     period = status.get("period")
