@@ -132,8 +132,16 @@ class Q3Model:
         margin_q90_model = self.margin_model.get("q90_model")
         
         # Predict means
-        total_mean = total_head.model.predict(X)[0]
-        margin_mean = margin_head.model.predict(X)[0]
+        # Check if main models exist (should never be None, but defensive)
+        if total_head.model is not None:
+            total_mean = total_head.model.predict(X)[0]
+        else:
+            total_mean = 215.0  # Fallback: typical NBA game total
+        
+        if margin_head.model is not None:
+            margin_mean = margin_head.model.predict(X)[0]
+        else:
+            margin_mean = 0.0  # Fallback: neutral
         
         # Predict quantiles for intervals
         # Check if quantile models exist (may be None if not trained)
