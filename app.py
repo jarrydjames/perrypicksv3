@@ -530,6 +530,7 @@ if gid is None:
 # -----------------------------
 def run_prediction(fetch_odds: bool = True):  # ← False by default to save API calls
 
+    pred = st.session_state.get("last_pred") or {}
     status = pred.get("status", {}) or {}
     period = status.get("period")
     clock = status.get("gameClock")
