@@ -117,26 +117,27 @@ class Q3Model:
         total_head = TrainedHead(
             model=self.total_model.get("model"),
             residual_sigma=self.total_model.get("residual_sigma", 2.0),
-            q10_model=self.total_model.get("q10_model"),
-            q90_model=self.total_model.get("q90_model"),
         )
-        
         margin_head = TrainedHead(
             model=self.margin_model.get("model"),
             residual_sigma=self.margin_model.get("residual_sigma", 2.0),
-            q10_model=self.margin_model.get("q10_model"),
-            q90_model=self.margin_model.get("q90_model"),
         )
+        
+        # Extract quantile models separately (not part of TrainedHead)
+        total_q10_model = self.total_model.get("q10_model")
+        total_q90_model = self.total_model.get("q90_model")
+        margin_q10_model = self.margin_model.get("q10_model")
+        margin_q90_model = self.margin_model.get("q90_model")
         
         # Predict means
         total_mean = total_head.model.predict(X)[0]
         margin_mean = margin_head.model.predict(X)[0]
         
         # Predict quantiles for intervals
-        total_q10 = total_head.q10_model.predict(X)[0]
-        total_q90 = total_head.q90_model.predict(X)[0]
-        margin_q10 = margin_head.q10_model.predict(X)[0]
-        margin_q90 = margin_head.q90_model.predict(X)[0]
+        total_q10 = total_q10_model.predict(X)[0]
+        total_q90 = total_q90_model.predict(X)[0]
+        margin_q10 = margin_q10_model.predict(X)[0]
+        margin_q90 = margin_q90_model.predict(X)[0]
         
         # Compute home win prob from margin
         margin_sd = margin_head.residual_sigma
