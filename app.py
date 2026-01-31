@@ -951,7 +951,7 @@ with g4:
         final_total_mean = (float(ft_lo) + float(ft_hi)) / 2.0
     st.markdown(
         "<div class='pp-kpi'><div class='pp-muted'>Final Total</div>"
-        f"<div style='font-size:20px;font-weight:800'>{float(final_total_mean):.2f}</div>"
+        + (f"<div style='font-size:20px;font-weight:800'>{float(final_total_mean):.2f}</div>" if final_total_mean is not None else "N/A")
         + (f"<div class='pp-muted'>80%: {float(ft_lo):.1f} – {float(ft_hi):.1f}</div>" if ft_lo is not None else "")
         + "</div>",
         unsafe_allow_html=True,
