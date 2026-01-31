@@ -301,12 +301,17 @@ with st.container():
                 st.info("No games found for this date (or NBA CDN is being cranky).")
             else:
                 labels = [format_game_label(g) for g in games]
+                # Clamp saved index to valid range
+                saved_idx = st.session_state.get("pp_game_idx", 0)
+                if saved_idx >= len(games):
+                    saved_idx = 0
+                
                 idx = st.selectbox(
                     "Games",
                     list(range(len(games))),
                     format_func=lambda i: labels[i],
                     key="pp_game_idx",
-                    index=st.session_state.get("pp_game_idx", 0),
+                    index=saved_idx,
                 )
 
                 chosen = games[int(idx)]
