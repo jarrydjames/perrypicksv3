@@ -1,0 +1,19 @@
+{
+  "dataset": "q3_team_v2.parquet",
+  "dataset_size": 1900,
+  "num_folds": 7,
+  "test_size": 200,
+  "train_min": 500,
+  "step_size": 200,
+  "metrics": {
+    "total_mae_mean": 5.561639519115524,
+    "total_mae_std": 0.3746789770176793,
+    "total_rmse_mean": 7.104192716913418,
+    "total_rmse_std": 0.67818262505405,
+    "margin_mae_mean": 5.9679120038816285,
+    "margin_mae_std": 0.24991567259001157,
+    "margin_rmse_mean": 7.48108585732311,
+    "margin_rmse_std": 0.31811222632633834,
+    "roi_mean": 7.262142857142857
+  }
+}

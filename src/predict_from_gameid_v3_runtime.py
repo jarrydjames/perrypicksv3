@@ -274,8 +274,8 @@ def predict_from_game_id(
                 # Cache miss - fetch from API
                 try:
                     odds = fetch_nba_odds_snapshot(
-                        home_name=home_name,
-                        away_name=away_name,
+                        home_name=result.get("home_name", "HOME"),
+                        away_name=result.get("away_name", "AWAY"),
                     )
                     # Store in cache
                     cache.set(home_tri, away_tri, odds)
@@ -284,7 +284,7 @@ def predict_from_game_id(
                     # Log the error but continue with predictions
                     import logging
                     logger = logging.getLogger(__name__)
-                    logger.warning(f"Odds not available for {away_name} @ {home_name}: {e}")
+                    logger.warning(f"Odds not available for {result.get('away_name', 'AWAY')} @ {result.get('home_name', 'HOME')}: {e}")
                     odds = None
             else:
                 # Cache hit but game is completed - invalidate and don't return odds

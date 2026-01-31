@@ -1,0 +1,147 @@
+PerryPicks v3 - Model Card v1.0
+==============================================
+
+Model Name: Ridge Regression (Production Champion)
+Version: v1.0
+Status: PRODUCTION DEPLOYED
+Decision Date: January 31, 2026
+Evaluation Method: Walkforward Cross-Validation
+
+MODEL INFORMATION
+------------------------------------------------------------------------------
+Type: Linear Regression (L2 Regularized)
+
+Hyperparameters:
+  - alpha: 2.0 (L2 regularization strength)
+  - solver: auto (algorithm for solving)
+  - random_state: 42 (reproducibility seed)
+  - fit_intercept: True (always include bias term)
+
+Features (12 h1_* features):
+  - h1_home: Halftime points scored by home team
+  - h1_away: Halftime points scored by away team
+  - h1_total: Total halftime points (home + away)
+  - h1_margin: Halftime point margin (home - away)
+  - h1_events: Number of events in first half
+  - h1_n_2pt: Number of 2-point shots
+  - h1_n_3pt: Number of 3-point shots
+  - h1_n_turnover: Number of turnovers
+  - h1_n_rebound: Number of rebounds
+  - h1_n_foul: Number of fouls
+  - h1_n_timeout: Number of timeouts
+  - h1_n_sub: Number of substitutions
+
+Target Variable:
+  - Name: h2_total
+  - Description: Second half total points scored by both teams
+  - Type: Continuous regression (MAE loss)
+
+TRAINING INFORMATION
+------------------------------------------------------------------------------
+Training Protocol: Walkforward Cross-Validation
+Folds: 11 time-contiguous blocks
+Train Size: 500 games (initial)
+Test Size: 200 games
+Step: 200 games (window advancement)
+Total Training Games: 5,500 games (sum across all folds)
+
+Data Source:
+  - Dataset: halftime_with_temporal_features_total.parquet
+  - Games: 2,796 unique games
+  - Seasons: 2023 (23), 2024 (24)
+  - Checksum: 0b8b8bffc5916f58
+
+Preprocessing:
+  - Scaling: None (standardize not applied)
+  - Feature Engineering: Baseline h1_* features only
+  - Temporal Sorting: By (season_end_yy, game_id) before splitting
+  - Missing Value Handling: None (no missing values in dataset)
+
+EVALUATION RESULTS (PRODUCTION BACKTEST)
+------------------------------------------------------------------------------
+Overall Performance Metrics:
+  - Mean Absolute Error (MAE): 11.60 points
+  - Training MAE: 11.60 points
+  - Test MAE: 11.60 points
+  - RMSE: 14.81 points
+  - R-squared (Coefficient of Determination): 0.08 (8% variance explained)
+
+Fold-by-Fold Performance:
+  - Fold 0 (200 games): Baseline MAE=12.17, Delta vs Overall=+0.57 (PASS)
+  - Fold 1 (200 games): Baseline MAE=10.83, Delta vs Overall=-0.77 (PASS)
+  - Fold 2 (200 games): Baseline MAE=10.83, Delta vs Overall=-0.77 (PASS)
+  - Fold 3 (200 games): Baseline MAE=11.36, Delta vs Overall=-0.24 (PASS)
+  - Fold 4 (200 games): Baseline MAE=14.92, Delta vs Overall=+3.32 (OUTLIER)
+  - Fold 5 (200 games): Baseline MAE=11.51, Delta vs Overall=-0.09 (PASS)
+  - Fold 6 (200 games): Baseline MAE=11.39, Delta vs Overall=-0.21 (PASS)
+  - Fold 7 (200 games): Baseline MAE=10.73, Delta vs Overall=-0.87 (PASS)
+  - Fold 8 (200 games): Baseline MAE=11.47, Delta vs Overall=-0.13 (PASS)
+  - Fold 9 (200 games): Baseline MAE=11.50, Delta vs Overall=-0.10 (PASS)
+  - Fold 10 (200 games): Baseline MAE=10.94, Delta vs Overall=-0.66 (PASS)
+
+STATISTICAL SIGNIFICANCE TESTS
+------------------------------------------------------------------------------
+Comparison Against: XGBoost v1.0 (Candidate)
+
+Block Bootstrap Results:
+  - Status: REJECTED (XGBoost worse)
+  - Mean Difference (XGBoost - Ridge): +0.716 points (XGBoost WORSE, not better)
+  - 95% CI: [0.4345, 0.9986] (positive = worse)
+  - P(improvement): 0.0000% (ZERO probability of improvement)
+
+Diebold-Mariano Results:
+  - Status: FAVORED (Ridge preferred)
+  - DM Statistic: 6.47
+  - P-Value: 1.01e-08
+  - Significance (p < 0.05): YES (extremely significant)
+  - Direction: Ridge is SIGNIFICANTLY BETTER than XGBoost
+
+FINAL DECISION: NO-GO
+  - Meaning: Do NOT deploy XGBoost
+  - Reason: No statistically significant improvement
+
+DEPLOYMENT STATUS
+------------------------------------------------------------------------------
+Production Champion: Ridge Regression v1.0
+  - Is Deployed: YES
+  - Reasoning: Significantly outperforms XGBoost under walkforward CV
+
+Candidate: XGBoost v1.0
+  - Is Deployed: NO
+  - Reasoning: Worse out-of-sample performance under production protocol
+
+DEPLOYMENT CHECKLIST
+------------------------------------------------------------------------------
+[x] Model Configuration Frozen
+  - Alpha: 2.0 (locked)
+  - Features: 12 h1_* (locked)
+  - Solver: auto (locked)
+  - Random State: 42 (locked)
+
+[x] Feature Set Frozen
+  - No new features added
+  - Baseline feature set only
+
+[x] Fold Definition Locked
+  - Min Train: 500 games (locked)
+  - Test Size: 200 games (locked)
+  - Step: 200 games (locked)
+  - Sort: (season_end_yy, game_id) (locked)
+  - Total Folds: 11 (locked)
+
+[x] Evaluation Protocol Locked
+  - Block Size: 200 games (locked)
+  - Bootstrap Seed: 42 (locked)
+  - Bootstrap Resamples: 1000 (locked)
+  - Diebold-Mariano Lags: 5 (locked)
+
+[ ] Conformal Uncertainty
+  - Status: NOT IMPLEMENTED YET
+  - Priority: HIGH (mandatory for Phase 4)
+
+[ ] Statistical Reporting
+  - Status: PARTIAL (manual report only)
+  - Priority: MEDIUM (automated for Phase 6)
+
+Document Version: v1.0
+Last Updated: January 31, 2026

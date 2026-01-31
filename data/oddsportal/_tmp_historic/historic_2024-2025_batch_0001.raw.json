@@ -1,0 +1,4300 @@
+[
+    {
+        "scraped_date": "2026-01-24 01:58:29 UTC",
+        "match_date": "2025-06-23 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2024-2025/oklahoma-city-thunder-indiana-pacers-YasLoKTi/",
+        "home_team": "Oklahoma City Thunder",
+        "away_team": "Indiana Pacers",
+        "league_name": "NBA 2024/2025",
+        "home_score": "103",
+        "away_score": "91",
+        "partial_results": "25:22, 22:26, 34:20, 22:23",
+        "venue": "Paycom Center",
+        "venue_town": "Oklahoma, OK",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.38",
+                "2": "3.10",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            }
+        ],
+        "over_under_games_220_5_market": [
+            {
+                "submarket_name": "Over/Under +190.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.01",
+                "odds_under": "10.00"
+            },
+            {
+                "submarket_name": "Over/Under +192.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +193.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.05",
+                "odds_under": "8.00"
+            },
+            {
+                "submarket_name": "Over/Under +194.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.05",
+                "odds_under": "7.50"
+            },
+            {
+                "submarket_name": "Over/Under +195.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.08",
+                "odds_under": "6.50"
+            },
+            {
+                "submarket_name": "Over/Under +196.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.10",
+                "odds_under": "6.00"
+            },
+            {
+                "submarket_name": "Over/Under +197.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.11",
+                "odds_under": "6.00"
+            },
+            {
+                "submarket_name": "Over/Under +198.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.12",
+                "odds_under": "5.50"
+            },
+            {
+                "submarket_name": "Over/Under +199.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.14",
+                "odds_under": "5.00"
+            },
+            {
+                "submarket_name": "Over/Under +200.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.16",
+                "odds_under": "4.40"
+            },
+            {
+                "submarket_name": "Over/Under +201.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.16",
+                "odds_under": "4.30"
+            },
+            {
+                "submarket_name": "Over/Under +202.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.20",
+                "odds_under": "3.85"
+            },
+            {
+                "submarket_name": "Over/Under +203.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.20",
+                "odds_under": "3.75"
+            },
+            {
+                "submarket_name": "Over/Under +204.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.25",
+                "odds_under": "3.45"
+            },
+            {
+                "submarket_name": "Over/Under +205.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.32",
+                "odds_under": "3.30"
+            },
+            {
+                "submarket_name": "Over/Under +206.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.36",
+                "odds_under": "3.10"
+            },
+            {
+                "submarket_name": "Over/Under +207.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.40",
+                "odds_under": "2.90"
+            },
+            {
+                "submarket_name": "Over/Under +208.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.44",
+                "odds_under": "2.75"
+            },
+            {
+                "submarket_name": "Over/Under +209.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.49",
+                "odds_under": "2.60"
+            },
+            {
+                "submarket_name": "Over/Under +210.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.55",
+                "odds_under": "2.42"
+            },
+            {
+                "submarket_name": "Over/Under +211.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.60",
+                "odds_under": "2.33"
+            },
+            {
+                "submarket_name": "Over/Under +212",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +212.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.66",
+                "odds_under": "2.23"
+            },
+            {
+                "submarket_name": "Over/Under +213",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.66",
+                "odds_under": "2.29"
+            },
+            {
+                "submarket_name": "Over/Under +213.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.73",
+                "odds_under": "2.12"
+            },
+            {
+                "submarket_name": "Over/Under +214",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.75",
+                "odds_under": "2.19"
+            },
+            {
+                "submarket_name": "Over/Under +214.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.80",
+                "odds_under": "2.01"
+            },
+            {
+                "submarket_name": "Over/Under +215",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.88",
+                "odds_under": "1.98"
+            },
+            {
+                "submarket_name": "Over/Under +215.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.89",
+                "odds_under": "1.93"
+            },
+            {
+                "submarket_name": "Over/Under +216",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.94",
+                "odds_under": "1.94"
+            },
+            {
+                "submarket_name": "Over/Under +216.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.98",
+                "odds_under": "1.84"
+            },
+            {
+                "submarket_name": "Over/Under +217",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.02",
+                "odds_under": "1.85"
+            },
+            {
+                "submarket_name": "Over/Under +217.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.07",
+                "odds_under": "1.76"
+            },
+            {
+                "submarket_name": "Over/Under +218",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.13",
+                "odds_under": "1.76"
+            },
+            {
+                "submarket_name": "Over/Under +218.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.17",
+                "odds_under": "1.69"
+            },
+            {
+                "submarket_name": "Over/Under +219.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.30",
+                "odds_under": "1.61"
+            },
+            {
+                "submarket_name": "Over/Under +220.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.40",
+                "odds_under": "1.56"
+            },
+            {
+                "submarket_name": "Over/Under +221.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.60",
+                "odds_under": "1.49"
+            },
+            {
+                "submarket_name": "Over/Under +222.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.75",
+                "odds_under": "1.44"
+            },
+            {
+                "submarket_name": "Over/Under +223.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.90",
+                "odds_under": "1.40"
+            },
+            {
+                "submarket_name": "Over/Under +224.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.10",
+                "odds_under": "1.36"
+            },
+            {
+                "submarket_name": "Over/Under +225.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.25",
+                "odds_under": "1.32"
+            },
+            {
+                "submarket_name": "Over/Under +226.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.25",
+                "odds_under": "1.28"
+            },
+            {
+                "submarket_name": "Over/Under +227.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.70",
+                "odds_under": "1.20"
+            },
+            {
+                "submarket_name": "Over/Under +228.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.90",
+                "odds_under": "1.20"
+            },
+            {
+                "submarket_name": "Over/Under +229.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.30",
+                "odds_under": "1.16"
+            },
+            {
+                "submarket_name": "Over/Under +230.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.40",
+                "odds_under": "1.16"
+            },
+            {
+                "submarket_name": "Over/Under +231.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.80",
+                "odds_under": "1.14"
+            },
+            {
+                "submarket_name": "Over/Under +232.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "5.50",
+                "odds_under": "1.12"
+            },
+            {
+                "submarket_name": "Over/Under +233.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.00",
+                "odds_under": "1.11"
+            },
+            {
+                "submarket_name": "Over/Under +234.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.00",
+                "odds_under": "1.10"
+            },
+            {
+                "submarket_name": "Over/Under +235.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.50",
+                "odds_under": "1.08"
+            },
+            {
+                "submarket_name": "Over/Under +236.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "7.00",
+                "odds_under": "1.06"
+            },
+            {
+                "submarket_name": "Over/Under +237.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "7.50",
+                "odds_under": "1.05"
+            },
+            {
+                "submarket_name": "Over/Under +238.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +239.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "9.00",
+                "odds_under": "1.03"
+            },
+            {
+                "submarket_name": "Over/Under +240.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "9.50",
+                "odds_under": "1.02"
+            }
+        ],
+        "asian_handicap_games_-3_5_games_market": [
+            {
+                "submarket_name": "Asian Handicap -30.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "-",
+                "handicap_team_2": "-"
+            },
+            {
+                "submarket_name": "Asian Handicap -29.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "12.00",
+                "handicap_team_2": "1.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -28.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "11.00",
+                "handicap_team_2": "1.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -27.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "11.00",
+                "handicap_team_2": "1.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -26.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "10.00",
+                "handicap_team_2": "1.03"
+            },
+            {
+                "submarket_name": "Asian Handicap -25.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "9.00",
+                "handicap_team_2": "1.03"
+            },
+            {
+                "submarket_name": "Asian Handicap -24.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "8.50",
+                "handicap_team_2": "1.04"
+            },
+            {
+                "submarket_name": "Asian Handicap -23.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "7.75",
+                "handicap_team_2": "1.05"
+            },
+            {
+                "submarket_name": "Asian Handicap -22.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "7.25",
+                "handicap_team_2": "1.06"
+            },
+            {
+                "submarket_name": "Asian Handicap -21.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "6.50",
+                "handicap_team_2": "1.08"
+            },
+            {
+                "submarket_name": "Asian Handicap -20.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "6.00",
+                "handicap_team_2": "1.10"
+            },
+            {
+                "submarket_name": "Asian Handicap -19.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "5.25",
+                "handicap_team_2": "1.13"
+            },
+            {
+                "submarket_name": "Asian Handicap -18.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "5.00",
+                "handicap_team_2": "1.14"
+            },
+            {
+                "submarket_name": "Asian Handicap -17.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "4.58",
+                "handicap_team_2": "1.19"
+            },
+            {
+                "submarket_name": "Asian Handicap -16.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "4.30",
+                "handicap_team_2": "1.20"
+            },
+            {
+                "submarket_name": "Asian Handicap -15.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.83",
+                "handicap_team_2": "1.25"
+            },
+            {
+                "submarket_name": "Asian Handicap -14.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.53",
+                "handicap_team_2": "1.27"
+            },
+            {
+                "submarket_name": "Asian Handicap -13.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.13",
+                "handicap_team_2": "1.34"
+            },
+            {
+                "submarket_name": "Asian Handicap -12.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.90",
+                "handicap_team_2": "1.39"
+            },
+            {
+                "submarket_name": "Asian Handicap -11.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.68",
+                "handicap_team_2": "1.46"
+            },
+            {
+                "submarket_name": "Asian Handicap -10.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.48",
+                "handicap_team_2": "1.53"
+            },
+            {
+                "submarket_name": "Asian Handicap -10",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.45",
+                "handicap_team_2": "1.59"
+            },
+            {
+                "submarket_name": "Asian Handicap -9.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.36",
+                "handicap_team_2": "1.59"
+            },
+            {
+                "submarket_name": "Asian Handicap -9",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.33",
+                "handicap_team_2": "1.66"
+            },
+            {
+                "submarket_name": "Asian Handicap -8.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.16",
+                "handicap_team_2": "1.71"
+            },
+            {
+                "submarket_name": "Asian Handicap -8",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.13",
+                "handicap_team_2": "1.76"
+            },
+            {
+                "submarket_name": "Asian Handicap -7.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.05",
+                "handicap_team_2": "1.80"
+            },
+            {
+                "submarket_name": "Asian Handicap -7",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.97",
+                "handicap_team_2": "1.89"
+            },
+            {
+                "submarket_name": "Asian Handicap -6.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.88",
+                "handicap_team_2": "1.95"
+            },
+            {
+                "submarket_name": "Asian Handicap -6",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.80",
+                "handicap_team_2": "2.11"
+            },
+            {
+                "submarket_name": "Asian Handicap -5.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.75",
+                "handicap_team_2": "2.12"
+            },
+            {
+                "submarket_name": "Asian Handicap -5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.67",
+                "handicap_team_2": "2.29"
+            },
+            {
+                "submarket_name": "Asian Handicap -4.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.63",
+                "handicap_team_2": "2.28"
+            },
+            {
+                "submarket_name": "Asian Handicap -4",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.57",
+                "handicap_team_2": "2.50"
+            },
+            {
+                "submarket_name": "Asian Handicap -3.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.55",
+                "handicap_team_2": "2.40"
+            },
+            {
+                "submarket_name": "Asian Handicap -2.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.48",
+                "handicap_team_2": "2.63"
+            },
+            {
+                "submarket_name": "Asian Handicap -1.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.42",
+                "handicap_team_2": "2.80"
+            },
+            {
+                "submarket_name": "Asian Handicap +1.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.33",
+                "handicap_team_2": "3.33"
+            },
+            {
+                "submarket_name": "Asian Handicap +2.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.25",
+                "handicap_team_2": "3.78"
+            },
+            {
+                "submarket_name": "Asian Handicap +3.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.21",
+                "handicap_team_2": "4.27"
+            },
+            {
+                "submarket_name": "Asian Handicap +4.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.19",
+                "handicap_team_2": "4.63"
+            },
+            {
+                "submarket_name": "Asian Handicap +5.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.16",
+                "handicap_team_2": "5.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +6.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.12",
+                "handicap_team_2": "5.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +7.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.10",
+                "handicap_team_2": "6.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +8.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.08",
+                "handicap_team_2": "7.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +9.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.06",
+                "handicap_team_2": "7.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +10.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.05",
+                "handicap_team_2": "8.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +11.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.04",
+                "handicap_team_2": "9.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +12.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.03",
+                "handicap_team_2": "10.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +13.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.02",
+                "handicap_team_2": "9.50"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:58:30 UTC",
+        "match_date": "2025-06-20 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2024-2025/indiana-pacers-oklahoma-city-thunder-O8I9XglL/",
+        "home_team": "Indiana Pacers",
+        "away_team": "Oklahoma City Thunder",
+        "league_name": "NBA 2024/2025",
+        "home_score": "108",
+        "away_score": "91",
+        "partial_results": "28:25, 36:17, 26:18, 18:31",
+        "venue": "Gainbridge Fieldhouse",
+        "venue_town": "Indianapolis, IN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "2.80",
+                "2": "1.45",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            }
+        ],
+        "over_under_games_220_5_market": [
+            {
+                "submarket_name": "Over/Under +199.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +200.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.05",
+                "odds_under": "7.50"
+            },
+            {
+                "submarket_name": "Over/Under +201.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.05",
+                "odds_under": "7.00"
+            },
+            {
+                "submarket_name": "Over/Under +202.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.08",
+                "odds_under": "6.50"
+            },
+            {
+                "submarket_name": "Over/Under +203.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.11",
+                "odds_under": "6.00"
+            },
+            {
+                "submarket_name": "Over/Under +204.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.12",
+                "odds_under": "5.50"
+            },
+            {
+                "submarket_name": "Over/Under +205.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.12",
+                "odds_under": "5.50"
+            },
+            {
+                "submarket_name": "Over/Under +206.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.14",
+                "odds_under": "5.00"
+            },
+            {
+                "submarket_name": "Over/Under +207.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.16",
+                "odds_under": "4.50"
+            },
+            {
+                "submarket_name": "Over/Under +208.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.20",
+                "odds_under": "4.00"
+            },
+            {
+                "submarket_name": "Over/Under +209.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.20",
+                "odds_under": "3.80"
+            },
+            {
+                "submarket_name": "Over/Under +210.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.25",
+                "odds_under": "3.55"
+            },
+            {
+                "submarket_name": "Over/Under +211.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.28",
+                "odds_under": "3.35"
+            },
+            {
+                "submarket_name": "Over/Under +212.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.32",
+                "odds_under": "3.28"
+            },
+            {
+                "submarket_name": "Over/Under +213.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.36",
+                "odds_under": "3.13"
+            },
+            {
+                "submarket_name": "Over/Under +214.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.40",
+                "odds_under": "2.90"
+            },
+            {
+                "submarket_name": "Over/Under +215.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.44",
+                "odds_under": "2.75"
+            },
+            {
+                "submarket_name": "Over/Under +216.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.49",
+                "odds_under": "2.60"
+            },
+            {
+                "submarket_name": "Over/Under +217.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.53",
+                "odds_under": "2.45"
+            },
+            {
+                "submarket_name": "Over/Under +218.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.60",
+                "odds_under": "2.33"
+            },
+            {
+                "submarket_name": "Over/Under +219.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.66",
+                "odds_under": "2.22"
+            },
+            {
+                "submarket_name": "Over/Under +220",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.67",
+                "odds_under": "2.27"
+            },
+            {
+                "submarket_name": "Over/Under +220.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.71",
+                "odds_under": "2.13"
+            },
+            {
+                "submarket_name": "Over/Under +221",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.75",
+                "odds_under": "2.15"
+            },
+            {
+                "submarket_name": "Over/Under +221.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.80",
+                "odds_under": "2.03"
+            },
+            {
+                "submarket_name": "Over/Under +222",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.85",
+                "odds_under": "2.02"
+            },
+            {
+                "submarket_name": "Over/Under +222.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.91",
+                "odds_under": "1.93"
+            },
+            {
+                "submarket_name": "Over/Under +223",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.99",
+                "odds_under": "1.92"
+            },
+            {
+                "submarket_name": "Over/Under +223.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.99",
+                "odds_under": "1.84"
+            },
+            {
+                "submarket_name": "Over/Under +224",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.13",
+                "odds_under": "1.82"
+            },
+            {
+                "submarket_name": "Over/Under +224.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.07",
+                "odds_under": "1.75"
+            },
+            {
+                "submarket_name": "Over/Under +225",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.16",
+                "odds_under": "1.74"
+            },
+            {
+                "submarket_name": "Over/Under +225.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.15",
+                "odds_under": "1.69"
+            },
+            {
+                "submarket_name": "Over/Under +226",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.27",
+                "odds_under": "1.67"
+            },
+            {
+                "submarket_name": "Over/Under +226.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.25",
+                "odds_under": "1.63"
+            },
+            {
+                "submarket_name": "Over/Under +227",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +227.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.40",
+                "odds_under": "1.56"
+            },
+            {
+                "submarket_name": "Over/Under +228.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.52",
+                "odds_under": "1.51"
+            },
+            {
+                "submarket_name": "Over/Under +229.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.68",
+                "odds_under": "1.47"
+            },
+            {
+                "submarket_name": "Over/Under +230.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.83",
+                "odds_under": "1.41"
+            },
+            {
+                "submarket_name": "Over/Under +231.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.98",
+                "odds_under": "1.38"
+            },
+            {
+                "submarket_name": "Over/Under +232.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.18",
+                "odds_under": "1.33"
+            },
+            {
+                "submarket_name": "Over/Under +233.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.40",
+                "odds_under": "1.25"
+            },
+            {
+                "submarket_name": "Over/Under +234.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.60",
+                "odds_under": "1.20"
+            },
+            {
+                "submarket_name": "Over/Under +235.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.90",
+                "odds_under": "1.20"
+            },
+            {
+                "submarket_name": "Over/Under +236.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.00",
+                "odds_under": "1.16"
+            },
+            {
+                "submarket_name": "Over/Under +237.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.30",
+                "odds_under": "1.18"
+            },
+            {
+                "submarket_name": "Over/Under +238.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "5.00",
+                "odds_under": "1.14"
+            },
+            {
+                "submarket_name": "Over/Under +239.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "5.50",
+                "odds_under": "1.12"
+            },
+            {
+                "submarket_name": "Over/Under +240.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "5.50",
+                "odds_under": "1.11"
+            },
+            {
+                "submarket_name": "Over/Under +241.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.00",
+                "odds_under": "1.08"
+            },
+            {
+                "submarket_name": "Over/Under +242.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.50",
+                "odds_under": "1.10"
+            },
+            {
+                "submarket_name": "Over/Under +243.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "7.50",
+                "odds_under": "1.06"
+            },
+            {
+                "submarket_name": "Over/Under +244.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "7.75",
+                "odds_under": "1.07"
+            },
+            {
+                "submarket_name": "Over/Under +245.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +246.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +247.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "9.00",
+                "odds_under": "1.03"
+            },
+            {
+                "submarket_name": "Over/Under +249.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            }
+        ],
+        "asian_handicap_games_-3_5_games_market": [
+            {
+                "submarket_name": "Asian Handicap -15.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "-",
+                "handicap_team_2": "-"
+            },
+            {
+                "submarket_name": "Asian Handicap -14.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "10.00",
+                "handicap_team_2": "1.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -13.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "10.00",
+                "handicap_team_2": "1.03"
+            },
+            {
+                "submarket_name": "Asian Handicap -12.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "9.50",
+                "handicap_team_2": "1.04"
+            },
+            {
+                "submarket_name": "Asian Handicap -11.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "8.50",
+                "handicap_team_2": "1.05"
+            },
+            {
+                "submarket_name": "Asian Handicap -10.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "7.50",
+                "handicap_team_2": "1.06"
+            },
+            {
+                "submarket_name": "Asian Handicap -9.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "7.00",
+                "handicap_team_2": "1.09"
+            },
+            {
+                "submarket_name": "Asian Handicap -8.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "6.00",
+                "handicap_team_2": "1.11"
+            },
+            {
+                "submarket_name": "Asian Handicap -7.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "5.50",
+                "handicap_team_2": "1.13"
+            },
+            {
+                "submarket_name": "Asian Handicap -6.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "4.80",
+                "handicap_team_2": "1.16"
+            },
+            {
+                "submarket_name": "Asian Handicap -5.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "4.58",
+                "handicap_team_2": "1.20"
+            },
+            {
+                "submarket_name": "Asian Handicap -4.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "4.03",
+                "handicap_team_2": "1.22"
+            },
+            {
+                "submarket_name": "Asian Handicap -3.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.60",
+                "handicap_team_2": "1.28"
+            },
+            {
+                "submarket_name": "Asian Handicap -2.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.25",
+                "handicap_team_2": "1.32"
+            },
+            {
+                "submarket_name": "Asian Handicap -1.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.05",
+                "handicap_team_2": "1.36"
+            },
+            {
+                "submarket_name": "Asian Handicap +1.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.53",
+                "handicap_team_2": "1.52"
+            },
+            {
+                "submarket_name": "Asian Handicap +2.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.35",
+                "handicap_team_2": "1.57"
+            },
+            {
+                "submarket_name": "Asian Handicap +3",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.42",
+                "handicap_team_2": "1.61"
+            },
+            {
+                "submarket_name": "Asian Handicap +3.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.24",
+                "handicap_team_2": "1.65"
+            },
+            {
+                "submarket_name": "Asian Handicap +4",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.23",
+                "handicap_team_2": "1.71"
+            },
+            {
+                "submarket_name": "Asian Handicap +4.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.10",
+                "handicap_team_2": "1.75"
+            },
+            {
+                "submarket_name": "Asian Handicap +5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.08",
+                "handicap_team_2": "1.85"
+            },
+            {
+                "submarket_name": "Asian Handicap +5.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.93",
+                "handicap_team_2": "1.89"
+            },
+            {
+                "submarket_name": "Asian Handicap +6",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.90",
+                "handicap_team_2": "1.97"
+            },
+            {
+                "submarket_name": "Asian Handicap +6.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.79",
+                "handicap_team_2": "2.04"
+            },
+            {
+                "submarket_name": "Asian Handicap +7",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.73",
+                "handicap_team_2": "2.21"
+            },
+            {
+                "submarket_name": "Asian Handicap +7.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.67",
+                "handicap_team_2": "2.20"
+            },
+            {
+                "submarket_name": "Asian Handicap +8",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.62",
+                "handicap_team_2": "2.40"
+            },
+            {
+                "submarket_name": "Asian Handicap +8.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.58",
+                "handicap_team_2": "2.30"
+            },
+            {
+                "submarket_name": "Asian Handicap +9",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "-",
+                "handicap_team_2": "-"
+            },
+            {
+                "submarket_name": "Asian Handicap +9.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.51",
+                "handicap_team_2": "2.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +10.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.44",
+                "handicap_team_2": "2.72"
+            },
+            {
+                "submarket_name": "Asian Handicap +11.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.39",
+                "handicap_team_2": "2.93"
+            },
+            {
+                "submarket_name": "Asian Handicap +12.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.33",
+                "handicap_team_2": "3.22"
+            },
+            {
+                "submarket_name": "Asian Handicap +13.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.27",
+                "handicap_team_2": "3.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +14.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.23",
+                "handicap_team_2": "3.90"
+            },
+            {
+                "submarket_name": "Asian Handicap +15.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.21",
+                "handicap_team_2": "4.35"
+            },
+            {
+                "submarket_name": "Asian Handicap +16.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.17",
+                "handicap_team_2": "4.90"
+            },
+            {
+                "submarket_name": "Asian Handicap +17.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.14",
+                "handicap_team_2": "5.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +18.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.11",
+                "handicap_team_2": "5.25"
+            },
+            {
+                "submarket_name": "Asian Handicap +19.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.11",
+                "handicap_team_2": "5.75"
+            },
+            {
+                "submarket_name": "Asian Handicap +20.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.08",
+                "handicap_team_2": "7.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +21.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.06",
+                "handicap_team_2": "7.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +22.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.04",
+                "handicap_team_2": "7.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +23.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.04",
+                "handicap_team_2": "8.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +24.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.03",
+                "handicap_team_2": "9.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +25.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.03",
+                "handicap_team_2": "9.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +26.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.02",
+                "handicap_team_2": "10.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +27.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.02",
+                "handicap_team_2": "12.00"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:58:29 UTC",
+        "match_date": "2025-06-17 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2024-2025/oklahoma-city-thunder-indiana-pacers-vwOOlokg/",
+        "home_team": "Oklahoma City Thunder",
+        "away_team": "Indiana Pacers",
+        "league_name": "NBA 2024/2025",
+        "home_score": "120",
+        "away_score": "109",
+        "partial_results": "32:22, 27:23, 28:34, 33:30",
+        "venue": "Paycom Center",
+        "venue_town": "Oklahoma, OK",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.26",
+                "2": "4.00",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            }
+        ],
+        "over_under_games_220_5_market": [
+            {
+                "submarket_name": "Over/Under +198.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.02",
+                "odds_under": "10.00"
+            },
+            {
+                "submarket_name": "Over/Under +199.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +200.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +201.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.05",
+                "odds_under": "8.00"
+            },
+            {
+                "submarket_name": "Over/Under +202.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.08",
+                "odds_under": "7.00"
+            },
+            {
+                "submarket_name": "Over/Under +203.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.07",
+                "odds_under": "6.50"
+            },
+            {
+                "submarket_name": "Over/Under +204.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.11",
+                "odds_under": "6.00"
+            },
+            {
+                "submarket_name": "Over/Under +205.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.12",
+                "odds_under": "5.50"
+            },
+            {
+                "submarket_name": "Over/Under +206.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.14",
+                "odds_under": "5.00"
+            },
+            {
+                "submarket_name": "Over/Under +207.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.14",
+                "odds_under": "4.70"
+            },
+            {
+                "submarket_name": "Over/Under +208.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.16",
+                "odds_under": "4.30"
+            },
+            {
+                "submarket_name": "Over/Under +209.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.20",
+                "odds_under": "4.00"
+            },
+            {
+                "submarket_name": "Over/Under +210.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.25",
+                "odds_under": "3.75"
+            },
+            {
+                "submarket_name": "Over/Under +211.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.25",
+                "odds_under": "3.50"
+            },
+            {
+                "submarket_name": "Over/Under +212.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.32",
+                "odds_under": "3.35"
+            },
+            {
+                "submarket_name": "Over/Under +213.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.35",
+                "odds_under": "3.20"
+            },
+            {
+                "submarket_name": "Over/Under +214.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.38",
+                "odds_under": "2.95"
+            },
+            {
+                "submarket_name": "Over/Under +215.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.42",
+                "odds_under": "2.80"
+            },
+            {
+                "submarket_name": "Over/Under +216.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.47",
+                "odds_under": "2.65"
+            },
+            {
+                "submarket_name": "Over/Under +217.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.52",
+                "odds_under": "2.50"
+            },
+            {
+                "submarket_name": "Over/Under +218.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.57",
+                "odds_under": "2.35"
+            },
+            {
+                "submarket_name": "Over/Under +219.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.63",
+                "odds_under": "2.27"
+            },
+            {
+                "submarket_name": "Over/Under +220",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.68",
+                "odds_under": "2.25"
+            },
+            {
+                "submarket_name": "Over/Under +220.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.71",
+                "odds_under": "2.15"
+            },
+            {
+                "submarket_name": "Over/Under +221",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.76",
+                "odds_under": "2.13"
+            },
+            {
+                "submarket_name": "Over/Under +221.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.78",
+                "odds_under": "2.05"
+            },
+            {
+                "submarket_name": "Over/Under +222",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.86",
+                "odds_under": "2.02"
+            },
+            {
+                "submarket_name": "Over/Under +222.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.86",
+                "odds_under": "1.96"
+            },
+            {
+                "submarket_name": "Over/Under +223",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.94",
+                "odds_under": "1.90"
+            },
+            {
+                "submarket_name": "Over/Under +223.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.96",
+                "odds_under": "1.88"
+            },
+            {
+                "submarket_name": "Over/Under +224",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.08",
+                "odds_under": "1.85"
+            },
+            {
+                "submarket_name": "Over/Under +224.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.06",
+                "odds_under": "1.80"
+            },
+            {
+                "submarket_name": "Over/Under +225",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.17",
+                "odds_under": "1.76"
+            },
+            {
+                "submarket_name": "Over/Under +225.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.17",
+                "odds_under": "1.71"
+            },
+            {
+                "submarket_name": "Over/Under +226",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.31",
+                "odds_under": "1.67"
+            },
+            {
+                "submarket_name": "Over/Under +226.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.23",
+                "odds_under": "1.64"
+            },
+            {
+                "submarket_name": "Over/Under +227",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +227.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.35",
+                "odds_under": "1.59"
+            },
+            {
+                "submarket_name": "Over/Under +228.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.47",
+                "odds_under": "1.52"
+            },
+            {
+                "submarket_name": "Over/Under +229.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.65",
+                "odds_under": "1.48"
+            },
+            {
+                "submarket_name": "Over/Under +230.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.80",
+                "odds_under": "1.44"
+            },
+            {
+                "submarket_name": "Over/Under +231.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.95",
+                "odds_under": "1.38"
+            },
+            {
+                "submarket_name": "Over/Under +232.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.15",
+                "odds_under": "1.35"
+            },
+            {
+                "submarket_name": "Over/Under +233.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.25",
+                "odds_under": "1.28"
+            },
+            {
+                "submarket_name": "Over/Under +234.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.45",
+                "odds_under": "1.25"
+            },
+            {
+                "submarket_name": "Over/Under +235.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.65",
+                "odds_under": "1.20"
+            },
+            {
+                "submarket_name": "Over/Under +236.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.85",
+                "odds_under": "1.20"
+            },
+            {
+                "submarket_name": "Over/Under +237.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.40",
+                "odds_under": "1.16"
+            },
+            {
+                "submarket_name": "Over/Under +238.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.30",
+                "odds_under": "1.13"
+            },
+            {
+                "submarket_name": "Over/Under +239.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "5.00",
+                "odds_under": "1.14"
+            },
+            {
+                "submarket_name": "Over/Under +240.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "5.50",
+                "odds_under": "1.12"
+            },
+            {
+                "submarket_name": "Over/Under +241.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.00",
+                "odds_under": "1.11"
+            },
+            {
+                "submarket_name": "Over/Under +242.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.00",
+                "odds_under": "1.10"
+            },
+            {
+                "submarket_name": "Over/Under +243.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.50",
+                "odds_under": "1.06"
+            },
+            {
+                "submarket_name": "Over/Under +244.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "7.50",
+                "odds_under": "1.08"
+            },
+            {
+                "submarket_name": "Over/Under +245.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "8.00",
+                "odds_under": "1.05"
+            },
+            {
+                "submarket_name": "Over/Under +246.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +247.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "9.00",
+                "odds_under": "1.02"
+            },
+            {
+                "submarket_name": "Over/Under +248.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "9.50",
+                "odds_under": "1.03"
+            }
+        ],
+        "asian_handicap_games_-3_5_games_market": [
+            {
+                "submarket_name": "Asian Handicap -32.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "12.00",
+                "handicap_team_2": "1.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -31.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "11.00",
+                "handicap_team_2": "1.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -30.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "10.00",
+                "handicap_team_2": "1.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -29.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "10.00",
+                "handicap_team_2": "1.03"
+            },
+            {
+                "submarket_name": "Asian Handicap -28.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "9.50",
+                "handicap_team_2": "1.04"
+            },
+            {
+                "submarket_name": "Asian Handicap -27.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "8.00",
+                "handicap_team_2": "1.04"
+            },
+            {
+                "submarket_name": "Asian Handicap -26.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "7.50",
+                "handicap_team_2": "1.05"
+            },
+            {
+                "submarket_name": "Asian Handicap -25.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "7.00",
+                "handicap_team_2": "1.06"
+            },
+            {
+                "submarket_name": "Asian Handicap -24.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "6.25",
+                "handicap_team_2": "1.08"
+            },
+            {
+                "submarket_name": "Asian Handicap -23.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "6.00",
+                "handicap_team_2": "1.10"
+            },
+            {
+                "submarket_name": "Asian Handicap -22.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "5.50",
+                "handicap_team_2": "1.11"
+            },
+            {
+                "submarket_name": "Asian Handicap -21.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "5.00",
+                "handicap_team_2": "1.14"
+            },
+            {
+                "submarket_name": "Asian Handicap -20.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "4.68",
+                "handicap_team_2": "1.19"
+            },
+            {
+                "submarket_name": "Asian Handicap -19.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "4.30",
+                "handicap_team_2": "1.21"
+            },
+            {
+                "submarket_name": "Asian Handicap -18.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.90",
+                "handicap_team_2": "1.23"
+            },
+            {
+                "submarket_name": "Asian Handicap -17.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.55",
+                "handicap_team_2": "1.29"
+            },
+            {
+                "submarket_name": "Asian Handicap -16.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.23",
+                "handicap_team_2": "1.33"
+            },
+            {
+                "submarket_name": "Asian Handicap -15.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.98",
+                "handicap_team_2": "1.38"
+            },
+            {
+                "submarket_name": "Asian Handicap -14.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.80",
+                "handicap_team_2": "1.42"
+            },
+            {
+                "submarket_name": "Asian Handicap -13.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.55",
+                "handicap_team_2": "1.49"
+            },
+            {
+                "submarket_name": "Asian Handicap -12.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.40",
+                "handicap_team_2": "1.55"
+            },
+            {
+                "submarket_name": "Asian Handicap -12",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.52",
+                "handicap_team_2": "1.56"
+            },
+            {
+                "submarket_name": "Asian Handicap -11.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.30",
+                "handicap_team_2": "1.64"
+            },
+            {
+                "submarket_name": "Asian Handicap -11",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.34",
+                "handicap_team_2": "1.65"
+            },
+            {
+                "submarket_name": "Asian Handicap -10.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.13",
+                "handicap_team_2": "1.73"
+            },
+            {
+                "submarket_name": "Asian Handicap -10",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.16",
+                "handicap_team_2": "1.78"
+            },
+            {
+                "submarket_name": "Asian Handicap -9.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.98",
+                "handicap_team_2": "1.85"
+            },
+            {
+                "submarket_name": "Asian Handicap -9",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.94",
+                "handicap_team_2": "1.92"
+            },
+            {
+                "submarket_name": "Asian Handicap -8.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.83",
+                "handicap_team_2": "2.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -8",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.80",
+                "handicap_team_2": "2.14"
+            },
+            {
+                "submarket_name": "Asian Handicap -7.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.71",
+                "handicap_team_2": "2.16"
+            },
+            {
+                "submarket_name": "Asian Handicap -7",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.68",
+                "handicap_team_2": "2.27"
+            },
+            {
+                "submarket_name": "Asian Handicap -6.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.61",
+                "handicap_team_2": "2.36"
+            },
+            {
+                "submarket_name": "Asian Handicap -5.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.52",
+                "handicap_team_2": "2.50"
+            },
+            {
+                "submarket_name": "Asian Handicap -4.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.44",
+                "handicap_team_2": "2.70"
+            },
+            {
+                "submarket_name": "Asian Handicap -3.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.38",
+                "handicap_team_2": "2.95"
+            },
+            {
+                "submarket_name": "Asian Handicap -2.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.32",
+                "handicap_team_2": "3.25"
+            },
+            {
+                "submarket_name": "Asian Handicap -1.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.27",
+                "handicap_team_2": "3.48"
+            },
+            {
+                "submarket_name": "Asian Handicap +1.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.19",
+                "handicap_team_2": "4.40"
+            },
+            {
+                "submarket_name": "Asian Handicap +2.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.16",
+                "handicap_team_2": "4.80"
+            },
+            {
+                "submarket_name": "Asian Handicap +3.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.15",
+                "handicap_team_2": "5.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +4.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.12",
+                "handicap_team_2": "5.75"
+            },
+            {
+                "submarket_name": "Asian Handicap +5.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.10",
+                "handicap_team_2": "6.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +6.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.07",
+                "handicap_team_2": "7.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +7.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.06",
+                "handicap_team_2": "8.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +8.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.05",
+                "handicap_team_2": "8.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +9.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.04",
+                "handicap_team_2": "9.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +10.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.03",
+                "handicap_team_2": "10.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +11.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.02",
+                "handicap_team_2": "10.00"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:58:29 UTC",
+        "match_date": "2025-06-14 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2024-2025/indiana-pacers-oklahoma-city-thunder-UJr9LChJ/",
+        "home_team": "Indiana Pacers",
+        "away_team": "Oklahoma City Thunder",
+        "league_name": "NBA 2024/2025",
+        "home_score": "104",
+        "away_score": "111",
+        "partial_results": "35:34, 25:23, 27:23, 17:31",
+        "venue": "Gainbridge Fieldhouse",
+        "venue_town": "Indianapolis, IN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "2.95",
+                "2": "1.42",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            }
+        ],
+        "over_under_games_220_5_market": [
+            {
+                "submarket_name": "Over/Under +200.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +201.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +203.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +204.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +205.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +206.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.08",
+                "odds_under": "7.00"
+            },
+            {
+                "submarket_name": "Over/Under +207.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.08",
+                "odds_under": "7.00"
+            },
+            {
+                "submarket_name": "Over/Under +208.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +209.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +210.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.13",
+                "odds_under": "5.00"
+            },
+            {
+                "submarket_name": "Over/Under +211.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.12",
+                "odds_under": "4.90"
+            },
+            {
+                "submarket_name": "Over/Under +212.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.15",
+                "odds_under": "4.70"
+            },
+            {
+                "submarket_name": "Over/Under +213.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.18",
+                "odds_under": "4.20"
+            },
+            {
+                "submarket_name": "Over/Under +214.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.23",
+                "odds_under": "3.95"
+            },
+            {
+                "submarket_name": "Over/Under +215.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.25",
+                "odds_under": "3.75"
+            },
+            {
+                "submarket_name": "Over/Under +216.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.28",
+                "odds_under": "3.50"
+            },
+            {
+                "submarket_name": "Over/Under +217.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.31",
+                "odds_under": "3.30"
+            },
+            {
+                "submarket_name": "Over/Under +218.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.36",
+                "odds_under": "3.13"
+            },
+            {
+                "submarket_name": "Over/Under +219.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.41",
+                "odds_under": "2.93"
+            },
+            {
+                "submarket_name": "Over/Under +220.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.44",
+                "odds_under": "2.78"
+            },
+            {
+                "submarket_name": "Over/Under +221.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.48",
+                "odds_under": "2.63"
+            },
+            {
+                "submarket_name": "Over/Under +222.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.53",
+                "odds_under": "2.45"
+            },
+            {
+                "submarket_name": "Over/Under +223.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.59",
+                "odds_under": "2.33"
+            },
+            {
+                "submarket_name": "Over/Under +224.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.68",
+                "odds_under": "2.21"
+            },
+            {
+                "submarket_name": "Over/Under +225",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.72",
+                "odds_under": "2.19"
+            },
+            {
+                "submarket_name": "Over/Under +225.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.74",
+                "odds_under": "2.11"
+            },
+            {
+                "submarket_name": "Over/Under +226",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.81",
+                "odds_under": "2.08"
+            },
+            {
+                "submarket_name": "Over/Under +226.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.82",
+                "odds_under": "2.02"
+            },
+            {
+                "submarket_name": "Over/Under +227",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.94",
+                "odds_under": "1.99"
+            },
+            {
+                "submarket_name": "Over/Under +227.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.91",
+                "odds_under": "1.94"
+            },
+            {
+                "submarket_name": "Over/Under +228",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.00",
+                "odds_under": "1.90"
+            },
+            {
+                "submarket_name": "Over/Under +228.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.99",
+                "odds_under": "1.83"
+            },
+            {
+                "submarket_name": "Over/Under +229",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.10",
+                "odds_under": "1.79"
+            },
+            {
+                "submarket_name": "Over/Under +229.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.08",
+                "odds_under": "1.75"
+            },
+            {
+                "submarket_name": "Over/Under +230",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.20",
+                "odds_under": "1.72"
+            },
+            {
+                "submarket_name": "Over/Under +230.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.18",
+                "odds_under": "1.69"
+            },
+            {
+                "submarket_name": "Over/Under +231.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.28",
+                "odds_under": "1.63"
+            },
+            {
+                "submarket_name": "Over/Under +232.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.40",
+                "odds_under": "1.56"
+            },
+            {
+                "submarket_name": "Over/Under +233.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.47",
+                "odds_under": "1.52"
+            },
+            {
+                "submarket_name": "Over/Under +234.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.65",
+                "odds_under": "1.48"
+            },
+            {
+                "submarket_name": "Over/Under +235.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.80",
+                "odds_under": "1.41"
+            },
+            {
+                "submarket_name": "Over/Under +236.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.93",
+                "odds_under": "1.39"
+            },
+            {
+                "submarket_name": "Over/Under +237.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.15",
+                "odds_under": "1.35"
+            },
+            {
+                "submarket_name": "Over/Under +238.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.30",
+                "odds_under": "1.32"
+            },
+            {
+                "submarket_name": "Over/Under +239.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.25",
+                "odds_under": "1.30"
+            },
+            {
+                "submarket_name": "Over/Under +240.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.50",
+                "odds_under": "1.28"
+            },
+            {
+                "submarket_name": "Over/Under +241.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.75",
+                "odds_under": "1.25"
+            },
+            {
+                "submarket_name": "Over/Under +242.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.00",
+                "odds_under": "1.18"
+            },
+            {
+                "submarket_name": "Over/Under +243.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.30",
+                "odds_under": "1.20"
+            },
+            {
+                "submarket_name": "Over/Under +244.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.60",
+                "odds_under": "1.16"
+            },
+            {
+                "submarket_name": "Over/Under +245.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.90",
+                "odds_under": "1.14"
+            },
+            {
+                "submarket_name": "Over/Under +246.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "5.25",
+                "odds_under": "1.14"
+            },
+            {
+                "submarket_name": "Over/Under +247.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.00",
+                "odds_under": "1.11"
+            },
+            {
+                "submarket_name": "Over/Under +248.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +249.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +250.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            }
+        ],
+        "asian_handicap_games_-3_5_games_market": [
+            {
+                "submarket_name": "Asian Handicap -14.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "9.50",
+                "handicap_team_2": "1.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -13.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "10.00",
+                "handicap_team_2": "1.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -12.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "9.50",
+                "handicap_team_2": "1.03"
+            },
+            {
+                "submarket_name": "Asian Handicap -11.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "8.50",
+                "handicap_team_2": "1.04"
+            },
+            {
+                "submarket_name": "Asian Handicap -10.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "8.00",
+                "handicap_team_2": "1.06"
+            },
+            {
+                "submarket_name": "Asian Handicap -9.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "7.00",
+                "handicap_team_2": "1.08"
+            },
+            {
+                "submarket_name": "Asian Handicap -8.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "6.00",
+                "handicap_team_2": "1.10"
+            },
+            {
+                "submarket_name": "Asian Handicap -7.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "5.75",
+                "handicap_team_2": "1.12"
+            },
+            {
+                "submarket_name": "Asian Handicap -6.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "5.25",
+                "handicap_team_2": "1.15"
+            },
+            {
+                "submarket_name": "Asian Handicap -5.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "4.50",
+                "handicap_team_2": "1.16"
+            },
+            {
+                "submarket_name": "Asian Handicap -4.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "4.20",
+                "handicap_team_2": "1.21"
+            },
+            {
+                "submarket_name": "Asian Handicap -3.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.88",
+                "handicap_team_2": "1.25"
+            },
+            {
+                "submarket_name": "Asian Handicap -2.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.48",
+                "handicap_team_2": "1.27"
+            },
+            {
+                "submarket_name": "Asian Handicap -1.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.13",
+                "handicap_team_2": "1.35"
+            },
+            {
+                "submarket_name": "Asian Handicap +1.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.63",
+                "handicap_team_2": "1.48"
+            },
+            {
+                "submarket_name": "Asian Handicap +2.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.42",
+                "handicap_team_2": "1.55"
+            },
+            {
+                "submarket_name": "Asian Handicap +3.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.28",
+                "handicap_team_2": "1.63"
+            },
+            {
+                "submarket_name": "Asian Handicap +4",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.25",
+                "handicap_team_2": "1.69"
+            },
+            {
+                "submarket_name": "Asian Handicap +4.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.12",
+                "handicap_team_2": "1.73"
+            },
+            {
+                "submarket_name": "Asian Handicap +5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.11",
+                "handicap_team_2": "1.82"
+            },
+            {
+                "submarket_name": "Asian Handicap +5.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.98",
+                "handicap_team_2": "1.85"
+            },
+            {
+                "submarket_name": "Asian Handicap +6",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.90",
+                "handicap_team_2": "1.96"
+            },
+            {
+                "submarket_name": "Asian Handicap +6.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.82",
+                "handicap_team_2": "2.01"
+            },
+            {
+                "submarket_name": "Asian Handicap +7",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.75",
+                "handicap_team_2": "2.21"
+            },
+            {
+                "submarket_name": "Asian Handicap +7.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.70",
+                "handicap_team_2": "2.17"
+            },
+            {
+                "submarket_name": "Asian Handicap +8",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.63",
+                "handicap_team_2": "2.37"
+            },
+            {
+                "submarket_name": "Asian Handicap +8.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.60",
+                "handicap_team_2": "2.38"
+            },
+            {
+                "submarket_name": "Asian Handicap +9.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.53",
+                "handicap_team_2": "2.45"
+            },
+            {
+                "submarket_name": "Asian Handicap +10.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.47",
+                "handicap_team_2": "2.65"
+            },
+            {
+                "submarket_name": "Asian Handicap +11.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.40",
+                "handicap_team_2": "2.88"
+            },
+            {
+                "submarket_name": "Asian Handicap +12.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.33",
+                "handicap_team_2": "3.18"
+            },
+            {
+                "submarket_name": "Asian Handicap +13.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.29",
+                "handicap_team_2": "3.48"
+            },
+            {
+                "submarket_name": "Asian Handicap +14.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.25",
+                "handicap_team_2": "3.80"
+            },
+            {
+                "submarket_name": "Asian Handicap +15.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.21",
+                "handicap_team_2": "4.20"
+            },
+            {
+                "submarket_name": "Asian Handicap +16.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.18",
+                "handicap_team_2": "4.58"
+            },
+            {
+                "submarket_name": "Asian Handicap +17.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.15",
+                "handicap_team_2": "5.20"
+            },
+            {
+                "submarket_name": "Asian Handicap +18.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.12",
+                "handicap_team_2": "5.25"
+            },
+            {
+                "submarket_name": "Asian Handicap +19.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.12",
+                "handicap_team_2": "5.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +20.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.10",
+                "handicap_team_2": "6.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +21.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.06",
+                "handicap_team_2": "6.75"
+            },
+            {
+                "submarket_name": "Asian Handicap +22.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.05",
+                "handicap_team_2": "7.25"
+            },
+            {
+                "submarket_name": "Asian Handicap +23.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.04",
+                "handicap_team_2": "7.75"
+            },
+            {
+                "submarket_name": "Asian Handicap +24.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.03",
+                "handicap_team_2": "8.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +25.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.04",
+                "handicap_team_2": "9.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +26.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.02",
+                "handicap_team_2": "10.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +27.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.02",
+                "handicap_team_2": "11.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +28.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.01",
+                "handicap_team_2": "12.00"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:58:28 UTC",
+        "match_date": "2025-06-12 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2024-2025/indiana-pacers-oklahoma-city-thunder-xCQ1NYN6/",
+        "home_team": "Indiana Pacers",
+        "away_team": "Oklahoma City Thunder",
+        "league_name": "NBA 2024/2025",
+        "home_score": "116",
+        "away_score": "107",
+        "partial_results": "24:32, 40:28, 20:29, 32:18",
+        "venue": "Gainbridge Fieldhouse",
+        "venue_town": "Indianapolis, IN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "2.85",
+                "2": "1.44",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            }
+        ],
+        "over_under_games_220_5_market": [
+            {
+                "submarket_name": "Over/Under +203.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +204.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.05",
+                "odds_under": "8.00"
+            },
+            {
+                "submarket_name": "Over/Under +205.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.08",
+                "odds_under": "7.00"
+            },
+            {
+                "submarket_name": "Over/Under +206.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.09",
+                "odds_under": "6.50"
+            },
+            {
+                "submarket_name": "Over/Under +207.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.07",
+                "odds_under": "6.00"
+            },
+            {
+                "submarket_name": "Over/Under +208.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.11",
+                "odds_under": "6.00"
+            },
+            {
+                "submarket_name": "Over/Under +209.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.14",
+                "odds_under": "5.00"
+            },
+            {
+                "submarket_name": "Over/Under +210.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.15",
+                "odds_under": "4.70"
+            },
+            {
+                "submarket_name": "Over/Under +211.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.16",
+                "odds_under": "4.30"
+            },
+            {
+                "submarket_name": "Over/Under +212.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.20",
+                "odds_under": "4.00"
+            },
+            {
+                "submarket_name": "Over/Under +213.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.20",
+                "odds_under": "3.70"
+            },
+            {
+                "submarket_name": "Over/Under +214.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.25",
+                "odds_under": "3.45"
+            },
+            {
+                "submarket_name": "Over/Under +215.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.28",
+                "odds_under": "3.25"
+            },
+            {
+                "submarket_name": "Over/Under +216.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.34",
+                "odds_under": "3.20"
+            },
+            {
+                "submarket_name": "Over/Under +217.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.36",
+                "odds_under": "3.03"
+            },
+            {
+                "submarket_name": "Over/Under +218.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.41",
+                "odds_under": "2.85"
+            },
+            {
+                "submarket_name": "Over/Under +219.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.47",
+                "odds_under": "2.68"
+            },
+            {
+                "submarket_name": "Over/Under +220.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.52",
+                "odds_under": "2.50"
+            },
+            {
+                "submarket_name": "Over/Under +221.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.56",
+                "odds_under": "2.38"
+            },
+            {
+                "submarket_name": "Over/Under +222.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.61",
+                "odds_under": "2.30"
+            },
+            {
+                "submarket_name": "Over/Under +223.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.69",
+                "odds_under": "2.17"
+            },
+            {
+                "submarket_name": "Over/Under +224.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.75",
+                "odds_under": "2.08"
+            },
+            {
+                "submarket_name": "Over/Under +225.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.83",
+                "odds_under": "1.98"
+            },
+            {
+                "submarket_name": "Over/Under +226",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.91",
+                "odds_under": "1.91"
+            },
+            {
+                "submarket_name": "Over/Under +226.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "1.92",
+                "odds_under": "1.88"
+            },
+            {
+                "submarket_name": "Over/Under +227",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +227.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.00",
+                "odds_under": "1.79"
+            },
+            {
+                "submarket_name": "Over/Under +228",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +228.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.10",
+                "odds_under": "1.72"
+            },
+            {
+                "submarket_name": "Over/Under +229.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.23",
+                "odds_under": "1.65"
+            },
+            {
+                "submarket_name": "Over/Under +230.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.33",
+                "odds_under": "1.59"
+            },
+            {
+                "submarket_name": "Over/Under +231.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.42",
+                "odds_under": "1.55"
+            },
+            {
+                "submarket_name": "Over/Under +232.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.53",
+                "odds_under": "1.51"
+            },
+            {
+                "submarket_name": "Over/Under +233.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.75",
+                "odds_under": "1.44"
+            },
+            {
+                "submarket_name": "Over/Under +234.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "2.85",
+                "odds_under": "1.40"
+            },
+            {
+                "submarket_name": "Over/Under +235.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.00",
+                "odds_under": "1.37"
+            },
+            {
+                "submarket_name": "Over/Under +236.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.22",
+                "odds_under": "1.34"
+            },
+            {
+                "submarket_name": "Over/Under +237.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.45",
+                "odds_under": "1.25"
+            },
+            {
+                "submarket_name": "Over/Under +238.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.60",
+                "odds_under": "1.20"
+            },
+            {
+                "submarket_name": "Over/Under +239.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "3.90",
+                "odds_under": "1.20"
+            },
+            {
+                "submarket_name": "Over/Under +240.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.10",
+                "odds_under": "1.18"
+            },
+            {
+                "submarket_name": "Over/Under +241.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "4.80",
+                "odds_under": "1.14"
+            },
+            {
+                "submarket_name": "Over/Under +242.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "5.00",
+                "odds_under": "1.14"
+            },
+            {
+                "submarket_name": "Over/Under +243.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "5.50",
+                "odds_under": "1.12"
+            },
+            {
+                "submarket_name": "Over/Under +244.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.00",
+                "odds_under": "1.11"
+            },
+            {
+                "submarket_name": "Over/Under +245.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.00",
+                "odds_under": "1.10"
+            },
+            {
+                "submarket_name": "Over/Under +246.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "6.50",
+                "odds_under": "1.09"
+            },
+            {
+                "submarket_name": "Over/Under +247.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "7.50",
+                "odds_under": "1.05"
+            },
+            {
+                "submarket_name": "Over/Under +248.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "7.50",
+                "odds_under": "1.07"
+            },
+            {
+                "submarket_name": "Over/Under +249.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +250.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "9.00",
+                "odds_under": "1.03"
+            },
+            {
+                "submarket_name": "Over/Under +251.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +252.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            },
+            {
+                "submarket_name": "Over/Under +253.5",
+                "period": "FullIncludingOT",
+                "market_type": "Over/Under",
+                "extraction_mode": "passive",
+                "odds_over": "-",
+                "odds_under": "-"
+            }
+        ],
+        "asian_handicap_games_-3_5_games_market": [
+            {
+                "submarket_name": "Asian Handicap -19.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "-",
+                "handicap_team_2": "-"
+            },
+            {
+                "submarket_name": "Asian Handicap -15.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "9.50",
+                "handicap_team_2": "1.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -14.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "10.00",
+                "handicap_team_2": "1.02"
+            },
+            {
+                "submarket_name": "Asian Handicap -13.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "9.50",
+                "handicap_team_2": "1.03"
+            },
+            {
+                "submarket_name": "Asian Handicap -12.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "9.50",
+                "handicap_team_2": "1.04"
+            },
+            {
+                "submarket_name": "Asian Handicap -11.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "8.50",
+                "handicap_team_2": "1.05"
+            },
+            {
+                "submarket_name": "Asian Handicap -10.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "7.50",
+                "handicap_team_2": "1.07"
+            },
+            {
+                "submarket_name": "Asian Handicap -9.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "6.50",
+                "handicap_team_2": "1.08"
+            },
+            {
+                "submarket_name": "Asian Handicap -8.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "6.00",
+                "handicap_team_2": "1.11"
+            },
+            {
+                "submarket_name": "Asian Handicap -7.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "5.50",
+                "handicap_team_2": "1.13"
+            },
+            {
+                "submarket_name": "Asian Handicap -6.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "5.00",
+                "handicap_team_2": "1.16"
+            },
+            {
+                "submarket_name": "Asian Handicap -5.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "4.35",
+                "handicap_team_2": "1.21"
+            },
+            {
+                "submarket_name": "Asian Handicap -4.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.98",
+                "handicap_team_2": "1.22"
+            },
+            {
+                "submarket_name": "Asian Handicap -3.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.58",
+                "handicap_team_2": "1.28"
+            },
+            {
+                "submarket_name": "Asian Handicap -2.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "3.28",
+                "handicap_team_2": "1.32"
+            },
+            {
+                "submarket_name": "Asian Handicap -1.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.93",
+                "handicap_team_2": "1.38"
+            },
+            {
+                "submarket_name": "Asian Handicap +1.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.50",
+                "handicap_team_2": "1.51"
+            },
+            {
+                "submarket_name": "Asian Handicap +2.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.30",
+                "handicap_team_2": "1.59"
+            },
+            {
+                "submarket_name": "Asian Handicap +3.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.17",
+                "handicap_team_2": "1.69"
+            },
+            {
+                "submarket_name": "Asian Handicap +4.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "2.00",
+                "handicap_team_2": "1.81"
+            },
+            {
+                "submarket_name": "Asian Handicap +5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "-",
+                "handicap_team_2": "-"
+            },
+            {
+                "submarket_name": "Asian Handicap +5.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.86",
+                "handicap_team_2": "1.93"
+            },
+            {
+                "submarket_name": "Asian Handicap +6.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.75",
+                "handicap_team_2": "2.08"
+            },
+            {
+                "submarket_name": "Asian Handicap +7.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.66",
+                "handicap_team_2": "2.23"
+            },
+            {
+                "submarket_name": "Asian Handicap +8.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.56",
+                "handicap_team_2": "2.38"
+            },
+            {
+                "submarket_name": "Asian Handicap +9.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.49",
+                "handicap_team_2": "2.55"
+            },
+            {
+                "submarket_name": "Asian Handicap +10.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.42",
+                "handicap_team_2": "2.78"
+            },
+            {
+                "submarket_name": "Asian Handicap +11.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.38",
+                "handicap_team_2": "3.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +12.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.32",
+                "handicap_team_2": "3.28"
+            },
+            {
+                "submarket_name": "Asian Handicap +13.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.27",
+                "handicap_team_2": "3.58"
+            },
+            {
+                "submarket_name": "Asian Handicap +14.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.23",
+                "handicap_team_2": "3.93"
+            },
+            {
+                "submarket_name": "Asian Handicap +15.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.19",
+                "handicap_team_2": "4.40"
+            },
+            {
+                "submarket_name": "Asian Handicap +16.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.17",
+                "handicap_team_2": "4.90"
+            },
+            {
+                "submarket_name": "Asian Handicap +17.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.14",
+                "handicap_team_2": "5.25"
+            },
+            {
+                "submarket_name": "Asian Handicap +18.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.11",
+                "handicap_team_2": "5.75"
+            },
+            {
+                "submarket_name": "Asian Handicap +19.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.10",
+                "handicap_team_2": "6.25"
+            },
+            {
+                "submarket_name": "Asian Handicap +20.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.07",
+                "handicap_team_2": "6.75"
+            },
+            {
+                "submarket_name": "Asian Handicap +21.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.06",
+                "handicap_team_2": "7.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +22.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.04",
+                "handicap_team_2": "8.00"
+            },
+            {
+                "submarket_name": "Asian Handicap +23.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.04",
+                "handicap_team_2": "8.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +24.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.04",
+                "handicap_team_2": "9.50"
+            },
+            {
+                "submarket_name": "Asian Handicap +25.5",
+                "period": "FullIncludingOT",
+                "market_type": "Asian Handicap",
+                "extraction_mode": "passive",
+                "handicap_team_1": "1.02",
+                "handicap_team_2": "10.00"
+            }
+        ]
+    }
+]

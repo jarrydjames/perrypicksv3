@@ -1,0 +1,64 @@
+{
+  "started_utc": "2026-01-24T01:10:07.117931+00:00",
+  "finished_utc": "2026-01-24T01:11:00.400548+00:00",
+  "odds_harvester_dir": "/Users/jarrydhawley/Desktop/Predictor/OddsHarvester",
+  "season": "2023-2024",
+  "max_pages": 1,
+  "summary": {
+    "scraped_matches": 5,
+    "matches_with_any_history": 5,
+    "unique_history_timestamps": 12,
+    "min_timestamp_utc": "2026-05-30T23:01:00+00:00",
+    "max_timestamp_utc": "2026-06-17T18:40:00+00:00",
+    "note": "This spike only checks whether *any* odds-history timestamps exist. Next step (if promising) is to join to NBA game_id/tipoff time and check for timestamps within a halftime window."
+  },
+  "filtered_raw_path": "/Users/jarrydhawley/Desktop/Predictor/perrypicksv2/data/oddsportal/spike_23_24.bet365.us.raw.json",
+  "example_match": {
+    "scraped_date": "2026-01-24 01:10:40 UTC",
+    "match_date": "2024-06-18 00:30:00 UTC",
+    "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-dallas-mavericks-dUhxW4j2/",
+    "home_team": "Boston Celtics",
+    "away_team": "Dallas Mavericks",
+    "league_name": "NBA 2023/2024",
+    "home_score": "106",
+    "away_score": "88",
+    "partial_results": "28:18, 39:28, 19:21, 20:21",
+    "venue": "TD Garden",
+    "venue_town": "Boston, MA",
+    "venue_country": "USA",
+    "home_away_market": [
+      {
+        "1": "1.36",
+        "2": "3.30",
+        "bookmaker_name": "bet365.us",
+        "period": "FullIncludingOT",
+        "odds_history_data": [
+          {
+            "odds_history": [
+              {
+                "timestamp": "2026-06-17T16:17:00",
+                "odds": 1.36
+              }
+            ],
+            "opening_odds": {
+              "timestamp": "2026-06-14T23:02:00",
+              "odds": 1.33
+            }
+          },
+          {
+            "odds_history": [
+              {
+                "timestamp": "2026-06-17T18:40:00",
+                "odds": 3.3
+              }
+            ],
+            "opening_odds": {
+              "timestamp": "2026-06-14T23:02:00",
+              "odds": 3.4
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

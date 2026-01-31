@@ -1,0 +1,1088 @@
+[
+    {
+        "scraped_date": "2026-01-24 01:19:06 UTC",
+        "match_date": "2024-06-18 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-dallas-mavericks-dUhxW4j2/",
+        "home_team": "Boston Celtics",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "106",
+        "away_score": "88",
+        "partial_results": "28:18, 39:28, 19:21, 20:21",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.36",
+                "2": "3.30",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-17T16:17:00",
+                                "odds": 1.36
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-14T23:02:00",
+                            "odds": 1.33
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-17T18:40:00",
+                                "odds": 3.3
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-14T23:02:00",
+                            "odds": 3.4
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_205_5_market": [],
+        "over_under_games_206_5_market": [],
+        "over_under_games_207_5_market": [],
+        "over_under_games_208_5_market": [],
+        "over_under_games_209_5_market": [
+            {
+                "odds_over": "1.91",
+                "odds_under": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-15T00:06:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-15T00:06:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-15T00:06:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-15T00:06:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_210_5_market": [
+            {
+                "odds_over": "1.91",
+                "odds_under": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-17T11:18:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-17T11:18:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-17T11:18:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-17T11:18:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_211_5_market": [],
+        "over_under_games_212_5_market": [],
+        "over_under_games_213_5_market": [],
+        "over_under_games_214_5_market": [],
+        "over_under_games_215_5_market": [],
+        "over_under_games_216_5_market": [],
+        "over_under_games_217_5_market": [],
+        "over_under_games_218_5_market": [],
+        "over_under_games_219_5_market": [],
+        "over_under_games_220_5_market": [],
+        "over_under_games_221_5_market": [],
+        "over_under_games_222_5_market": [],
+        "over_under_games_223_5_market": [],
+        "over_under_games_224_5_market": [],
+        "over_under_games_225_5_market": [],
+        "over_under_games_226_5_market": [],
+        "over_under_games_227_5_market": [],
+        "over_under_games_228_5_market": [],
+        "over_under_games_229_5_market": [],
+        "over_under_games_230_5_market": [],
+        "over_under_games_231_5_market": [],
+        "over_under_games_232_5_market": [],
+        "over_under_games_233_5_market": [],
+        "over_under_games_234_5_market": [],
+        "over_under_games_235_5_market": [],
+        "over_under_games_236_5_market": [],
+        "over_under_games_237_5_market": [],
+        "over_under_games_238_5_market": [],
+        "over_under_games_239_5_market": [],
+        "over_under_games_240_5_market": [],
+        "asian_handicap_games_-1_5_games_market": [],
+        "asian_handicap_games_-2_5_games_market": [],
+        "asian_handicap_games_-3_5_games_market": [],
+        "asian_handicap_games_-4_5_games_market": [],
+        "asian_handicap_games_-5_5_games_market": [],
+        "asian_handicap_games_-6_5_games_market": [
+            {
+                "handicap_team_1": "1.87",
+                "handicap_team_2": "1.95",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-17T16:17:00",
+                                "odds": 1.87
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-16T02:00:00",
+                            "odds": 1.95
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-17T16:17:00",
+                                "odds": 1.95
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-16T02:00:00",
+                            "odds": 1.87
+                        }
+                    }
+                ]
+            }
+        ],
+        "asian_handicap_games_-7_5_games_market": [],
+        "asian_handicap_games_-8_5_games_market": [],
+        "asian_handicap_games_-9_5_games_market": [],
+        "asian_handicap_games_-10_5_games_market": [],
+        "asian_handicap_games_+1_5_games_market": [],
+        "asian_handicap_games_+2_5_games_market": [],
+        "asian_handicap_games_+3_5_games_market": [],
+        "asian_handicap_games_+4_5_games_market": [],
+        "asian_handicap_games_+5_5_games_market": [],
+        "asian_handicap_games_+6_5_games_market": [],
+        "asian_handicap_games_+7_5_games_market": [],
+        "asian_handicap_games_+8_5_games_market": [],
+        "asian_handicap_games_+9_5_games_market": [],
+        "asian_handicap_games_+10_5_games_market": [],
+        "asian_handicap_games_+0_5_games_market": []
+    },
+    {
+        "scraped_date": "2026-01-24 01:19:05 UTC",
+        "match_date": "2024-06-15 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/dallas-mavericks-boston-celtics-6iOfHeYI/",
+        "home_team": "Dallas Mavericks",
+        "away_team": "Boston Celtics",
+        "league_name": "NBA 2023/2024",
+        "home_score": "122",
+        "away_score": "84",
+        "partial_results": "34:21, 27:14, 31:25, 30:24",
+        "venue": "American Airlines Center",
+        "venue_town": "Dallas, TX",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "2.00",
+                "2": "1.83",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-14T19:01:00",
+                                "odds": 2.0
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-12T22:04:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-14T19:01:00",
+                                "odds": 1.83
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-12T22:04:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_205_5_market": [],
+        "over_under_games_206_5_market": [],
+        "over_under_games_207_5_market": [],
+        "over_under_games_208_5_market": [],
+        "over_under_games_209_5_market": [],
+        "over_under_games_210_5_market": [],
+        "over_under_games_211_5_market": [
+            {
+                "odds_over": "1.91",
+                "odds_under": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-12T22:04:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-12T22:04:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-12T22:04:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-12T22:04:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_212_5_market": [],
+        "over_under_games_213_5_market": [],
+        "over_under_games_214_5_market": [],
+        "over_under_games_215_5_market": [],
+        "over_under_games_216_5_market": [],
+        "over_under_games_217_5_market": [],
+        "over_under_games_218_5_market": [],
+        "over_under_games_219_5_market": [],
+        "over_under_games_220_5_market": [],
+        "over_under_games_221_5_market": [],
+        "over_under_games_222_5_market": [],
+        "over_under_games_223_5_market": [],
+        "over_under_games_224_5_market": [],
+        "over_under_games_225_5_market": [],
+        "over_under_games_226_5_market": [],
+        "over_under_games_227_5_market": [],
+        "over_under_games_228_5_market": [],
+        "over_under_games_229_5_market": [],
+        "over_under_games_230_5_market": [],
+        "over_under_games_231_5_market": [],
+        "over_under_games_232_5_market": [],
+        "over_under_games_233_5_market": [],
+        "over_under_games_234_5_market": [],
+        "over_under_games_235_5_market": [],
+        "over_under_games_236_5_market": [],
+        "over_under_games_237_5_market": [],
+        "over_under_games_238_5_market": [],
+        "over_under_games_239_5_market": [],
+        "over_under_games_240_5_market": [],
+        "asian_handicap_games_-1_5_games_market": [],
+        "asian_handicap_games_-2_5_games_market": [],
+        "asian_handicap_games_-3_5_games_market": [],
+        "asian_handicap_games_-4_5_games_market": [],
+        "asian_handicap_games_-5_5_games_market": [],
+        "asian_handicap_games_-6_5_games_market": [],
+        "asian_handicap_games_-7_5_games_market": [],
+        "asian_handicap_games_-8_5_games_market": [],
+        "asian_handicap_games_-9_5_games_market": [],
+        "asian_handicap_games_-10_5_games_market": [],
+        "asian_handicap_games_+1_5_games_market": [],
+        "asian_handicap_games_+2_5_games_market": [],
+        "asian_handicap_games_+3_5_games_market": [],
+        "asian_handicap_games_+4_5_games_market": [],
+        "asian_handicap_games_+5_5_games_market": [],
+        "asian_handicap_games_+6_5_games_market": [],
+        "asian_handicap_games_+7_5_games_market": [],
+        "asian_handicap_games_+8_5_games_market": [],
+        "asian_handicap_games_+9_5_games_market": [],
+        "asian_handicap_games_+10_5_games_market": [],
+        "asian_handicap_games_+0_5_games_market": []
+    },
+    {
+        "scraped_date": "2026-01-24 01:19:03 UTC",
+        "match_date": "2024-06-13 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/dallas-mavericks-boston-celtics-YwQnJH36/",
+        "home_team": "Dallas Mavericks",
+        "away_team": "Boston Celtics",
+        "league_name": "NBA 2023/2024",
+        "home_score": "99",
+        "away_score": "106",
+        "partial_results": "31:30, 20:20, 19:35, 29:21",
+        "venue": "American Airlines Center",
+        "venue_town": "Dallas, TX",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.67",
+                "2": "2.25",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-12T19:27:00",
+                                "odds": 1.67
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-09T21:37:00",
+                            "odds": 1.83
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-12T19:27:00",
+                                "odds": 2.25
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-09T21:37:00",
+                            "odds": 2.0
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_205_5_market": [],
+        "over_under_games_206_5_market": [],
+        "over_under_games_207_5_market": [],
+        "over_under_games_208_5_market": [],
+        "over_under_games_209_5_market": [],
+        "over_under_games_210_5_market": [],
+        "over_under_games_211_5_market": [],
+        "over_under_games_212_5_market": [
+            {
+                "odds_over": "1.91",
+                "odds_under": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-11T21:30:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-09T21:37:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-11T21:30:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-09T21:37:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_213_5_market": [
+            {
+                "odds_over": "1.91",
+                "odds_under": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-12T09:07:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-12T09:07:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-12T09:07:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-12T09:07:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_214_5_market": [
+            {
+                "odds_over": "1.91",
+                "odds_under": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-12T15:29:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-12T15:29:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-12T15:29:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-12T15:29:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_215_5_market": [],
+        "over_under_games_216_5_market": [],
+        "over_under_games_217_5_market": [],
+        "over_under_games_218_5_market": [],
+        "over_under_games_219_5_market": [],
+        "over_under_games_220_5_market": [],
+        "over_under_games_221_5_market": [],
+        "over_under_games_222_5_market": [],
+        "over_under_games_223_5_market": [],
+        "over_under_games_224_5_market": [],
+        "over_under_games_225_5_market": [],
+        "over_under_games_226_5_market": [],
+        "over_under_games_227_5_market": [],
+        "over_under_games_228_5_market": [],
+        "over_under_games_229_5_market": [],
+        "over_under_games_230_5_market": [],
+        "over_under_games_231_5_market": [],
+        "over_under_games_232_5_market": [],
+        "over_under_games_233_5_market": [],
+        "over_under_games_234_5_market": [],
+        "over_under_games_235_5_market": [],
+        "over_under_games_236_5_market": [],
+        "over_under_games_237_5_market": [],
+        "over_under_games_238_5_market": [],
+        "over_under_games_239_5_market": [],
+        "over_under_games_240_5_market": [],
+        "asian_handicap_games_-1_5_games_market": [
+            {
+                "handicap_team_1": "1.87",
+                "handicap_team_2": "1.95",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-10T06:35:00",
+                                "odds": 1.87
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-09T21:37:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-10T06:35:00",
+                                "odds": 1.95
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-09T21:37:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "asian_handicap_games_-2_5_games_market": [
+            {
+                "handicap_team_1": "1.87",
+                "handicap_team_2": "1.95",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-12T19:27:00",
+                                "odds": 1.87
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-11T14:10:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-12T19:27:00",
+                                "odds": 1.95
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-11T14:10:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "asian_handicap_games_-3_5_games_market": [],
+        "asian_handicap_games_-4_5_games_market": [],
+        "asian_handicap_games_-5_5_games_market": [],
+        "asian_handicap_games_-6_5_games_market": [],
+        "asian_handicap_games_-7_5_games_market": [],
+        "asian_handicap_games_-8_5_games_market": [],
+        "asian_handicap_games_-9_5_games_market": [],
+        "asian_handicap_games_-10_5_games_market": [],
+        "asian_handicap_games_+1_5_games_market": [],
+        "asian_handicap_games_+2_5_games_market": [],
+        "asian_handicap_games_+3_5_games_market": [],
+        "asian_handicap_games_+4_5_games_market": [],
+        "asian_handicap_games_+5_5_games_market": [],
+        "asian_handicap_games_+6_5_games_market": [],
+        "asian_handicap_games_+7_5_games_market": [],
+        "asian_handicap_games_+8_5_games_market": [],
+        "asian_handicap_games_+9_5_games_market": [],
+        "asian_handicap_games_+10_5_games_market": [],
+        "asian_handicap_games_+0_5_games_market": []
+    },
+    {
+        "scraped_date": "2026-01-24 01:19:05 UTC",
+        "match_date": "2024-06-10 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-dallas-mavericks-xCWwLwZg/",
+        "home_team": "Boston Celtics",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "105",
+        "away_score": "98",
+        "partial_results": "25:28, 29:23, 29:23, 22:24",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.36",
+                "2": "3.25",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-09T18:28:00",
+                                "odds": 1.36
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T22:00:00",
+                            "odds": 1.37
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-09T15:48:00",
+                                "odds": 3.25
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T22:00:00",
+                            "odds": 3.2
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_205_5_market": [],
+        "over_under_games_206_5_market": [],
+        "over_under_games_207_5_market": [],
+        "over_under_games_208_5_market": [],
+        "over_under_games_209_5_market": [],
+        "over_under_games_210_5_market": [],
+        "over_under_games_211_5_market": [],
+        "over_under_games_212_5_market": [],
+        "over_under_games_213_5_market": [],
+        "over_under_games_214_5_market": [
+            {
+                "odds_over": "1.91",
+                "odds_under": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-08T21:30:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T22:00:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-08T21:30:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T22:00:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_215_5_market": [],
+        "over_under_games_216_5_market": [],
+        "over_under_games_217_5_market": [],
+        "over_under_games_218_5_market": [],
+        "over_under_games_219_5_market": [],
+        "over_under_games_220_5_market": [],
+        "over_under_games_221_5_market": [],
+        "over_under_games_222_5_market": [],
+        "over_under_games_223_5_market": [],
+        "over_under_games_224_5_market": [],
+        "over_under_games_225_5_market": [],
+        "over_under_games_226_5_market": [],
+        "over_under_games_227_5_market": [],
+        "over_under_games_228_5_market": [],
+        "over_under_games_229_5_market": [],
+        "over_under_games_230_5_market": [],
+        "over_under_games_231_5_market": [],
+        "over_under_games_232_5_market": [],
+        "over_under_games_233_5_market": [],
+        "over_under_games_234_5_market": [],
+        "over_under_games_235_5_market": [],
+        "over_under_games_236_5_market": [],
+        "over_under_games_237_5_market": [],
+        "over_under_games_238_5_market": [],
+        "over_under_games_239_5_market": [],
+        "over_under_games_240_5_market": [],
+        "asian_handicap_games_-1_5_games_market": [],
+        "asian_handicap_games_-2_5_games_market": [],
+        "asian_handicap_games_-3_5_games_market": [],
+        "asian_handicap_games_-4_5_games_market": [],
+        "asian_handicap_games_-5_5_games_market": [],
+        "asian_handicap_games_-6_5_games_market": [
+            {
+                "handicap_team_1": "1.87",
+                "handicap_team_2": "1.95",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-09T13:31:00",
+                                "odds": 1.87
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-08T20:30:00",
+                            "odds": 1.87
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-09T13:31:00",
+                                "odds": 1.95
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-08T20:30:00",
+                            "odds": 1.95
+                        }
+                    }
+                ]
+            }
+        ],
+        "asian_handicap_games_-7_5_games_market": [
+            {
+                "handicap_team_1": "1.91",
+                "handicap_team_2": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-06T22:00:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T22:00:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-06T22:00:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T22:00:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "asian_handicap_games_-8_5_games_market": [],
+        "asian_handicap_games_-9_5_games_market": [],
+        "asian_handicap_games_-10_5_games_market": [],
+        "asian_handicap_games_+1_5_games_market": [],
+        "asian_handicap_games_+2_5_games_market": [],
+        "asian_handicap_games_+3_5_games_market": [],
+        "asian_handicap_games_+4_5_games_market": [],
+        "asian_handicap_games_+5_5_games_market": [],
+        "asian_handicap_games_+6_5_games_market": [],
+        "asian_handicap_games_+7_5_games_market": [],
+        "asian_handicap_games_+8_5_games_market": [],
+        "asian_handicap_games_+9_5_games_market": [],
+        "asian_handicap_games_+10_5_games_market": [],
+        "asian_handicap_games_+0_5_games_market": []
+    },
+    {
+        "scraped_date": "2026-01-24 01:19:04 UTC",
+        "match_date": "2024-06-07 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-dallas-mavericks-UoTVMa4s/",
+        "home_team": "Boston Celtics",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "107",
+        "away_score": "89",
+        "partial_results": "37:20, 26:22, 23:24, 21:23",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.41",
+                "2": "3.00",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-06T18:29:00",
+                                "odds": 1.41
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-05-30T23:01:00",
+                            "odds": 1.41
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-06T18:29:00",
+                                "odds": 3.0
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-05-30T23:01:00",
+                            "odds": 3.0
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_205_5_market": [],
+        "over_under_games_206_5_market": [],
+        "over_under_games_207_5_market": [],
+        "over_under_games_208_5_market": [],
+        "over_under_games_209_5_market": [],
+        "over_under_games_210_5_market": [],
+        "over_under_games_211_5_market": [],
+        "over_under_games_212_5_market": [],
+        "over_under_games_213_5_market": [],
+        "over_under_games_214_5_market": [
+            {
+                "odds_over": "1.91",
+                "odds_under": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-04T15:30:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-05-31T00:02:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-04T15:30:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-05-31T00:02:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_215_5_market": [
+            {
+                "odds_over": "1.91",
+                "odds_under": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-06T06:44:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T06:44:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-06T06:44:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T06:44:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_216_5_market": [
+            {
+                "odds_over": "1.91",
+                "odds_under": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-06T11:42:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T11:42:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-06T11:42:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T11:42:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_217_5_market": [
+            {
+                "odds_over": "1.91",
+                "odds_under": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-06T16:18:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T16:18:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-06T16:18:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-06-06T16:18:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "over_under_games_218_5_market": [],
+        "over_under_games_219_5_market": [],
+        "over_under_games_220_5_market": [],
+        "over_under_games_221_5_market": [],
+        "over_under_games_222_5_market": [],
+        "over_under_games_223_5_market": [],
+        "over_under_games_224_5_market": [],
+        "over_under_games_225_5_market": [],
+        "over_under_games_226_5_market": [],
+        "over_under_games_227_5_market": [],
+        "over_under_games_228_5_market": [],
+        "over_under_games_229_5_market": [],
+        "over_under_games_230_5_market": [],
+        "over_under_games_231_5_market": [],
+        "over_under_games_232_5_market": [],
+        "over_under_games_233_5_market": [],
+        "over_under_games_234_5_market": [],
+        "over_under_games_235_5_market": [],
+        "over_under_games_236_5_market": [],
+        "over_under_games_237_5_market": [],
+        "over_under_games_238_5_market": [],
+        "over_under_games_239_5_market": [],
+        "over_under_games_240_5_market": [],
+        "asian_handicap_games_-1_5_games_market": [],
+        "asian_handicap_games_-2_5_games_market": [],
+        "asian_handicap_games_-3_5_games_market": [],
+        "asian_handicap_games_-4_5_games_market": [],
+        "asian_handicap_games_-5_5_games_market": [],
+        "asian_handicap_games_-6_5_games_market": [
+            {
+                "handicap_team_1": "1.91",
+                "handicap_team_2": "1.91",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT",
+                "odds_history_data": [
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-05T10:30:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-05-31T09:45:00",
+                            "odds": 1.91
+                        }
+                    },
+                    {
+                        "odds_history": [
+                            {
+                                "timestamp": "2026-06-05T10:30:00",
+                                "odds": 1.91
+                            }
+                        ],
+                        "opening_odds": {
+                            "timestamp": "2026-05-31T09:45:00",
+                            "odds": 1.91
+                        }
+                    }
+                ]
+            }
+        ],
+        "asian_handicap_games_-7_5_games_market": [],
+        "asian_handicap_games_-8_5_games_market": [],
+        "asian_handicap_games_-9_5_games_market": [],
+        "asian_handicap_games_-10_5_games_market": [],
+        "asian_handicap_games_+1_5_games_market": [],
+        "asian_handicap_games_+2_5_games_market": [],
+        "asian_handicap_games_+3_5_games_market": [],
+        "asian_handicap_games_+4_5_games_market": [],
+        "asian_handicap_games_+5_5_games_market": [],
+        "asian_handicap_games_+6_5_games_market": [],
+        "asian_handicap_games_+7_5_games_market": [],
+        "asian_handicap_games_+8_5_games_market": [],
+        "asian_handicap_games_+9_5_games_market": [],
+        "asian_handicap_games_+10_5_games_market": [],
+        "asian_handicap_games_+0_5_games_market": []
+    }
+]

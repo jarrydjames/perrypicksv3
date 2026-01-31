@@ -1,0 +1,2158 @@
+[
+    {
+        "scraped_date": "2026-01-24 00:57:13 UTC",
+        "match_date": "2024-05-10 23:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/indiana-pacers-new-york-knicks-f1QxKVGl/",
+        "home_team": "Indiana Pacers",
+        "away_team": "New York Knicks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "111",
+        "away_score": "106",
+        "partial_results": "29:20, 34:38, 22:32, 26:16",
+        "venue": "Gainbridge Fieldhouse",
+        "venue_town": "Indianapolis, IN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.33",
+                "2": "3.25",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.33",
+                "2": "3.30",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.36",
+                "2": "3.30",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.36",
+                "2": "3.37",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.35",
+                "2": "3.35",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:57:08 UTC",
+        "match_date": "2024-05-13 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/minnesota-timberwolves-denver-nuggets-lnOqvsp4/",
+        "home_team": "Minnesota Timberwolves",
+        "away_team": "Denver Nuggets",
+        "league_name": "NBA 2023/2024",
+        "home_score": "107",
+        "away_score": "115",
+        "partial_results": "24:29, 25:35, 30:26, 28:25",
+        "venue": "Target Center",
+        "venue_town": "Minneapolis, MN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.53",
+                "2": "2.45",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.56",
+                "2": "2.45",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.56",
+                "2": "2.50",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.58",
+                "2": "2.44",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:57:12 UTC",
+        "match_date": "2024-05-12 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/cleveland-cavaliers-boston-celtics-IsYOCw8E/",
+        "home_team": "Cleveland Cavaliers",
+        "away_team": "Boston Celtics",
+        "league_name": "NBA 2023/2024",
+        "home_score": "93",
+        "away_score": "106",
+        "partial_results": "28:30, 20:27, 21:27, 24:22",
+        "venue": "Rocket Arena",
+        "venue_town": "Cleveland, OH",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "3.55",
+                "2": "1.30",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.50",
+                "2": "1.31",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.50",
+                "2": "1.32",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.57",
+                "2": "1.33",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.50",
+                "2": "1.32",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:57:30 UTC",
+        "match_date": "2024-06-10 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-dallas-mavericks-xCWwLwZg/",
+        "home_team": "Boston Celtics",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "105",
+        "away_score": "98",
+        "partial_results": "25:28, 29:23, 29:23, 22:24",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.33",
+                "2": "3.15",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.43",
+                "2": "2.80",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.36",
+                "2": "3.25",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.40",
+                "2": "3.23",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.36",
+                "2": "3.15",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:57:31 UTC",
+        "match_date": "2024-05-14 01:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/dallas-mavericks-oklahoma-city-thunder-Io2yKiA5/",
+        "home_team": "Dallas Mavericks",
+        "away_team": "Oklahoma City Thunder",
+        "league_name": "NBA 2023/2024",
+        "home_score": "96",
+        "away_score": "100",
+        "partial_results": "30:20, 24:23, 15:22, 27:35",
+        "venue": "American Airlines Center",
+        "venue_town": "Dallas, TX",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.80",
+                "2": "2.00",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.87",
+                "2": "1.97",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.87",
+                "2": "1.95",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.90",
+                "2": "2.06",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.87",
+                "2": "1.97",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:57:34 UTC",
+        "match_date": "2024-05-18 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/indiana-pacers-new-york-knicks-Igzo14wH/",
+        "home_team": "Indiana Pacers",
+        "away_team": "New York Knicks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "116",
+        "away_score": "103",
+        "partial_results": "29:30, 32:21, 27:24, 28:28",
+        "venue": "Gainbridge Fieldhouse",
+        "venue_town": "Indianapolis, IN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.50",
+                "2": "2.60",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.48",
+                "2": "2.63",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.50",
+                "2": "2.65",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.55",
+                "2": "2.65",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:57:51 UTC",
+        "match_date": "2024-05-15 02:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/denver-nuggets-minnesota-timberwolves-n1nnoQCs/",
+        "home_team": "Denver Nuggets",
+        "away_team": "Minnesota Timberwolves",
+        "league_name": "NBA 2023/2024",
+        "home_score": "112",
+        "away_score": "97",
+        "partial_results": "28:26, 22:18, 38:30, 24:23",
+        "venue": "Ball Arena",
+        "venue_town": "Denver, CO",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.50",
+                "2": "2.55",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.51",
+                "2": "2.60",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.54",
+                "2": "2.55",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.54",
+                "2": "2.63",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.53",
+                "2": "2.57",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:57:53 UTC",
+        "match_date": "2024-05-12 19:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/indiana-pacers-new-york-knicks-2RTpI9o1/",
+        "home_team": "Indiana Pacers",
+        "away_team": "New York Knicks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "121",
+        "away_score": "89",
+        "partial_results": "34:14, 35:27, 32:22, 20:26",
+        "venue": "Gainbridge Fieldhouse",
+        "venue_town": "Indianapolis, IN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.40",
+                "2": "2.80",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.42",
+                "2": "2.90",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.42",
+                "2": "2.95",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.46",
+                "2": "2.90",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.44",
+                "2": "2.85",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:57:54 UTC",
+        "match_date": "2024-05-23 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/minnesota-timberwolves-dallas-mavericks-b3x2uIfB/",
+        "home_team": "Minnesota Timberwolves",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "105",
+        "away_score": "108",
+        "partial_results": "33:27, 29:32, 21:23, 22:26",
+        "venue": "Target Center",
+        "venue_town": "Minneapolis, MN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.50",
+                "2": "2.55",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.51",
+                "2": "2.55",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.53",
+                "2": "2.60",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.52",
+                "2": "2.69",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.45",
+                "2": "2.57",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:58:13 UTC",
+        "match_date": "2024-05-04 23:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/denver-nuggets-minnesota-timberwolves-r91INLaN/",
+        "home_team": "Denver Nuggets",
+        "away_team": "Minnesota Timberwolves",
+        "league_name": "NBA 2023/2024",
+        "home_score": "99",
+        "away_score": "106",
+        "partial_results": "25:23, 19:17, 27:33, 28:33",
+        "venue": "Ball Arena",
+        "venue_town": "Denver, CO",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.50",
+                "2": "2.50",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.51",
+                "2": "2.59",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.56",
+                "2": "2.50",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.57",
+                "2": "2.57",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:58:15 UTC",
+        "match_date": "2024-05-16 01:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/oklahoma-city-thunder-dallas-mavericks-jcsNECMt/",
+        "home_team": "Oklahoma City Thunder",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "92",
+        "away_score": "104",
+        "partial_results": "22:24, 22:30, 23:25, 25:25",
+        "venue": "Paycom Center",
+        "venue_town": "Oklahoma, OK",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.50",
+                "2": "2.50",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.51",
+                "2": "2.58",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.53",
+                "2": "2.60",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.53",
+                "2": "2.71",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:58:13 UTC",
+        "match_date": "2024-05-02 02:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/los-angeles-clippers-dallas-mavericks-KKFEp2gM/",
+        "home_team": "Los Angeles Clippers",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "93",
+        "away_score": "123",
+        "partial_results": "24:25, 22:31, 23:33, 24:34",
+        "venue": "Crypto.com Arena",
+        "venue_town": "Los Angeles, CA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "2.20",
+                "2": "1.67",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "2.12",
+                "2": "1.73",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "2.20",
+                "2": "1.71",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "2.27",
+                "2": "1.70",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:58:39 UTC",
+        "match_date": "2024-05-09 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/new-york-knicks-indiana-pacers-CtNDPigR/",
+        "home_team": "New York Knicks",
+        "away_team": "Indiana Pacers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "130",
+        "away_score": "121",
+        "partial_results": "36:36, 27:37, 36:18, 31:30",
+        "venue": "Madison Square Garden",
+        "venue_town": "New York, NY",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.53",
+                "2": "2.45",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.53",
+                "2": "2.50",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.54",
+                "2": "2.55",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.58",
+                "2": "2.59",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.55",
+                "2": "2.51",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:58:35 UTC",
+        "match_date": "2024-05-20 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/denver-nuggets-minnesota-timberwolves-vJHjMg0m/",
+        "home_team": "Denver Nuggets",
+        "away_team": "Minnesota Timberwolves",
+        "league_name": "NBA 2023/2024",
+        "home_score": "90",
+        "away_score": "98",
+        "partial_results": "24:19, 29:19, 14:28, 23:32",
+        "venue": "Ball Arena",
+        "venue_town": "Denver, CO",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.50",
+                "2": "2.55",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.51",
+                "2": "2.60",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.53",
+                "2": "2.60",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.56",
+                "2": "2.61",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:58:41 UTC",
+        "match_date": "2024-06-15 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/dallas-mavericks-boston-celtics-6iOfHeYI/",
+        "home_team": "Dallas Mavericks",
+        "away_team": "Boston Celtics",
+        "league_name": "NBA 2023/2024",
+        "home_score": "122",
+        "away_score": "84",
+        "partial_results": "34:21, 27:14, 31:25, 30:24",
+        "venue": "American Airlines Center",
+        "venue_town": "Dallas, TX",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.95",
+                "2": "1.85",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.93",
+                "2": "1.88",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "2.00",
+                "2": "1.83",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.96",
+                "2": "1.94",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.93",
+                "2": "1.87",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:58:56 UTC",
+        "match_date": "2024-05-05 17:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/cleveland-cavaliers-orlando-magic-EihMmTT9/",
+        "home_team": "Cleveland Cavaliers",
+        "away_team": "Orlando Magic",
+        "league_name": "NBA 2023/2024",
+        "home_score": "106",
+        "away_score": "94",
+        "partial_results": "18:24, 25:29, 33:15, 30:26",
+        "venue": "Rocket Arena",
+        "venue_town": "Cleveland, OH",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.53",
+                "2": "2.40",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.61",
+                "2": "2.34",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.63",
+                "2": "2.35",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:59:00 UTC",
+        "match_date": "2024-05-29 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/dallas-mavericks-minnesota-timberwolves-tQzVri13/",
+        "home_team": "Dallas Mavericks",
+        "away_team": "Minnesota Timberwolves",
+        "league_name": "NBA 2023/2024",
+        "home_score": "100",
+        "away_score": "105",
+        "partial_results": "20:27, 29:22, 24:29, 27:27",
+        "venue": "American Airlines Center",
+        "venue_town": "Dallas, TX",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.80",
+                "2": "2.00",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.85",
+                "2": "1.99",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.80",
+                "2": "2.05",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.89",
+                "2": "2.02",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.81",
+                "2": "1.97",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:58:59 UTC",
+        "match_date": "2024-05-27 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/dallas-mavericks-minnesota-timberwolves-QHhrLm9d/",
+        "home_team": "Dallas Mavericks",
+        "away_team": "Minnesota Timberwolves",
+        "league_name": "NBA 2023/2024",
+        "home_score": "116",
+        "away_score": "107",
+        "partial_results": "33:28, 27:24, 27:35, 29:20",
+        "venue": "American Airlines Center",
+        "venue_town": "Dallas, TX",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.80",
+                "2": "2.00",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.87",
+                "2": "1.96",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.83",
+                "2": "2.00",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.86",
+                "2": "2.04",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.81",
+                "2": "1.97",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:59:24 UTC",
+        "match_date": "2024-05-26 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/indiana-pacers-boston-celtics-IPhoEudC/",
+        "home_team": "Indiana Pacers",
+        "away_team": "Boston Celtics",
+        "league_name": "NBA 2023/2024",
+        "home_score": "111",
+        "away_score": "114",
+        "partial_results": "31:32, 38:25, 21:24, 21:33",
+        "venue": "Gainbridge Fieldhouse",
+        "venue_town": "Indianapolis, IN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "3.25",
+                "2": "1.33",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.30",
+                "2": "1.33",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.30",
+                "2": "1.36",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.40",
+                "2": "1.42",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.15",
+                "2": "1.32",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:59:26 UTC",
+        "match_date": "2024-05-01 01:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/milwaukee-bucks-indiana-pacers-4dTtOD64/",
+        "home_team": "Milwaukee Bucks",
+        "away_team": "Indiana Pacers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "115",
+        "away_score": "92",
+        "partial_results": "23:31, 30:17, 34:19, 28:25",
+        "venue": "Fiserv Forum",
+        "venue_town": "Milwaukee, WI",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "2.65",
+                "2": "1.47",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "2.63",
+                "2": "1.48",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "2.65",
+                "2": "1.50",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "2.41",
+                "2": "1.63",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:59:28 UTC",
+        "match_date": "2024-05-03 23:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/orlando-magic-cleveland-cavaliers-6sXxmCP8/",
+        "home_team": "Orlando Magic",
+        "away_team": "Cleveland Cavaliers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "103",
+        "away_score": "96",
+        "partial_results": "29:25, 24:24, 20:29, 30:18",
+        "venue": "Kia Center",
+        "venue_town": "Orlando, FL",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.53",
+                "2": "2.45",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.53",
+                "2": "2.50",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.54",
+                "2": "2.55",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.60",
+                "2": "2.49",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:59:45 UTC",
+        "match_date": "2024-05-19 19:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/new-york-knicks-indiana-pacers-SfhZgKEt/",
+        "home_team": "New York Knicks",
+        "away_team": "Indiana Pacers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "109",
+        "away_score": "130",
+        "partial_results": "27:39, 28:31, 29:31, 25:29",
+        "venue": "Madison Square Garden",
+        "venue_town": "New York, NY",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.65",
+                "2": "2.25",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.65",
+                "2": "2.30",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.65",
+                "2": "2.30",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.69",
+                "2": "2.38",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:59:46 UTC",
+        "match_date": "2024-05-01 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/cleveland-cavaliers-orlando-magic-AN71LTVG/",
+        "home_team": "Cleveland Cavaliers",
+        "away_team": "Orlando Magic",
+        "league_name": "NBA 2023/2024",
+        "home_score": "104",
+        "away_score": "103",
+        "partial_results": "33:23, 15:24, 27:23, 29:33",
+        "venue": "Rocket Arena",
+        "venue_town": "Cleveland, OH",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.50",
+                "2": "2.50",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.56",
+                "2": "2.45",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.53",
+                "2": "2.60",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.51",
+                "2": "2.71",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 00:59:47 UTC",
+        "match_date": "2024-06-07 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-dallas-mavericks-UoTVMa4s/",
+        "home_team": "Boston Celtics",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "107",
+        "away_score": "89",
+        "partial_results": "37:20, 26:22, 23:24, 21:23",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.40",
+                "2": "2.95",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.48",
+                "2": "2.73",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.41",
+                "2": "3.00",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.42",
+                "2": "3.06",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.40",
+                "2": "2.95",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:00:04 UTC",
+        "match_date": "2024-05-07 02:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/denver-nuggets-minnesota-timberwolves-0QskIaNp/",
+        "home_team": "Denver Nuggets",
+        "away_team": "Minnesota Timberwolves",
+        "league_name": "NBA 2023/2024",
+        "home_score": "80",
+        "away_score": "106",
+        "partial_results": "20:28, 15:33, 25:21, 20:24",
+        "venue": "Ball Arena",
+        "venue_town": "Denver, CO",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.30",
+                "2": "3.35",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.32",
+                "2": "3.40",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.33",
+                "2": "3.40",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.35",
+                "2": "3.30",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:00:06 UTC",
+        "match_date": "2024-04-30 23:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/new-york-knicks-philadelphia-76ers-UoyqUcEl/",
+        "home_team": "New York Knicks",
+        "away_team": "Philadelphia 76ers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "106",
+        "away_score": "112",
+        "partial_results": "17:26, 32:17, 21:26, 27:28, 9:15",
+        "venue": "Madison Square Garden",
+        "venue_town": "New York, NY",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.53",
+                "2": "2.40",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.56",
+                "2": "2.45",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.59",
+                "2": "2.45",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.64",
+                "2": "2.40",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:00:06 UTC",
+        "match_date": "2024-05-13 23:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/cleveland-cavaliers-boston-celtics-vcMXAHxR/",
+        "home_team": "Cleveland Cavaliers",
+        "away_team": "Boston Celtics",
+        "league_name": "NBA 2023/2024",
+        "home_score": "102",
+        "away_score": "109",
+        "partial_results": "30:37, 27:25, 21:26, 24:21",
+        "venue": "Rocket Arena",
+        "venue_town": "Cleveland, OH",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "5.75",
+                "2": "1.13",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "5.50",
+                "2": "1.14",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "6.25",
+                "2": "1.13",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "6.15",
+                "2": "1.14",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.80",
+                "2": "1.28",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:00:28 UTC",
+        "match_date": "2024-05-04 01:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/dallas-mavericks-los-angeles-clippers-bkP5irdd/",
+        "home_team": "Dallas Mavericks",
+        "away_team": "Los Angeles Clippers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "114",
+        "away_score": "101",
+        "partial_results": "34:26, 18:26, 35:20, 27:29",
+        "venue": "American Airlines Center",
+        "venue_town": "Dallas, TX",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.27",
+                "2": "3.70",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.29",
+                "2": "3.70",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.27",
+                "2": "3.90",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:00:26 UTC",
+        "match_date": "2024-04-30 02:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/denver-nuggets-los-angeles-lakers-nRBwQuio/",
+        "home_team": "Denver Nuggets",
+        "away_team": "Los Angeles Lakers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "108",
+        "away_score": "106",
+        "partial_results": "28:24, 22:29, 31:26, 27:27",
+        "venue": "Ball Arena",
+        "venue_town": "Denver, CO",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.36",
+                "2": "3.00",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.40",
+                "2": "3.00",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.40",
+                "2": "3.05",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.37",
+                "2": "3.31",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:00:29 UTC",
+        "match_date": "2024-05-02 22:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/indiana-pacers-milwaukee-bucks-QL0flNVF/",
+        "home_team": "Indiana Pacers",
+        "away_team": "Milwaukee Bucks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "120",
+        "away_score": "98",
+        "partial_results": "33:24, 26:23, 34:31, 27:20",
+        "venue": "Gainbridge Fieldhouse",
+        "venue_town": "Indianapolis, IN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.40",
+                "2": "2.85",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.42",
+                "2": "2.90",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.42",
+                "2": "2.95",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.32",
+                "2": "3.65",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:00:45 UTC",
+        "match_date": "2024-05-31 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/minnesota-timberwolves-dallas-mavericks-2V13yfaE/",
+        "home_team": "Minnesota Timberwolves",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "103",
+        "away_score": "124",
+        "partial_results": "19:35, 21:34, 33:28, 30:27",
+        "venue": "Target Center",
+        "venue_town": "Minneapolis, MN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.50",
+                "2": "2.55",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.51",
+                "2": "2.59",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.50",
+                "2": "2.65",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.51",
+                "2": "2.73",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.47",
+                "2": "2.53",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:00:51 UTC",
+        "match_date": "2024-05-08 01:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/oklahoma-city-thunder-dallas-mavericks-AuuA3WPO/",
+        "home_team": "Oklahoma City Thunder",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "117",
+        "away_score": "95",
+        "partial_results": "23:23, 39:30, 27:26, 28:16",
+        "venue": "Paycom Center",
+        "venue_town": "Oklahoma, OK",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.53",
+                "2": "2.50",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.53",
+                "2": "2.55",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.54",
+                "2": "2.55",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.57",
+                "2": "2.61",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.54",
+                "2": "2.56",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:00:48 UTC",
+        "match_date": "2024-06-18 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-dallas-mavericks-dUhxW4j2/",
+        "home_team": "Boston Celtics",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "106",
+        "away_score": "88",
+        "partial_results": "28:18, 39:28, 19:21, 20:21",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.33",
+                "2": "3.20",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.38",
+                "2": "3.05",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.36",
+                "2": "3.30",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.40",
+                "2": "3.22",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.36",
+                "2": "3.15",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:01:23 UTC",
+        "match_date": "2024-05-09 23:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-cleveland-cavaliers-jytwkzG7/",
+        "home_team": "Boston Celtics",
+        "away_team": "Cleveland Cavaliers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "94",
+        "away_score": "118",
+        "partial_results": "24:30, 30:24, 24:36, 16:28",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.10",
+                "2": "6.70",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.10",
+                "2": "7.00",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.11",
+                "2": "7.00",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.11",
+                "2": "7.57",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.12",
+                "2": "6.75",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:01:11 UTC",
+        "match_date": "2024-05-11 19:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/dallas-mavericks-oklahoma-city-thunder-MJ8SLDug/",
+        "home_team": "Dallas Mavericks",
+        "away_team": "Oklahoma City Thunder",
+        "league_name": "NBA 2023/2024",
+        "home_score": "105",
+        "away_score": "101",
+        "partial_results": "26:23, 25:29, 31:26, 23:23",
+        "venue": "American Airlines Center",
+        "venue_town": "Dallas, TX",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.80",
+                "2": "2.00",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.82",
+                "2": "2.03",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.87",
+                "2": "1.95",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.72",
+                "2": "2.25",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.82",
+                "2": "2.03",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:01:16 UTC",
+        "match_date": "2024-05-11 01:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/minnesota-timberwolves-denver-nuggets-hKUzt3Fi/",
+        "home_team": "Minnesota Timberwolves",
+        "away_team": "Denver Nuggets",
+        "league_name": "NBA 2023/2024",
+        "home_score": "90",
+        "away_score": "117",
+        "partial_results": "20:28, 21:28, 25:37, 24:24",
+        "venue": "Target Center",
+        "venue_town": "Minneapolis, MN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.62",
+                "2": "2.30",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.63",
+                "2": "2.31",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.53",
+                "2": "2.60",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.68",
+                "2": "2.31",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.64",
+                "2": "2.32",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:01:31 UTC",
+        "match_date": "2024-05-01 23:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-miami-heat-repuKinJ/",
+        "home_team": "Boston Celtics",
+        "away_team": "Miami Heat",
+        "league_name": "NBA 2023/2024",
+        "home_score": "118",
+        "away_score": "84",
+        "partial_results": "41:23, 27:23, 30:20, 20:18",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.08",
+                "2": "7.50",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.09",
+                "2": "7.50",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.10",
+                "2": "7.50",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.10",
+                "2": "8.01",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:01:37 UTC",
+        "match_date": "2024-06-13 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/dallas-mavericks-boston-celtics-YwQnJH36/",
+        "home_team": "Dallas Mavericks",
+        "away_team": "Boston Celtics",
+        "league_name": "NBA 2023/2024",
+        "home_score": "99",
+        "away_score": "106",
+        "partial_results": "31:30, 20:20, 19:35, 29:21",
+        "venue": "American Airlines Center",
+        "venue_town": "Dallas, TX",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.66",
+                "2": "2.20",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.65",
+                "2": "2.20",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.67",
+                "2": "2.25",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.70",
+                "2": "2.29",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.68",
+                "2": "2.18",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:01:41 UTC",
+        "match_date": "2024-05-25 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/minnesota-timberwolves-dallas-mavericks-IikzN9vp/",
+        "home_team": "Minnesota Timberwolves",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "108",
+        "away_score": "109",
+        "partial_results": "32:26, 28:22, 26:31, 22:30",
+        "venue": "Target Center",
+        "venue_town": "Minneapolis, MN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.36",
+                "2": "3.00",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.38",
+                "2": "3.05",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.40",
+                "2": "3.05",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.47",
+                "2": "3.11",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.37",
+                "2": "2.85",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:01:49 UTC",
+        "match_date": "2024-05-24 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-indiana-pacers-xGpwG1Ra/",
+        "home_team": "Boston Celtics",
+        "away_team": "Indiana Pacers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "126",
+        "away_score": "110",
+        "partial_results": "25:27, 32:24, 36:29, 33:30",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.25",
+                "2": "3.90",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.25",
+                "2": "4.00",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.26",
+                "2": "4.10",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.27",
+                "2": "4.10",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.24",
+                "2": "3.75",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:01:56 UTC",
+        "match_date": "2024-05-19 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/dallas-mavericks-oklahoma-city-thunder-OQXlFms1/",
+        "home_team": "Dallas Mavericks",
+        "away_team": "Oklahoma City Thunder",
+        "league_name": "NBA 2023/2024",
+        "home_score": "117",
+        "away_score": "116",
+        "partial_results": "23:30, 25:34, 35:26, 34:26",
+        "venue": "American Airlines Center",
+        "venue_town": "Dallas, TX",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.53",
+                "2": "2.45",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.56",
+                "2": "2.45",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.56",
+                "2": "2.50",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.61",
+                "2": "2.46",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:02:00 UTC",
+        "match_date": "2024-05-15 23:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-cleveland-cavaliers-lj28NK5j/",
+        "home_team": "Boston Celtics",
+        "away_team": "Cleveland Cavaliers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "113",
+        "away_score": "98",
+        "partial_results": "28:28, 30:24, 27:26, 28:20",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.06",
+                "2": "9.25",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.05",
+                "2": "10.00",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.06",
+                "2": "10.50",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.06",
+                "2": "11.27",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:02:12 UTC",
+        "match_date": "2024-05-17 00:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/minnesota-timberwolves-denver-nuggets-UDcZnEI6/",
+        "home_team": "Minnesota Timberwolves",
+        "away_team": "Denver Nuggets",
+        "league_name": "NBA 2023/2024",
+        "home_score": "115",
+        "away_score": "70",
+        "partial_results": "31:14, 28:26, 27:21, 29:9",
+        "venue": "Target Center",
+        "venue_town": "Minneapolis, MN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.75",
+                "2": "2.05",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.78",
+                "2": "2.06",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.77",
+                "2": "2.10",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.83",
+                "2": "2.17",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:02:15 UTC",
+        "match_date": "2024-05-28 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/indiana-pacers-boston-celtics-jwigCJQO/",
+        "home_team": "Indiana Pacers",
+        "away_team": "Boston Celtics",
+        "league_name": "NBA 2023/2024",
+        "home_score": "102",
+        "away_score": "105",
+        "partial_results": "27:29, 30:29, 26:22, 19:25",
+        "venue": "Gainbridge Fieldhouse",
+        "venue_town": "Indianapolis, IN",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "3.25",
+                "2": "1.33",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.20",
+                "2": "1.36",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.35",
+                "2": "1.34",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.32",
+                "2": "1.38",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "3.25",
+                "2": "1.30",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:02:22 UTC",
+        "match_date": "2024-05-22 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-indiana-pacers-UksVHNdm/",
+        "home_team": "Boston Celtics",
+        "away_team": "Indiana Pacers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "133",
+        "away_score": "128",
+        "partial_results": "34:31, 30:33, 30:29, 23:24, 16:11",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.22",
+                "2": "4.20",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.22",
+                "2": "4.25",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.24",
+                "2": "4.25",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.25",
+                "2": "4.30",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.20",
+                "2": "4.25",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:02:32 UTC",
+        "match_date": "2024-05-15 00:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/new-york-knicks-indiana-pacers-6kRuDu1b/",
+        "home_team": "New York Knicks",
+        "away_team": "Indiana Pacers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "121",
+        "away_score": "91",
+        "partial_results": "38:32, 31:22, 27:21, 25:16",
+        "venue": "Madison Square Garden",
+        "venue_town": "New York, NY",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.80",
+                "2": "2.00",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.85",
+                "2": "1.98",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.83",
+                "2": "2.00",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.88",
+                "2": "2.06",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.75",
+                "2": "2.13",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:02:34 UTC",
+        "match_date": "2024-05-10 01:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/oklahoma-city-thunder-dallas-mavericks-l6AKNZAt/",
+        "home_team": "Oklahoma City Thunder",
+        "away_team": "Dallas Mavericks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "110",
+        "away_score": "119",
+        "partial_results": "32:36, 30:32, 27:31, 21:20",
+        "venue": "Paycom Center",
+        "venue_town": "Oklahoma, OK",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.50",
+                "2": "2.60",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.48",
+                "2": "2.68",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.50",
+                "2": "2.65",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.53",
+                "2": "2.67",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.52",
+                "2": "2.61",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:02:40 UTC",
+        "match_date": "2024-05-06 23:30:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/new-york-knicks-indiana-pacers-vTO5RDOE/",
+        "home_team": "New York Knicks",
+        "away_team": "Indiana Pacers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "121",
+        "away_score": "117",
+        "partial_results": "27:24, 22:31, 33:32, 39:30",
+        "venue": "Madison Square Garden",
+        "venue_town": "New York, NY",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.40",
+                "2": "2.85",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.40",
+                "2": "3.00",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.41",
+                "2": "3.00",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.44",
+                "2": "2.85",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:02:50 UTC",
+        "match_date": "2024-05-03 01:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/philadelphia-76ers-new-york-knicks-Ua0r3Puo/",
+        "home_team": "Philadelphia 76ers",
+        "away_team": "New York Knicks",
+        "league_name": "NBA 2023/2024",
+        "home_score": "115",
+        "away_score": "118",
+        "partial_results": "22:36, 32:15, 29:32, 32:35",
+        "venue": "Xfinity Mobile Arena",
+        "venue_town": "Philadelphia, PA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.62",
+                "2": "2.30",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.65",
+                "2": "2.27",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.67",
+                "2": "2.25",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.66",
+                "2": "2.35",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            }
+        ]
+    },
+    {
+        "scraped_date": "2026-01-24 01:02:51 UTC",
+        "match_date": "2024-05-07 23:00:00 UTC",
+        "match_link": "https://www.oddsportal.com/basketball/usa/nba-2023-2024/boston-celtics-cleveland-cavaliers-WYPyidoe/",
+        "home_team": "Boston Celtics",
+        "away_team": "Cleveland Cavaliers",
+        "league_name": "NBA 2023/2024",
+        "home_score": "120",
+        "away_score": "95",
+        "partial_results": "40:34, 19:15, 33:28, 28:18",
+        "venue": "TD Garden",
+        "venue_town": "Boston, MA",
+        "venue_country": "USA",
+        "home_away_market": [
+            {
+                "1": "1.11",
+                "2": "6.40",
+                "bookmaker_name": "888sport",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.13",
+                "2": "6.00",
+                "bookmaker_name": "bet-at-home",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.13",
+                "2": "6.50",
+                "bookmaker_name": "bet365.us",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.13",
+                "2": "6.56",
+                "bookmaker_name": "BetInAsia",
+                "period": "FullIncludingOT"
+            },
+            {
+                "1": "1.13",
+                "2": "6.00",
+                "bookmaker_name": "Coins.game",
+                "period": "FullIncludingOT"
+            }
+        ]
+    }
+]

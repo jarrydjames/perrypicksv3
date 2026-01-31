@@ -1,0 +1,19 @@
+{
+  "dataset": "halftime_training_23_24.parquet",
+  "dataset_size": 2796,
+  "num_folds": 11,
+  "test_size": 200,
+  "train_min": 500,
+  "step_size": 200,
+  "metrics": {
+    "total_mae_mean": 1.1829087988042397,
+    "total_mae_std": 1.1957201249957115,
+    "total_rmse_mean": 3.272723294355789,
+    "total_rmse_std": 5.277947354645349,
+    "margin_mae_mean": 0.6375238631281288,
+    "margin_mae_std": 0.20539433179096003,
+    "margin_rmse_mean": 1.2242638728706035,
+    "margin_rmse_std": 0.30358480325224346,
+    "roi_mean": 12.239545454545457
+  }
+}

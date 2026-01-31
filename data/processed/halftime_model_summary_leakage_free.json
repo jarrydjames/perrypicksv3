@@ -1,0 +1,25 @@
+{
+  "dataset": "halftime_training_23_24_leakage_free.parquet",
+  "dataset_size": 2796,
+  "num_folds": 11,
+  "test_size": 200,
+  "train_min": 500,
+  "step_size": 200,
+  "leakage_removed": [
+    "market_total_line",
+    "market_home_spread_line",
+    "market_home_team_total_line",
+    "market_away_team_total_line"
+  ],
+  "metrics": {
+    "total_mae_mean": 1.1792754416104971,
+    "total_mae_std": 1.1920308803398958,
+    "total_rmse_mean": 3.2700220915005604,
+    "total_rmse_std": 5.264009578060069,
+    "margin_mae_mean": 0.6360300866353633,
+    "margin_mae_std": 0.20927340674046188,
+    "margin_rmse_mean": 1.2204550338658438,
+    "margin_rmse_std": 0.30498995345402935,
+    "roi_mean": 12.239545454545457
+  }
+}
