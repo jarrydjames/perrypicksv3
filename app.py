@@ -308,7 +308,7 @@ with st.container():
                     key="pp_game_idx",
                     index=st.session_state.get("pp_game_idx", 0),
                 )
-                st.session_state["pp_game_idx"] = idx
+
                 chosen = games[int(idx)]
 
                 if st.button("Use selected game", width="stretch"):
