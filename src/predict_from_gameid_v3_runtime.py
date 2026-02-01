@@ -236,7 +236,7 @@ def predict_from_game_id(
         q3_home_name = _safe_team_name(home, "Home")
         q3_away_name = _safe_team_name(away, "Away")
         
-        # Build result with comprehensive error handling
+        # Build result with v2-compatible structure (bands80, normal, pred keys)
         result = {
             "game_id": game_id,
             "model_used": "Q3",
@@ -246,6 +246,43 @@ def predict_from_game_id(
             "home_win_prob": pred.home_win_prob,
             "home_name": q3_home_name,
             "away_name": q3_away_name,
+            # V2-compatible: bands80 structure with [q10, q90] intervals
+            "bands80": {
+                "final_total": [pred.total_q10, pred.total_q90],
+                "final_margin": [pred.margin_q10, pred.margin_q90],
+                "final_home": [pred.total_q10 - (pred.total_mean - pred.margin_mean) / 2, 
+                              pred.total_q90 - (pred.total_mean - pred.margin_mean) / 2],
+                "final_away": [pred.total_q10 + (pred.total_mean - pred.margin_mean) / 2, 
+                              pred.total_q90 + (pred.total_mean - pred.margin_mean) / 2],
+            },
+            # V2-compatible: normal structure with [q10, q90] intervals
+            "normal": {
+                "final_total": [pred.total_q10, pred.total_q90],
+                "final_margin": [pred.margin_q10, pred.margin_q90],
+            },
+            # V2-compatible: pred structure with mean predictions
+            "h1_home": int(h1_home),
+            "h1_home": int(h1_home),
+            "h1_away": int(h1_away),
+            "current_home": q3_home,
+            "current_away": q3_away,
+            "elapsed_since_halftime_seconds": 0,  # Q3 prediction assumes end of Q3
+            "text": f"Q3 Prediction: {q3_away_name} @ {q3_home_name}\nQ3 Score: {q3_home} - {q3_away}\nFinal Total: {pred.total_mean:.1f}\nFinal Margin: {pred.margin_mean:.1f}",
+            "labels": {
+                "total": f"q3_model(sd={pred.total_sd:.2f})",
+                "margin": f"q3_model(sd={pred.margin_sd:.2f})",
+            },
+            "_live": {
+                "game_poss_2h": 0.0,  # Q3 model doesn't track live possessions
+            },
+            # V2-compatible: pred structure with mean predictions
+            "pred": {
+                "pred_2h_total": pred.total_mean - (q3_home + q3_away),
+                "pred_2h_margin": pred.margin_mean - (q3_home - q3_away),
+                "pred_final_home": pred.total_mean / 2 + pred.margin_mean / 2,
+                "pred_final_away": pred.total_mean / 2 - pred.margin_mean / 2,
+            },
+            # Keep original structure for reference
             "margin": {
                 "mu": pred.margin_mean,
                 "sd": pred.margin_sd,
