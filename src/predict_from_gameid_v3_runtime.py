@@ -130,7 +130,7 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             except Exception as e:
                 # If PBP fails, fall back to halftime model
                 import logging
-                logging.warning(f"PBP fetch failed for {game_id}: {e}")
+                logging.warning(f"PBP fetch failed for {game_input}: {e}")
                 result = predict_halftime(game_input)
                 result["model_used"] = "HALFTIME_PBP_ERROR"
                 return result
@@ -185,6 +185,7 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             q3_model = get_q3_model()
             
             # For now, assume end-of-Q3 (period=4, clock=12:00)
+            # TODO: Dynamically fetch current period/clock from live data
             pred = q3_model.predict(
                 features=features,  # Only features that models need!
                 period=4,
@@ -247,7 +248,7 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             
         except requests.HTTPError as e:
             # If NBA.com API fails (403/429), fall back to halftime model
-            logger.warning(f"NBA.com API failed for {game_id}: {e}")
+            logger.warning(f"NBA.com API failed for {game_input}: {e}")
             result = predict_halftime(game_input)
             result["model_used"] = "HALFTIME_API_ERROR"
             result["api_error"] = f"NBA.com API error: {e}"
