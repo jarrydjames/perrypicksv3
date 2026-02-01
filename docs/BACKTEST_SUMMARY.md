@@ -1,7 +1,8 @@
 # Perry Picks v3 - Backtest Results Summary
 
 **Generated:** 2025-01-31  
-**Commit:** 6c49f61
+**Latest Update:** 2025-01-31 (Complete Pregame backtest with Total + Margin)  
+**Commit:** f8c1842
 
 ## Overview
 
@@ -40,29 +41,11 @@ This document provides a comprehensive summary of backtesting results for all Pe
 | **Worst Fold ROI** | 11.19% |
 | **Positive ROI Folds** | 11/11 (100%) |
 
-### Fold-by-Fold Breakdown
-
-| Fold | Margin MAE | Margin RMSE | ROI |
-|------|-------------|-------------|-----|
-| 1 | 1.128 | 1.877 | 13.02% |
-| 2 | 0.806 | 1.353 | 11.66% |
-| 3 | 0.825 | 1.463 | 12.33% |
-| 4 | 0.653 | 1.207 | 12.34% |
-| 5 | 0.480 | 0.846 | 11.76% |
-| 6 | 0.498 | 0.841 | 11.22% |
-| 7 | 0.505 | 1.128 | 11.81% |
-| 8 | 0.651 | 1.433 | 13.22% |
-| 9 | 0.509 | 1.216 | 11.19% |
-| 10 | 0.469 | 1.105 | 12.99% |
-| 11 | 0.472 | 0.955 | 13.10% |
-
-**Average:** MAE=0.636, RMSE=1.220, ROI=12.24%
-
 ---
 
 ## 2. Pregame Backtest Results
 
-**Dataset:** `data/processed/pregame_backtest_results.parquet`  
+**Dataset:** `data/processed/pregame_backtest_results_complete.parquet`  
 **Folds:** 15  
 **Game State:** Before game → End of game (final predictions)
 
@@ -70,38 +53,39 @@ This document provides a comprehensive summary of backtesting results for all Pe
 
 | Target | MAE | RMSE | Std Dev | Rating |
 |---------|------|------|---------|---------|
+| **Total** | 3.639 | 4.563 | ±0.414 | GOOD |
 | **Margin** | 3.421 | 4.286 | ±0.257 | GOOD |
 
 ### Betting Performance
 
 | Metric | Value |
 |--------|-------|
-| **Average ROI** | 84.53% |
-| **Best Fold ROI** | 92.00% |
-| **Worst Fold ROI** | 74.00% |
+| **Average ROI** | 84.5% |
+| **Best Fold ROI** | 92.0% |
+| **Worst Fold ROI** | 74.0% |
 | **Positive ROI Folds** | 15/15 (100%) |
 
 ### Fold-by-Fold Breakdown
 
-| Fold | Margin MAE | Margin RMSE | ROI |
+| Fold | Total MAE | Margin MAE | ROI |
 |------|-------------|-------------|-----|
-| 1 | 4.050 | 5.152 | 74.00% |
-| 2 | 3.773 | 4.740 | 85.00% |
-| 3 | 3.409 | 4.268 | 92.00% |
-| 4 | 3.409 | 4.269 | 86.00% |
-| 5 | 3.533 | 4.351 | 79.00% |
-| 6 | 3.644 | 4.534 | 81.00% |
-| 7 | 3.311 | 4.159 | 85.00% |
-| 8 | 3.216 | 4.031 | 86.00% |
-| 9 | 3.508 | 4.361 | 88.00% |
-| 10 | 3.285 | 4.023 | 89.00% |
-| 11 | 3.335 | 4.207 | 76.00% |
-| 12 | 3.409 | 4.175 | 84.00% |
-| 13 | 3.018 | 3.810 | 89.00% |
-| 14 | 3.212 | 4.046 | 86.00% |
-| 15 | 3.198 | 4.159 | 88.00% |
+| 1 | 4.607 | 4.050 | 74.0% |
+| 2 | 4.405 | 3.773 | 85.0% |
+| 3 | 3.838 | 3.409 | 92.0% |
+| 4 | 3.893 | 3.409 | 86.0% |
+| 5 | 3.465 | 3.533 | 79.0% |
+| 6 | 3.476 | 3.644 | 81.0% |
+| 7 | 3.044 | 3.311 | 85.0% |
+| 8 | 3.446 | 3.216 | 86.0% |
+| 9 | 3.594 | 3.508 | 88.0% |
+| 10 | 3.418 | 3.285 | 89.0% |
+| 11 | 3.463 | 3.335 | 76.0% |
+| 12 | 3.484 | 3.409 | 84.0% |
+| 13 | 3.730 | 3.018 | 89.0% |
+| 14 | 3.525 | 3.212 | 86.0% |
+| 15 | 3.193 | 3.198 | 88.0% |
 
-**Average:** MAE=3.421, RMSE=4.286, ROI=84.53%
+**Average:** Total MAE=3.639, Margin MAE=3.421, ROI=84.5%
 
 ---
 
@@ -135,7 +119,7 @@ This document provides a comprehensive summary of backtesting results for all Pe
 
 | Metric | Halftime | Pregame | Q3 | Best |
 |--------|----------|---------|-----|------|
-| **Total MAE** | 1.179 | N/A | 5.562 | **Halftime** |
+| **Total MAE** | 1.179 | **3.639** | 5.562 | **Halftime** |
 | **Margin MAE** | 0.636 | 3.421 | 5.968 | **Halftime** |
 
 ### ROI Comparison (Higher is Better)
@@ -157,6 +141,7 @@ This document provides a comprehensive summary of backtesting results for all Pe
 | Game State | CV MAE | Backtest MAE | Difference | Stability |
 |------------|---------|--------------|------------|------------|
 | **Halftime** | 11.228 | 1.179 | -10.049 | EXCELLENT |
+| **Pregame** | 3.508 | 3.639 | +0.131 | EXCELLENT |
 | **Q3** | 6.549 | 5.562 | -0.988 | GOOD |
 
 ### MARGIN Target
@@ -177,6 +162,7 @@ This document provides a comprehensive summary of backtesting results for all Pe
 |---------|-----|---------|------|--------|
 | **Halftime Total** | 1.179 | 1.192 | 101.1% | HIGH |
 | **Halftime Margin** | 0.636 | 0.209 | 32.9% | HIGH |
+| **Pregame Total** | 3.639 | 0.414 | 11.4% | GOOD |
 | **Pregame Margin** | 3.421 | 0.257 | 7.5% | GOOD |
 | **Q3 Total** | 5.562 | 0.375 | 6.7% | GOOD |
 | **Q3 Margin** | 5.968 | 0.250 | 4.2% | EXCELLENT |
@@ -191,10 +177,11 @@ This document provides a comprehensive summary of backtesting results for all Pe
 - 100% positive ROI folds (11/11)
 - **Status:** PRODUCTION READY
 
-### 2. Pregame: Strong Consistency
-- **Only 2.4% difference** between CV (3.34) and backtest (3.42)
+### 2. Pregame: Strong Consistency for Both Targets
+- **Total:** Only 3.7% difference between CV (3.51) and backtest (3.64)
+- **Margin:** Only 2.4% difference between CV (3.34) and backtest (3.42)
 - **Best ROI performer:** 84.5% average ROI
-- Extremely stable: CV = 7.5% (coefficient of variation)
+- Extremely stable: Total CV = 11.4%, Margin CV = 7.5%
 - All 15 folds positive ROI (74-92%)
 - **Status:** PRODUCTION READY
 
@@ -207,9 +194,9 @@ This document provides a comprehensive summary of backtesting results for all Pe
 
 ### 4. Stability Across Folds
 - Most metrics show CV < 10%
-- **Pregame margin** is most stable (CV = 7.5%)
-- **Q3 margin** is excellent (CV = 4.2%)
-- **Halftime margin** has high CV (33%) but very low MAE
+- **Q3 margin** is most stable (CV = 4.2%)
+- **Pregame margin** is very stable (CV = 7.5%)
+- **Pregame total** is stable (CV = 11.4%)
 
 ---
 
@@ -219,6 +206,7 @@ This document provides a comprehensive summary of backtesting results for all Pe
 |-------|--------------|---------|-----|-----------|---------|
 | **Halftime Total** | 1.18 | 11.23 | — | HIGH | READY |
 | **Halftime Margin** | 0.64 | 9.20 | 12.24% | HIGH | READY |
+| **Pregame Total** | 3.64 | 3.51 | — | GOOD | READY |
 | **Pregame Margin** | 3.42 | 3.34 | 84.53% | GOOD | READY |
 | **Q3 Total** | 5.56 | 6.55 | — | GOOD | READY |
 | **Q3 Margin** | 5.97 | 3.88 | 7.26% | EXCELLENT | CAUTION |
@@ -236,7 +224,7 @@ This document provides a comprehensive summary of backtesting results for all Pe
 
 | Metric | Halftime | Pregame | Q3 | Winner |
 |--------|----------|---------|-----|---------|
-| **Total MAE** | 1.18 | — | 5.56 | Halftime |
+| **Total MAE** | 1.18 | 3.64 | 5.56 | Halftime |
 | **Margin MAE** | 0.64 | 3.42 | 5.97 | Halftime |
 | **Average ROI** | 12.24% | 84.53% | 7.26% | Pregame |
 | **Stability** | HIGH | GOOD | GOOD | Q3 (margin) |
@@ -246,4 +234,4 @@ This document provides a comprehensive summary of backtesting results for all Pe
 
 **Lowest Error:** Halftime Margin (MAE: 0.64, RMSE: 1.22)
 
-**Production Ready:** Halftime (both targets), Pregame (margin)
+**Production Ready:** Halftime (both targets), Pregame (both targets)
