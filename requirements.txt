@@ -1,4 +1,4 @@
-streamlit
+-e streamlit
 requests
 pandas
 numpy
@@ -8,3 +8,4 @@ pyarrow
 streamlit-autorefresh
 pypdf
 pytz
+nba_api
