@@ -123,9 +123,14 @@ def extract_q3_row(gid: str) -> dict:
     for k, v in at.items():
         row[f"away_{k}"] = v
     
-    # Add final labels (game outcomes - same as halftime)
-    final_home = sum_first2(home.get("periods"))
-    final_away = sum_first2(away.get("periods"))
+    # Add final labels (game outcomes - FINAL GAME SCORE, not halftime)
+    # Import final_score_from_box to get actual final game scores
+    from src.build_dataset_team_v2 import final_score_from_box
+    
+    fin = final_score_from_box(game)
+    if fin is None:
+        raise ValueError(f"Missing final score for game {gid}")
+    final_home, final_away = fin
     
     row["total"] = final_home + final_away
     row["margin"] = final_home - final_away
