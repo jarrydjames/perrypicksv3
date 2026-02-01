@@ -21,6 +21,7 @@ from src.modeling.q3_model import Q3Model, get_q3_model, Q3Prediction
 
 # Feature extraction from game data (v2)
 from src.predict_from_gameid_v2 import (
+    extract_game_id,
     first_half_score,
     behavior_counts_1h,
     team_totals_from_box_team,
@@ -84,10 +85,16 @@ def behavior_counts_q3(pbp) -> dict:
     }
 
 def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, Any]:
-    """Predict game outcome from NBA.com game ID."""
+    """Predict game outcome from NBA.com game ID or URL."""
     import joblib
     import logging
     logger = logging.getLogger(__name__)
+    
+    # Extract game ID from input (handles URLs like https://www.nba.com/game/nyk-vs-por-0022500551)
+    try:
+        gid = extract_game_id(game_input)
+    except ValueError as e:
+        raise ValueError(f"Invalid game input '{game_input}': {e}")
     
     # Load halftime and Q3 models once
     q3_model = get_q3_model()
@@ -101,158 +108,163 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
         import json
         from src.data.scoreboard import fetch_scoreboard
         
-        # Try to get scoreboard data
+        # Try to fetch game data (will return None on 403 errors)
+        from src.data.game_data import fetch_game_by_id
+        game = fetch_game_by_id(gid)
+        
+        if not game:
+            # Game not found or API error (403/429)
+            # Fall back to halftime model
+            import logging
+            logging.warning(f"Game not found or API error for {gid}, falling back to halftime prediction")
+            result = predict_halftime(gid)
+            result["model_used"] = "HALFTIME_FALLBACK_API_ERROR"
+            return result
+        
+        # Check if we have Q3 data (periods 1-3)
+        home_periods = (game.get("homeTeam", {}) or {}).get("periods", [])
+        away_periods = (game.get("awayTeam", {}) or {}).get("periods", [])
+        
+        has_q3_data = any(
+            isinstance(p, dict) and 1 <= int(float(p.get("period", 0))) <= 3
+            for p in (home_periods or []) + (away_periods or [])
+        )
+        
+        if not has_q3_data:
+            # Fall back to halftime model
+            result = predict_halftime(gid)
+            result["model_used"] = "HALFTIME_NO_Q3_DATA"
+            return result
+        
+        # Fetch PBP data for Q3 features
         try:
-            from src.data.game_data import fetch_game_by_id
-            game = fetch_game_by_id(game_input)
-            
-            if not game:
-                raise ValueError(f"Game not found: {game_input}")
-            
-            # Check if we have Q3 data (periods 1-3)
-            home_periods = (game.get("homeTeam", {}) or {}).get("periods", [])
-            away_periods = (game.get("awayTeam", {}) or {}).get("periods", [])
-            
-            has_q3_data = any(
-                isinstance(p, dict) and 1 <= int(float(p.get("period", 0))) <= 3
-                for p in (home_periods or []) + (away_periods or [])
-            )
-            
-            if not has_q3_data:
-                # Fall back to halftime model
-                result = predict_halftime(game_input)
-                result["model_used"] = "HALFTIME_NO_Q3_DATA"
-                return result
-            
-            # Fetch PBP data for Q3 features
+            pbp = fetch_pbp_df(gid)
+        except Exception as e:
+            # If PBP fails, fall back to halftime model
+            import logging
+            logging.warning(f"PBP fetch failed for {gid}: {e}")
+            result = predict_halftime(gid)
+            result["model_used"] = "HALFTIME_PBP_ERROR"
+            return result
+        
+        # Extract team info
+        home = game.get("homeTeam", {}) or {}
+        away = game.get("awayTeam", {}) or {}
+        
+        if not home or not away:
+            raise ValueError(f"Invalid game data: Missing team information for game {gid}")
+        
+        # Get tri-codes
+        home_tri = home.get("teamTricode", "HOME")
+        away_tri = away.get("teamTricode", "AWAY")
+        
+        # Get full names
+        home_name = home.get("teamName", home_tri)
+        away_name = away.get("teamName", away_tri)
+        
+        # Extract Q3 scores
+        q3_home, q3_away = third_quarter_score(game)
+        
+        # Extract possession/PPP features
+        poss_features = game_possessions_first_half(pbp.to_dict("records"), home_tri=home_tri, away_tri=away_tri)
+        
+        # Extract team stats from box score
+        ht = team_totals_from_box_team(home)
+        at = team_totals_from_box_team(away)
+        
+        # Build ONLY features that models actually need
+        # Don't add H1, H1 behavior, or market line features!
+        q3_behavior = behavior_counts_q3(pbp)
+        
+        # Add team efficiency features (needed by both models)
+        features = add_rate_features(ht, at, base_features={})
+        
+        # Add Q3-specific features
+        features["q3_home"] = q3_home
+        features["q3_away"] = q3_away
+        features["q3_total"] = q3_home + q3_away
+        features["q3_margin"] = q3_home - q3_away
+        features["q3_events"] = q3_behavior["q3_events"]
+        features["q3_n_2pt"] = q3_behavior["q3_n_2pt"]
+        features["q3_n_3pt"] = q3_behavior["q3_n_3pt"]
+        features["q3_n_turnover"] = q3_behavior["q3_n_turnover"]
+        features["q3_n_rebound"] = q3_behavior["q3_n_rebound"]
+        features["q3_n_foul"] = q3_behavior["q3_n_foul"]
+        features["q3_n_timeout"] = q3_behavior["q3_n_timeout"]
+        features["q3_n_sub"] = q3_behavior["q3_n_sub"]
+        
+        # Get Q3 model and predict
+        q3_model = get_q3_model()
+        
+        # For now, assume end-of-Q3 (period=4, clock=12:00)
+        # TODO: Dynamically fetch current period/clock from live data
+        pred = q3_model.predict(
+            features=features,  # Only features that models need!
+            period=4,
+            clock="PT12M00.00S",
+            game_id=gid,
+        )
+        
+        if pred is None:
+            # Fallback to halftime if Q3 model not loaded
+            result = predict_halftime(gid)
+            result["model_used"] = "HALFTIME_FALLBACK"
+            return result
+        
+        # Build result dict (same structure as halftime)
+        result = {
+            "game_id": gid,
+            "home_name": home_name,
+            "away_name": away_name,
+            "period": 4,
+            "clock": "PT12M00.00S",
+            "home_score": q3_home,
+            "away_score": q3_away,
+            "margin": pred.margin_mean,
+            "total": pred.total_mean,
+            "margin_q10": pred.margin_q10,
+            "margin_q90": pred.margin_q90,
+            "total_q10": pred.total_q10,
+            "total_q90": pred.total_q90,
+            "home_win_prob": pred.home_win_prob,
+            "margin_sd": pred.margin_sd,
+            "total_sd": pred.total_sd,
+            "model_used": "Q3",
+            "model_name": pred.model_name,
+            "feature_version": pred.feature_version,
+        }
+        
+        # Fetch odds if requested
+        if fetch_odds:
             try:
-                pbp = fetch_pbp_df(game_input)
-            except Exception as e:
-                # If PBP fails, fall back to halftime model
-                import logging
-                logging.warning(f"PBP fetch failed for {game_input}: {e}")
-                result = predict_halftime(game_input)
-                result["model_used"] = "HALFTIME_PBP_ERROR"
-                return result
-            
-            # Extract team info
-            home = game.get("homeTeam", {}) or {}
-            away = game.get("awayTeam", {}) or {}
-            
-            if not home or not away:
-                raise ValueError(f"Invalid game data: Missing team information for game {game_input}")
-            
-            # Get tri-codes
-            home_tri = home.get("teamTricode", "HOME")
-            away_tri = away.get("teamTricode", "AWAY")
-            
-            # Get full names
-            home_name = home.get("teamName", home_tri)
-            away_name = away.get("teamName", away_tri)
-            
-            # Extract Q3 scores
-            q3_home, q3_away = third_quarter_score(game)
-            
-            # Extract possession/PPP features
-            poss_features = game_possessions_first_half(pbp.to_dict("records"), home_tri=home_tri, away_tri=away_tri)
-            
-            # Extract team stats from box score
-            ht = team_totals_from_box_team(home)
-            at = team_totals_from_box_team(away)
-            
-            # Build ONLY the features that models actually need
-            # Don't add H1, H1 behavior, or market line features!
-            q3_behavior = behavior_counts_q3(pbp)
-            
-            # Add team efficiency features (needed by both models)
-            features = add_rate_features(ht, at, base_features={})
-            
-            # Add Q3-specific features
-            features["q3_home"] = q3_home
-            features["q3_away"] = q3_away
-            features["q3_total"] = q3_home + q3_away
-            features["q3_margin"] = q3_home - q3_away
-            features["q3_events"] = q3_behavior["q3_events"]
-            features["q3_n_2pt"] = q3_behavior["q3_n_2pt"]
-            features["q3_n_3pt"] = q3_behavior["q3_n_3pt"]
-            features["q3_n_turnover"] = q3_behavior["q3_n_turnover"]
-            features["q3_n_rebound"] = q3_behavior["q3_n_rebound"]
-            features["q3_n_foul"] = q3_behavior["q3_n_foul"]
-            features["q3_n_timeout"] = q3_behavior["q3_n_timeout"]
-            features["q3_n_sub"] = q3_behavior["q3_n_sub"]
-            
-            # Get Q3 model and predict
-            q3_model = get_q3_model()
-            
-            # For now, assume end-of-Q3 (period=4, clock=12:00)
-            # TODO: Dynamically fetch current period/clock from live data
-            pred = q3_model.predict(
-                features=features,  # Only features that models need!
-                period=4,
-                clock="PT12M00.00S",
-                game_id=game_input,
-            )
-            
-            if pred is None:
-                # Fallback to halftime if Q3 model not loaded
-                result = predict_halftime(game_input)
-                result["model_used"] = "HALFTIME_FALLBACK"
-                return result
-            
-            # Build result dict (same structure as halftime)
-            result = {
-                "game_id": game_input,
-                "home_name": home_name,
-                "away_name": away_name,
-                "period": 4,
-                "clock": "PT12M00.00S",
-                "home_score": q3_home,
-                "away_score": q3_away,
-                "margin": pred.margin_mean,
-                "total": pred.total_mean,
-                "margin_q10": pred.margin_q10,
-                "margin_q90": pred.margin_q90,
-                "total_q10": pred.total_q10,
-                "total_q90": pred.total_q90,
-                "home_win_prob": pred.home_win_prob,
-                "margin_sd": pred.margin_sd,
-                "total_sd": pred.total_sd,
-                "model_used": "Q3",
-                "model_name": pred.model_name,
-                "feature_version": pred.feature_version,
-            }
-            
-            # Fetch odds if requested
-            if fetch_odds:
-                try:
-                    # Use persistent cache to avoid repeated API calls
-                    cache = PersistentOddsCache()
-                    odds_snapshot = cache.get_or_fetch(home_name, away_name)
-                    
-                    if odds_snapshot:
-                        result.update({
-                            "odds_home_ml": odds_snapshot.home_moneyline,
-                            "odds_away_ml": odds_snapshot.away_moneyline,
-                            "odds_total_line": odds_snapshot.total_line,
-                            "odds_total_over": odds_snapshot.total_over_odds,
-                            "odds_total_under": odds_snapshot.total_under_odds,
-                            "odds_spread_home_line": odds_snapshot.spread_home_line,
-                            "odds_spread_home": odds_snapshot.spread_home_odds,
-                            "odds_spread_away": odds_snapshot.spread_away_odds,
-                        })
-                except OddsAPIError as e:
-                    logger.warning(f"Odds API error: {e}")
-                    result["odds_error"] = str(e)
-            
-            return result
-            
-        except requests.HTTPError as e:
-            # If NBA.com API fails (403/429), fall back to halftime model
-            logger.warning(f"NBA.com API failed for {game_input}: {e}")
-            result = predict_halftime(game_input)
-            result["model_used"] = "HALFTIME_API_ERROR"
-            result["api_error"] = f"NBA.com API error: {e}"
-            return result
+                # Use persistent cache to avoid repeated API calls
+                cache = PersistentOddsCache()
+                odds_snapshot = cache.get_or_fetch(home_name, away_name)
+                
+                if odds_snapshot:
+                    result.update({
+                        "odds_home_ml": odds_snapshot.home_moneyline,
+                        "odds_away_ml": odds_snapshot.away_moneyline,
+                        "odds_total_line": odds_snapshot.total_line,
+                        "odds_total_over": odds_snapshot.total_over_odds,
+                        "odds_total_under": odds_snapshot.total_under_odds,
+                        "odds_spread_home_line": odds_snapshot.spread_home_line,
+                        "odds_spread_home": odds_snapshot.spread_home_odds,
+                        "odds_spread_away": odds_snapshot.spread_away_odds,
+                    })
+            except OddsAPIError as e:
+                logger.warning(f"Odds API error: {e}")
+                result["odds_error"] = str(e)
+        
+        return result
+        
+    except requests.HTTPError as e:
+        # If NBA.com API fails (403/429), fall back to halftime model
+        logger.warning(f"NBA.com API failed for {gid}: {e}")
+        result = predict_halftime(gid)
+        result["model_used"] = "HALFTIME_API_ERROR"
+        result["api_error"] = f"NBA.com API error: {e}"
+        return result
         
     except Exception as e:
         # General error handling
