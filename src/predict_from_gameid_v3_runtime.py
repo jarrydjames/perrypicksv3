@@ -277,10 +277,12 @@ def predict_from_game_id(
             },
             # V2-compatible: pred structure with mean predictions
             "pred": {
+                # 2H predictions: what each team scores in 2nd half
                 "pred_2h_total": pred.total_mean - (q3_home + q3_away),
                 "pred_2h_margin": pred.margin_mean - (q3_home - q3_away),
-                "pred_final_home": pred.total_mean / 2 + pred.margin_mean / 2,
-                "pred_final_away": pred.total_mean / 2 - pred.margin_mean / 2,
+                # Final predictions: current Q3 score + predicted 2nd half
+                "pred_final_home": q3_home + (pred.total_mean - (q3_home + q3_away)) / 2,
+                "pred_final_away": q3_away + (pred.total_mean - (q3_home + q3_away)) / 2,
             },
             # Keep original structure for reference
             "margin": {
