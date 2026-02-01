@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict
-import requests, Tuple
+from typing import Any, Dict, Tuple
+import requests
 import math
 
 import pandas as pd  # required by predict_from_gameid_v2 helpers
