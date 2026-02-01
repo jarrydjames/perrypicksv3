@@ -14,7 +14,7 @@ from tqdm import tqdm
 # Import Q3 builder functions
 from src.build_dataset_q3 import extract_q3_row
 
-TARGET_GAMES = 2000
+TARGET_GAMES = 4000
 BATCH_SIZE = 100
 
 def run_batch():
@@ -29,7 +29,7 @@ def run_batch():
         existing_games = set()
     
     # Load all available game IDs
-    with open('data/processed/game_ids_from_box_cache.json', 'r') as f:
+    with open('data/processed/game_ids_3_seasons.json', 'r') as f:
         games = json.load(f)
     
     game_ids = [g['gameId'] for g in games if 'gameId' in g]

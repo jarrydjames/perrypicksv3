@@ -130,9 +130,9 @@ def build_pregame_dataset(
 
 def main() -> None:
     """CLI entry point for building pregame dataset."""
-    from src.build_dataset_v2 import SCHED_PATH
+    # SCHED_PATH = "data/processed/game_ids_3_seasons.json"  # 3 seasons combined
     
-    with open(SCHED_PATH, "r") as f:
+    with open("data/processed/game_ids_3_seasons.json", "r") as f:
         sched = json.load(f)
     
     # Only completed games (need final scores for training)

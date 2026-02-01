@@ -5065,7 +5065,7 @@
     "gameDate": "2026-02-01T01:00:00Z",
     "homeTeam": "MIA",
     "awayTeam": "CHI",
-    "gameStatus": 1
+    "gameStatus": 2
   },
   {
     "gameId": "0022500697",
@@ -5093,14 +5093,14 @@
     "gameDate": "2026-02-01T01:00:00Z",
     "homeTeam": "MEM",
     "awayTeam": "MIN",
-    "gameStatus": 1
+    "gameStatus": 2
   },
   {
     "gameId": "0022500701",
     "gameDate": "2026-02-01T01:30:00Z",
     "homeTeam": "HOU",
     "awayTeam": "DAL",
-    "gameStatus": 1
+    "gameStatus": 2
   },
   {
     "gameId": "0022500702",

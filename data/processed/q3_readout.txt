@@ -1,0 +1,46 @@
+======================================================================
+Q3 MODEL BACKTEST READOUT
+======================================================================
+Timestamp: 2026-01-31 20:27:08
+
+DATASET SUMMARY
+----------------------------------------------------------------------
+Total games: 2000
+Features (22): q3_home, q3_away, q3_total, q3_margin, q3_events...
+Targets: total, margin
+
+CROSS-VALIDATION RESULTS
+----------------------------------------------------------------------
+Folds: 6
+
+TOTAL TARGET:
+
+  Model           | MAE (test)    | RMSE (test)   | R² (test)
+  --------------------------------------------------------------------
+  Ridge           |  6.549         |  9.275        | 0.7699
+  Random Forest   |  7.522         | 10.034        | 0.7400
+  GBT             |  6.895         |  9.242        | 0.7792
+
+  DIEBOLD-MARIANO TEST (Ridge as baseline):
+  Ridge vs RF:   DM=-3.174,  P-value=8.09e-02
+  Ridge vs GBT:  DM=-1.317,  P-value=3.08e-01
+
+MARGIN TARGET:
+
+  Model           | MAE (test)    | RMSE (test)   | R² (test)
+  --------------------------------------------------------------------
+  Ridge           |  4.717         |  5.940        | 0.8541
+  Random Forest   |  4.968         |  6.279        | 0.8374
+  GBT             |  3.875         |  4.924        | 0.8998
+
+  DIEBOLD-MARIANO TEST (Ridge as baseline):
+  Ridge vs RF:   DM=-2.021,  P-value=1.40e-01
+  Ridge vs GBT:  DM= 3.843,  P-value=1.40e-02
+
+CHAMPION MODEL
+----------------------------------------------------------------------
+Selected: RIDGE
+
+Statistical Significance: LOW - No significant difference, selected based on lowest MAE
+
+======================================================================

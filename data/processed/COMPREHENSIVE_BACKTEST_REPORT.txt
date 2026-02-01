@@ -1,0 +1,117 @@
+======================================================================
+PERRY PICKS - COMPREHENSIVE MODEL BACKTEST REPORT
+======================================================================
+Generated: 2026-01-31 20:35:31
+
+----------------------------------------------------------------------
+HALFTIME MODEL
+----------------------------------------------------------------------
+
+Folds completed: 10
+h2_total MAE (Ridge): 11.287
+h2_total MAE (RF): 11.375
+h2_total MAE (GBT): 11.701
+Champion: RIDGE
+Calibrated SD: 13.999
+
+----------------------------------------------------------------------
+PREGAME MODEL
+----------------------------------------------------------------------
+
+======================================================================
+PREGAME MODEL BACKTEST READOUT
+======================================================================
+Timestamp: 2026-01-31 20:17:26
+
+DATASET SUMMARY
+----------------------------------------------------------------------
+Total games: 3520
+Features (14): home_efg, home_ftr, home_tpar, home_tor, home_orbp...
+Targets: total, margin
+
+CROSS-VALIDATION RESULTS
+----------------------------------------------------------------------
+Folds: 11
+
+TOTAL TARGET:
+
+  Model           | MAE (test)    | RMSE (test)   | R² (test)
+  --------------------------------------------------------------------
+  Ridge           |  3.508         |  4.389        | 0.9493
+  Random Forest   |  5.477         |  7.006        | 0.8698
+  GBT             |  4.323         |  5.488        | 0.9200
+
+  DIEBOLD-MARIANO TEST (Ridge as baseline):
+  Ridge vs RF:   DM=-6.114,  P-value=1.11e-05
+  Ridge vs GBT:  DM=-3.815,  P-value=2.11e-03
+
+MARGIN TARGET:
+
+  Model           | MAE (test)    | RMSE (test)   | R² (test)
+  --------------------------------------------------------------------
+  Ridge           |  3.343         |  4.173        | 0.9279
+  Random Forest   |  4.919         |  6.235        | 0.8399
+  GBT             |  3.778         |  4.783        | 0.9055
+
+  DIEBOLD-MARIANO TEST (Ridge as baseline):
+  Ridge vs RF:   DM=-5.856,  P-value=2.37e-07
+  Ridge vs GBT:  DM=-2.473,  P-value=4.22e-02
+
+CHAMPION MODEL
+(Full readout in data/processed/pregame_readout.txt)
+
+----------------------------------------------------------------------
+Q3 MODEL
+----------------------------------------------------------------------
+
+======================================================================
+Q3 MODEL BACKTEST READOUT
+======================================================================
+Timestamp: 2026-01-31 20:27:08
+
+DATASET SUMMARY
+----------------------------------------------------------------------
+Total games: 2000
+Features (22): q3_home, q3_away, q3_total, q3_margin, q3_events...
+Targets: total, margin
+
+CROSS-VALIDATION RESULTS
+----------------------------------------------------------------------
+Folds: 6
+
+TOTAL TARGET:
+
+  Model           | MAE (test)    | RMSE (test)   | R² (test)
+  --------------------------------------------------------------------
+  Ridge           |  6.549         |  9.275        | 0.7699
+  Random Forest   |  7.522         | 10.034        | 0.7400
+  GBT             |  6.895         |  9.242        | 0.7792
+
+  DIEBOLD-MARIANO TEST (Ridge as baseline):
+  Ridge vs RF:   DM=-3.174,  P-value=8.09e-02
+  Ridge vs GBT:  DM=-1.317,  P-value=3.08e-01
+
+MARGIN TARGET:
+
+  Model           | MAE (test)    | RMSE (test)   | R² (test)
+  --------------------------------------------------------------------
+  Ridge           |  4.717         |  5.940        | 0.8541
+  Random Forest   |  4.968         |  6.279        | 0.8374
+  GBT             |  3.875         |  4.924        | 0.8998
+
+  DIEBOLD-MARIANO TEST (Ridge as baseline):
+  Ridge vs RF:   DM=-2.021,  P-value=1.40e-01
+  Ridge vs GBT:  DM= 3.843,  P-value=1.40e-02
+
+CHAMPION MODEL
+(Full readout in data/processed/q3_readout.txt)
+
+----------------------------------------------------------------------
+DATASET SIZES
+----------------------------------------------------------------------
+
+Pregame: 3520 games
+Q3: 2000 games
+Halftime: 2796 games
+
+======================================================================
