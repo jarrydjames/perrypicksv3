@@ -12,6 +12,7 @@ Key features:
 from __future__ import annotations
 from typing import Any, Dict, Optional
 import requests  # For HTTPError handling
+import pandas as pd
 
 # Halftime model (v2 - unchanged)
 from src.predict_from_gameid_v2_ci import predict_from_game_id as predict_halftime
@@ -66,7 +67,19 @@ def third_quarter_score(game):
 
 def behavior_counts_q3(pbp) -> dict:
     """Count action types in first 3 quarters."""
-    import pandas as pd
+    if pbp is None or len(pbp) == 0:
+        # Return empty counts if PBP is empty
+        return {
+            "q3_events": 0,
+            "q3_n_2pt": 0,
+            "q3_n_3pt": 0,
+            "q3_n_turnover": 0,
+            "q3_n_rebound": 0,
+            "q3_n_foul": 0,
+            "q3_n_timeout": 0,
+            "q3_n_sub": 0,
+        }
+    
     q3 = pbp[pbp["period"].astype(int) <= 3].copy()
     at = q3.get("actionType", pd.Series([""] * len(q3))).astype(str).fillna("")
     
@@ -114,12 +127,22 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
         
         if not game:
             # Game not found or API error (403/429)
-            # Fall back to halftime model
+            # Fall back to halftime model with error handling
             import logging
             logging.warning(f"Game not found or API error for {gid}, falling back to halftime prediction")
-            result = predict_halftime(gid)
-            result["model_used"] = "HALFTIME_FALLBACK_API_ERROR"
-            return result
+            try:
+                result = predict_halftime(gid)
+                result["model_used"] = "HALFTIME_FALLBACK_API_ERROR"
+                return result
+            except (ValueError, requests.HTTPError) as e:
+                # Halftime model also failed (likely 403)
+                logging.error(f"Both Q3 and halftime models failed for {gid}: {e}")
+                return {
+                    "status": "error",
+                    "error": f"Unable to fetch game data from NBA.com API (403 Forbidden). Please try again later.",
+                    "game_id": gid,
+                    "model_used": "ERROR",
+                }
         
         # Check if we have Q3 data (periods 1-3)
         home_periods = (game.get("homeTeam", {}) or {}).get("periods", [])
@@ -132,9 +155,18 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
         
         if not has_q3_data:
             # Fall back to halftime model
-            result = predict_halftime(gid)
-            result["model_used"] = "HALFTIME_NO_Q3_DATA"
-            return result
+            try:
+                result = predict_halftime(gid)
+                result["model_used"] = "HALFTIME_NO_Q3_DATA"
+                return result
+            except (ValueError, requests.HTTPError) as e:
+                logging.error(f"Halftime model failed for {gid}: {e}")
+                return {
+                    "status": "error",
+                    "error": f"Unable to fetch game data from NBA.com API: {e}",
+                    "game_id": gid,
+                    "model_used": "ERROR",
+                }
         
         # Fetch PBP data for Q3 features
         try:
@@ -143,9 +175,18 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             # If PBP fails, fall back to halftime model
             import logging
             logging.warning(f"PBP fetch failed for {gid}: {e}")
-            result = predict_halftime(gid)
-            result["model_used"] = "HALFTIME_PBP_ERROR"
-            return result
+            try:
+                result = predict_halftime(gid)
+                result["model_used"] = "HALFTIME_PBP_ERROR"
+                return result
+            except (ValueError, requests.HTTPError) as e:
+                logging.error(f"Halftime model failed for {gid}: {e}")
+                return {
+                    "status": "error",
+                    "error": f"Unable to fetch game data from NBA.com API: {e}",
+                    "game_id": gid,
+                    "model_used": "ERROR",
+                }
         
         # Extract team info
         home = game.get("homeTeam", {}) or {}
@@ -165,21 +206,19 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
         # Extract Q3 scores
         q3_home, q3_away = third_quarter_score(game)
         
-        # Extract possession/PPP features
-        poss_features = game_possessions_first_half(pbp.to_dict("records"), home_tri=home_tri, away_tri=away_tri)
-        
         # Extract team stats from box score
         ht = team_totals_from_box_team(home)
         at = team_totals_from_box_team(away)
         
-        # Build ONLY features that models actually need
-        # Don't add H1, H1 behavior, or market line features!
-        q3_behavior = behavior_counts_q3(pbp)
-        
+        # Build features dict
         # Add team efficiency features (needed by both models)
-        features = add_rate_features(ht, at, base_features={})
+        # Call add_rate_features correctly: prefix, team, opponent
+        features = {}
+        features.update(add_rate_features("home", ht, at))
+        features.update(add_rate_features("away", at, ht))
         
         # Add Q3-specific features
+        q3_behavior = behavior_counts_q3(pbp)
         features["q3_home"] = q3_home
         features["q3_away"] = q3_away
         features["q3_total"] = q3_home + q3_away
@@ -207,9 +246,18 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
         
         if pred is None:
             # Fallback to halftime if Q3 model not loaded
-            result = predict_halftime(gid)
-            result["model_used"] = "HALFTIME_FALLBACK"
-            return result
+            try:
+                result = predict_halftime(gid)
+                result["model_used"] = "HALFTIME_FALLBACK"
+                return result
+            except (ValueError, requests.HTTPError) as e:
+                logging.error(f"Halftime model failed for {gid}: {e}")
+                return {
+                    "status": "error",
+                    "error": f"Unable to fetch game data from NBA.com API: {e}",
+                    "game_id": gid,
+                    "model_used": "ERROR",
+                }
         
         # Build result dict (same structure as halftime)
         result = {
@@ -259,16 +307,23 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
         return result
         
     except requests.HTTPError as e:
-        # If NBA.com API fails (403/429), fall back to halftime model
+        # If NBA.com API fails (403/429), return error message
         logger.warning(f"NBA.com API failed for {gid}: {e}")
-        result = predict_halftime(gid)
-        result["model_used"] = "HALFTIME_API_ERROR"
-        result["api_error"] = f"NBA.com API error: {e}"
-        return result
+        return {
+            "status": "error",
+            "error": f"NBA.com API returned error ({e.response.status_code}). Please try again later.",
+            "game_id": gid,
+            "model_used": "ERROR",
+        }
         
     except Exception as e:
         # General error handling
         import traceback
         logger.error(f"Prediction failed: {repr(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
-        raise
+        return {
+            "status": "error",
+            "error": f"Prediction failed: {str(e)}",
+            "game_id": gid,
+            "model_used": "ERROR",
+        }
