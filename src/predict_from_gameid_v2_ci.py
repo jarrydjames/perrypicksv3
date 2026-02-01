@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict
+import requests, Tuple
 import math
 
 import pandas as pd  # required by predict_from_gameid_v2 helpers
@@ -93,8 +94,22 @@ def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True) -> 
 
     gid = extract_game_id(gid_or_url)
 
-    game = fetch_box(gid)
-    pbp = fetch_pbp_df(gid)
+    # Fetch game data with error handling
+    try:
+        game = fetch_box(gid)
+    except requests.HTTPError as e:
+        raise ValueError(f"Failed to fetch game data from NBA.com API: {e}")
+    
+    # Fetch play-by-play data with error handling
+    try:
+        pbp = fetch_pbp_df(gid)
+    except requests.HTTPError as e:
+        # If PBP fails, we can still make a basic prediction with box score only
+        # Use empty behavior counts as fallback
+        import logging
+        logging.warning(f"PBP API failed for {gid}: {e}")
+        logging.warning("Using empty behavior counts as fallback")
+        pbp = pd.DataFrame()  # Empty DataFrame
 
     h1_home, h1_away = first_half_score(game)
     beh = behavior_counts_1h(pbp)

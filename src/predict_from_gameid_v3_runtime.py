@@ -12,6 +12,7 @@ Key features:
 
 from __future__ import annotations
 from typing import Any, Dict, Optional
+import requests  # For HTTPError handling
 
 # Halftime model (v2 - unchanged)
 from src.predict_from_gameid_v2_ci import predict_from_game_id as predict_halftime
@@ -138,7 +139,20 @@ def predict_from_game_id(
         game = fetch_box(game_id)
         
         # Fetch play-by-play data for Q3 feature extraction
-        pbp = fetch_pbp_df(game_id)
+        try:
+            pbp = fetch_pbp_df(game_id)
+        except requests.HTTPError as e:
+            # If NBA.com API fails (403/429), fall back to halftime model
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.warning(f"NBA.com PBP API failed for {game_id}: {e}")
+            logger.warning("Falling back to halftime prediction model")
+            
+            # Fall back to halftime prediction
+            result = predict_halftime(game_input)
+            result["model_used"] = "HALFTIME_FALLBACK_API_ERROR"
+            result["api_error"] = f"NBA.com API error: {e}"
+            return result
         
         # Extract team info
         home = game.get("homeTeam", {}) or {}
