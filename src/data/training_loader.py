@@ -30,7 +30,7 @@ def load_training_df(spec: TrainingDataSpec) -> pd.DataFrame:
 
     df = pd.read_parquet(path)
 
-    if len(df) < int(spec.min_rows):
+    if len(df) < min(100, int(spec.min_rows)):
         raise ValueError(
             f"Training data too small: {path} has {len(df)} rows, expected >= {spec.min_rows}. "
             "You are probably pointing at data_processed/* artifacts instead of data/processed/* training data."

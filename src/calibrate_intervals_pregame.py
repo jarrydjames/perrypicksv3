@@ -12,7 +12,7 @@ from pathlib import Path
 def main():
     """Calibrate pregame intervals using residuals."""
     # Pregame dataset (same structure as halftime/Q3 dataset)
-    df = pd.read_parquet("data/processed/pregame_team_v2.parquet").dropna()
+    df = pd.read_parquet("data/processed/pregame_team_v2.parquet").dropna(subset=["final_total", "final_margin"])
     
     # Load pregame trained models (using gbt as default)
     obj = joblib.load("models_v3/pregame/gbt_twohead.joblib")

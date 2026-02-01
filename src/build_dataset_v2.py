@@ -6,6 +6,8 @@ from tqdm import tqdm
 
 CDN_PBP = "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_{gid}.json"
 CDN_BOX = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_{gid}.json"
+SCHED_PATH = "data/processed/game_ids_2025.json"
+CDN_BOX = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_{gid}.json"
 
 def fetch_json(url: str) -> dict:
     r = requests.get(url, timeout=25)
