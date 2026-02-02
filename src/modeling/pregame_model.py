@@ -181,3 +181,10 @@ class PregameModel:
             model_name="pregame_gbt_ridge",
             feature_version=self.total_model.get("feature_version", "unknown"),
         )
+
+def get_pregame_model() -> Optional[PregameModel]:
+    """Get or create pregame model instance."""
+    model = PregameModel()
+    if model.load_models():
+        return model
+    return None
