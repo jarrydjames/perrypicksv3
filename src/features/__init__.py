@@ -1,8 +1,6 @@
-"""Feature extraction helpers.
+"""Feature engineering module for PerryPicks."""
+from .team_features import TeamFeatures
+from .schedule_features import ScheduleFeatures
+from .advanced_features import AdvancedFeatures
 
-These are designed to be reused across:
-- training dataset enrichment
-- future inference pipeline upgrades
-
-Avoid train/serve skew.
-"""
+__all__ = ['TeamFeatures', 'ScheduleFeatures', 'AdvancedFeatures']

@@ -1,0 +1,49 @@
+======================================================================
+PHASE 1: LEAKAGE-FREE HISTORICAL BACKTEST
+======================================================================
+Timestamp: 2026-02-01 14:39:59
+
+DATASET SUMMARY
+----------------------------------------------------------------------
+Total games: 3520
+Features (14): home_efg, home_ftr, home_tpar, home_tor, home_orbp...
+Targets: total, margin
+
+COMPARISON WITH LEAKED RESULTS
+----------------------------------------------------------------------
+OLD (LEAKED) Results:
+  Total MAE: 3.51 points
+  Total RMSE: 4.39 points
+  Total R²: 0.949
+
+CROSS-VALIDATION RESULTS (LEAKAGE-FREE)
+----------------------------------------------------------------------
+Folds: 13
+
+TOTAL TARGET:
+
+  Model           | MAE (test)    | RMSE (test)   | R² (test)
+  --------------------------------------------------------------------
+  Ridge           |   3.52         |   4.40        | 0.9492
+  Random Forest   |   5.44         |   6.94        | 0.8736
+  GBT             |   4.25         |   5.45        | 0.9222
+
+MARGIN TARGET:
+
+  Model           | MAE (test)    | RMSE (test)   | R² (test)
+  --------------------------------------------------------------------
+  Ridge           |   3.47         |   4.32        | 0.9221
+  Random Forest   |   4.81         |   6.18        | 0.8435
+  GBT             |   3.83         |   4.91        | 0.9006
+
+LEAKAGE IMPACT
+----------------------------------------------------------------------
+Old Total MAE (LEAKED):  3.51
+New Total MAE (FIXED):   3.52
+Leakage Error:           0.01 points (0.4%)
+
+MODEL SELECTION
+----------------------------------------------------------------------
+Selected Champion: RIDGE
+
+======================================================================
