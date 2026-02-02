@@ -9,3 +9,5 @@ streamlit-autorefresh
 pypdf
 pytz
 nba_api
+xgboost
+lightgbm
