@@ -1,0 +1,56 @@
+======================================================================
+PHASE 3 MODEL TRAINING RESULTS (FIXED - FOUR FACTORS ONLY)
+======================================================================
+
+Total Target
+--------------------------------------------------
+
+Linear Regression:
+  Train MAE: 15.731
+  Train RMSE: 19.769
+  Val MAE: 14.589
+  Val RMSE: 17.704
+
+Ridge Regression:
+  Train MAE: 16.033
+  Train RMSE: 20.053
+  Val MAE: 15.187
+  Val RMSE: 18.338
+
+Random Forest:
+  Train MAE: 11.915
+  Train RMSE: 14.919
+  Val MAE: 14.591
+  Val RMSE: 18.030
+
+Gradient Boosting:
+  Train MAE: 11.257
+  Train RMSE: 14.216
+  Val MAE: 14.897
+  Val RMSE: 18.692
+Margin Target
+--------------------------------------------------
+
+Linear Regression:
+  Train MAE: 10.997
+  Train RMSE: 14.182
+  Val MAE: 12.101
+  Val RMSE: 15.133
+
+Ridge Regression:
+  Train MAE: 11.536
+  Train RMSE: 14.719
+  Val MAE: 12.648
+  Val RMSE: 15.782
+
+Random Forest:
+  Train MAE: 8.136
+  Train RMSE: 10.530
+  Val MAE: 12.833
+  Val RMSE: 15.905
+
+Gradient Boosting:
+  Train MAE: 8.143
+  Train RMSE: 10.612
+  Val MAE: 13.394
+  Val RMSE: 16.641
