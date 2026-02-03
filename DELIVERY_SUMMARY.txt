@@ -40,7 +40,7 @@ Worker Modules (worker/):
   └── runner.py           (389 lines) - Main loop
 
 Configuration:
-  └── config/.env.example (30 lines) - Configuration template
+  └── config/env.example (783 bytes) - Configuration template
 
 Documentation:
   ├── AUTOMATION_README.md          (410 lines) - Full documentation
@@ -119,7 +119,7 @@ TTL by Trigger Type:
    $ pip install -r requirements.txt
 
 2. Configure environment:
-   $ cp config/.env.example .env
+   $ cp config/env.example .env
    $ nano .env  # Add your ODDS_API_KEY and DISCORD_WEBHOOK_URL
 
 3. Verify installation:
@@ -188,7 +188,7 @@ Top Bets:
 ═══════════════════════════════════════════════════════════════════════════════
 
 1. Configure API Keys
-   - Copy config/.env.example to .env
+   - Copy config/env.example to .env
    - Add your ODDS_API_KEY (https://the-odds-api.com/)
    - Add your DISCORD_WEBHOOK_URL
 

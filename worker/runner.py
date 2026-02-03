@@ -10,6 +10,20 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 import argparse
+import os
+import pytz
+
+# Load environment variables from .env file (if it exists)
+try:
+    from dotenv import load_dotenv
+    env_path = Path(__file__).parent.parent / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+        logger = logging.getLogger(__name__)
+        logger.debug(f"Loaded environment from {env_path}")
+except ImportError:
+    # python-dotenv not installed, fall back to os.getenv
+    pass
 
 from core.storage import init_database, GameStorage, TriggerStorage, PickStorage, TrackingStorage, DiscordPostStorage
 from core.data_sources import CombinedDataSource
@@ -30,12 +44,14 @@ class AutomationRunner:
         odds_api_key: str,
         discord_webhook_url: str,
         poll_interval: int = 60,
-        dry_run: bool = False
+        dry_run: bool = False,
+        date: str = 'today'
     ):
         self.db_path = db_path
         self.poll_interval = poll_interval
         self.dry_run = dry_run
         self.running = False
+        self.date = date
         
         # Initialize components
         self.data_source = CombinedDataSource(odds_api_key)
@@ -60,11 +76,20 @@ class AutomationRunner:
             init_database(self.db_path)
             logger.info("Database initialized")
             
-            # Schedule games for today
-            today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-            games_scheduled = self.scheduler.schedule_games_for_date(today)
+            # Schedule games for the specified date
+            # IMPORTANT: Use CST (Eastern time) for 'today' since NBA games are
+            # scheduled in EST/CST timezone. Using UTC here would cause issues
+            # with games that cross the UTC date boundary (e.g., 9pm CST games).
+            if self.date == 'today':
+                cst_tz = pytz.timezone('America/Chicago')
+                now_cst = datetime.now(timezone.utc).astimezone(cst_tz)
+                schedule_date = now_cst.strftime('%Y-%m-%d')
+            else:
+                schedule_date = self.date
             
-            logger.info(f"Initialized {games_scheduled} games for {today}")
+            games_scheduled = self.scheduler.schedule_games_for_date(schedule_date)
+            
+            logger.info(f"Initialized {games_scheduled} games for {schedule_date}")
             return True
             
         except Exception as e:
@@ -351,7 +376,6 @@ def main():
         db_path = Path(__file__).parent.parent / 'data' / 'automation.db'
     
     # Load environment variables
-    import os
     odds_api_key = os.getenv('ODDS_API_KEY', '')
     discord_webhook_url = os.getenv('DISCORD_WEBHOOK_URL', '')
     
@@ -369,7 +393,8 @@ def main():
         odds_api_key=odds_api_key,
         discord_webhook_url=discord_webhook_url,
         poll_interval=args.poll_interval,
-        dry_run=args.dry_run
+        dry_run=args.dry_run,
+        date=args.date
     )
     
     if not runner.initialize():

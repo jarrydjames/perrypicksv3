@@ -38,8 +38,15 @@ class DiscordWebhookClient:
             
             # Try to extract message ID from response
             # Webhook responses don't always include message ID
-            data = response.json()
-            message_id = data.get('id')
+            # Some webhooks return JSON with id, others return empty response
+            message_id = None
+            try:
+                if response.content:
+                    data = response.json()
+                    message_id = data.get('id')
+            except Exception:
+                # Response is empty or not JSON - that's okay
+                pass
             
             logger.info(f"Posted Discord message (id={message_id})")
             return message_id

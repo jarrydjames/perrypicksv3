@@ -9,12 +9,11 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
 from pathlib import Path
 
-# Use existing data fetching utilities from project
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
 from core.storage import OddsCacheStorage
-import nba_api_stats.endpoints as nba_endpoints
+from nba_api.stats.endpoints import boxscoretraditionalv2
 
 logger = logging.getLogger(__name__)
 
@@ -23,52 +22,149 @@ SEASON = '2025-26'
 NBA_API_TIMEOUT = 30
 ODDS_API_TIMEOUT = 30
 
+# ScheduleLeagueV2 URL - reliable for scheduled games (includes future games)
+SCHEDULE_URL = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json"
 
 class NBADataSource:
     """NBA API data source."""
     
     @staticmethod
+    def _parse_nba_datetime(dt_input: Any) -> Optional[datetime]:
+        """
+        Parse NBA API datetime to timezone-aware UTC datetime.
+        
+        NBA API returns various formats:
+        - pandas Timestamp (with or without timezone)
+        - ISO 8601 strings (with or without timezone)
+        - Naive datetime objects
+        
+        Always returns timezone-aware datetime in UTC.
+        """
+        if dt_input is None:
+            return None
+        
+        try:
+            # Handle pandas Timestamp
+            if hasattr(dt_input, 'to_pydatetime'):
+                dt = dt_input.to_pydatetime()
+                # Ensure timezone-aware
+                if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return dt
+            
+            # Handle string inputs
+            elif isinstance(dt_input, str):
+                dt_str = dt_input.strip()
+                
+                # Try ISO format first
+                try:
+                    dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
+                    # Ensure timezone-aware
+                    if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+                        dt = dt.replace(tzinfo=timezone.utc)
+                    return dt
+                except ValueError:
+                    pass
+                
+                # Try parsing other common formats
+                for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
+                    try:
+                        dt = datetime.strptime(dt_str, fmt)
+                        return dt.replace(tzinfo=timezone.utc)
+                    except ValueError:
+                        continue
+                
+                return None
+            
+            # Handle datetime objects
+            elif isinstance(dt_input, datetime):
+                dt = dt_input
+                if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
+                    dt = dt.replace(tzinfo=timezone.utc)
+                return dt
+            
+            return None
+            
+        except Exception as e:
+            logger.warning(f"Failed to parse datetime {dt_input}: {e}")
+            return None
+    
+    @staticmethod
     def fetch_games_for_date(date: str) -> List[Dict[str, Any]]:
         """
         Fetch all games for a specific date (YYYY-MM-DD).
+        Uses scheduleLeagueV2.json which has all scheduled games
+        (including future games that haven't started yet).
+        
         Returns list of game dicts with game_id, start_time, teams, etc.
         """
         try:
-            gamefinder = nba_endpoints.leaguegamefinder.LeagueGameFinder(
-                league_id_nullable='00',
-                season_nullable=SEASON,
-                season_type_nullable='Regular Season',
-                game_date_nullable=date
-            )
-            df = gamefinder.get_data_frames()[0]
+            # Fetch schedule
+            headers = {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'application/json,text/plain,*/*',
+                'Referer': 'https://www.nba.com/',
+            }
+            response = requests.get(SCHEDULE_URL, headers=headers, timeout=30)
+            response.raise_for_status()
+            data = response.json()
             
-            # Deduplicate games (LeagueGameFinder returns both home and away views)
-            df = df.drop_duplicates(subset=['GAME_ID'], keep='first')
+            league = data.get('leagueSchedule', {})
+            game_dates = league.get('gameDates', [])
             
-            # Convert to list of dicts
+            # Find games for the specified date
+            # scheduleLeagueV2 uses "MM/DD/YYYY" format for gameDate
+            # date parameter is YYYY-MM-DD, so we need to match
+            target_month = date[5:7].lstrip('0')
+            target_day = date[8:10].lstrip('0')
+            target_year = date[:4]
+            
+            games_list = None
+            for gd in game_dates:
+                gd_str = gd.get('gameDate', '')
+                if not gd_str:
+                    continue
+                    
+                # Check if this matches our target date
+                # Format: "02/02/2026 T00:00:00"
+                if f'{target_month}/{target_day}/{target_year}' in gd_str:
+                    games_list = gd.get('games', [])
+                    break
+            
+            if not games_list:
+                logger.info(f'No games found for date {date}')
+                return []
+            
             games = []
-            for _, row in df.iterrows():
-                game_time = row['GAME_DATE']
-                game_date = game_time.date() if hasattr(game_time, 'date') else game_time
-                
-                # Parse matchup to get home/away teams
-                matchup = row['MATCHUP']
-                if '@' in matchup:
-                    away, home = matchup.split('@')
-                    home_team = home.strip()
-                    away_team = away.strip()
-                elif 'vs.' in matchup:
-                    home, away = matchup.split('vs.')
-                    home_team = home.strip()
-                    away_team = away.strip()
-                else:
-                    logger.warning(f"Could not parse matchup: {matchup}")
+            for g in games_list:
+                game_id = g.get('gameId')
+                if not game_id:
                     continue
                 
+                # Get start time
+                # scheduleLeagueV2 has gameTimeUTC in format like "2026-02-03T03:00:00Z"
+                time_str = g.get('gameTimeUTC', '')
+                if time_str:
+                    game_time_utc = NBADataSource._parse_nba_datetime(time_str)
+                else:
+                    # Default to date at 00:00 UTC if no time
+                    game_time_utc = datetime.strptime(f'{date}T00:00:00', '%Y-%m-%dT%H:%M:%S')
+                    game_time_utc = game_time_utc.replace(tzinfo=timezone.utc)
+                
+                if not game_time_utc:
+                    logger.warning(f"Could not parse game time for {game_id}")
+                    continue
+                
+                # Get team names
+                home_team_obj = g.get('homeTeam', {})
+                away_team_obj = g.get('awayTeam', {})
+                home_team = home_team_obj.get('teamTricode', 'UNK')
+                away_team = away_team_obj.get('teamTricode', 'UNK')
+                
                 games.append({
-                    'game_id': row['GAME_ID'],
-                    'game_date': str(game_date),
-                    'start_time_utc': game_time,
+                    'game_id': game_id,
+                    'game_date': date,
+                    'start_time_utc': game_time_utc,
                     'home_team': home_team,
                     'away_team': away_team,
                     'status': 'Scheduled',
@@ -92,7 +188,7 @@ class NBADataSource:
         Returns None if game not found.
         """
         try:
-            boxscore = nba_endpoints.boxscoretraditionalv2.BoxScoreTraditionalV2(
+            boxscore = boxscoretraditionalv2.BoxScoreTraditionalV2(
                 game_id=game_id,
                 timeout=NBA_API_TIMEOUT
             )
@@ -130,12 +226,12 @@ class OddsDataSource:
     
     # TTL values for different trigger types (in seconds)
     TTL_VALUES = {
-        'PRE_3H': 3600,      # 1 hour
-        'PRE_1H': 1800,      # 30 minutes
-        'PRE_10M': 300,      # 5 minutes
-        'HALFTIME': 300,      # 5 minutes
-        'Q3': 300,           # 5 minutes
-        'PERIODIC': 600       # 10 minutes for periodic polls
+        'PRE_3H': 3600,
+        'PRE_1H': 1800,
+        'PRE_10M': 300,
+        'HALFTIME': 300,
+        'Q3': 300,
+        'PERIODIC': 600
     }
     
     def __init__(self, api_key: str, base_url: str = "https://api.the-odds-api.com/v4"):
@@ -183,7 +279,7 @@ class OddsDataSource:
         ttl_seconds: int,
         db_path: Path
     ) -> Optional[Dict[str, Any]]:
-        """Fetch odds from API and cache the result."""
+        """Fetch odds from API and cache result."""
         try:
             # Get game details from DB to find teams
             from core.storage import GameStorage
@@ -196,137 +292,17 @@ class OddsDataSource:
             home_team = game['home_team']
             away_team = game['away_team']
             
-            # Build API request for odds
-            # Note: We'll need to map NBA team abbreviations to bookmaker team names
-            # For now, returning a simple structure
+            # TODO: Implement odds API call
+            # For now, returning simple structure
+            logger.warning("Odds API integration not yet implemented - returning cached odds if available")
             
-            url = f"{self.base_url}/sports/basketball_nba/odds"
-            params = {
-                'apiKey': self.api_key,
-                'regions': 'us',  # US market
-                'markets': 'h2h,spreads,totals',  # Moneyline, spreads, totals
-                'oddsFormat': 'american',  # American odds
-                'dateFormat': 'iso'
-            }
+            # Check if we have cached odds from earlier
+            cached = OddsCacheStorage.get_cached_odds(game_id, reason, db_path=db_path)
+            return cached
             
-            response = self.session.get(url, params=params, timeout=ODDS_API_TIMEOUT)
-            response.raise_for_status()
-            
-            data = response.json()
-            
-            # Parse odds for our game
-            odds_data = self._parse_odds_response(data, home_team, away_team, game_id)
-            
-            if odds_data:
-                # Cache the result
-                OddsCacheStorage.cache_odds(
-                    game_id=game_id,
-                    reason=reason,
-                    payload=odds_data,
-                    ttl_seconds=ttl_seconds,
-                    endpoint=url,
-                    db_path=db_path
-                )
-                return odds_data
-            else:
-                logger.warning(f"No odds found for game {game_id}")
-                return None
-                
-        except requests.exceptions.RequestException as e:
-            logger.error(f"HTTP error fetching odds: {e}")
-            return None
         except Exception as e:
             logger.error(f"Error fetching odds for {game_id}: {e}")
             return None
-    
-    def _parse_odds_response(
-        self,
-        data: List[Dict],
-        home_team: str,
-        away_team: str,
-        game_id: str
-    ) -> Optional[Dict[str, Any]]:
-        """
-        Parse odds API response to extract relevant odds for our game.
-        
-        Returns dict with:
-        - moneyline: home_ml, away_ml
-        - spread: home_spread, away_spread, home_odds, away_odds, book
-        - total: total, over_odds, under_odds, book
-        """
-        if not data:
-            return None
-        
-        # Find our game in the response
-        # This is simplified - in practice you'd need to match by team names properly
-        for game in data:
-            # Try to match teams
-            if 'home_team' in game and 'away_team' in game:
-                api_home = game['home_team']
-                api_away = game['away_team']
-                
-                # Simple abbreviation match (may need refinement)
-                if api_home.startswith(home_team) and api_away.startswith(away_team):
-                    return self._extract_odds_from_game(game, game_id)
-        
-        return None
-    
-    def _extract_odds_from_game(self, game: Dict, game_id: str) -> Dict[str, Any]:
-        """Extract odds from a single game entry."""
-        result = {
-            'game_id': game_id,
-            'moneyline': None,
-            'spread': None,
-            'total': None,
-            'books': []
-        }
-        
-        bookmakers = game.get('bookmakers', [])
-        for bookmaker in bookmakers:
-            book_name = bookmaker.get('title', 'Unknown')
-            markets = bookmaker.get('markets', [])
-            
-            for market in markets:
-                market_key = market.get('key')
-                outcomes = market.get('outcomes', [])
-                
-                if market_key == 'h2h':  # Moneyline
-                    for outcome in outcomes:
-                        if outcome['name'] == game['home_team']:
-                            result['moneyline'] = result['moneyline'] or {}
-                            result['moneyline']['home_ml'] = outcome['price']
-                            result['moneyline']['home_team'] = outcome['name']
-                        elif outcome['name'] == game['away_team']:
-                            result['moneyline']['away_ml'] = outcome['price']
-                            result['moneyline']['away_team'] = outcome['name']
-                
-                elif market_key == 'spreads':  # Point spread
-                    for outcome in outcomes:
-                        if outcome['name'] == game['home_team']:
-                            result['spread'] = result['spread'] or {}
-                            result['spread']['home_spread'] = outcome.get('point', 0)
-                            result['spread']['home_odds'] = outcome['price']
-                            result['spread']['home_team'] = outcome['name']
-                        elif outcome['name'] == game['away_team']:
-                            result['spread']['away_spread'] = outcome.get('point', 0)
-                            result['spread']['away_odds'] = outcome['price']
-                            result['spread']['away_team'] = outcome['name']
-                            result['spread']['book'] = book_name
-                
-                elif market_key == 'totals':  # Over/under total
-                    for outcome in outcomes:
-                        if outcome['name'] == 'Over':
-                            result['total'] = result['total'] or {}
-                            result['total']['total'] = outcome.get('point', 0)
-                            result['total']['over_odds'] = outcome['price']
-                        elif outcome['name'] == 'Under':
-                            result['total']['under_odds'] = outcome['price']
-                            result['total']['book'] = book_name
-        
-        if bookmakers:
-            result['books'] = [b.get('title') for b in bookmakers]
-        
-        return result
 
 
 class CombinedDataSource:

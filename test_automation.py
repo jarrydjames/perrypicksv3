@@ -61,7 +61,7 @@ def test_database():
     print("🎉 All tests passed! Automation system is ready.")
     print()
     print("Next steps:")
-    print("1. Copy config/.env.example to .env and fill in your API keys")
+    print("1. Copy config/env.example to .env and fill in your API keys")
     print("2. Run: python -m worker.runner --once")
     print("3. For continuous automation: python -m worker.runner")
 

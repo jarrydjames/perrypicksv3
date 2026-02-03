@@ -269,7 +269,7 @@ ENABLE_AUTOMATION=true
 SCAN_INTERVAL_SECONDS=60
 ```
 
-**File:** `.env.example` (new)
+**File:** `env.example` (new)
 
 ---
 
@@ -300,7 +300,7 @@ SCAN_INTERVAL_SECONDS=60
 
 ### Phase 5: Storage & Config
 - [ ] Implement complete SQLite schema (src/storage/sqlite_store.py)
-- [ ] Add .env.example with all config vars
+- [x] Add env.example with all config vars
 - [ ] Update requirements.txt with new dependencies (pytz, requests)
 
 ---

@@ -34,7 +34,7 @@ PerryPicks v3/
 │   ├── triggers.py           # Game-state detection (235 lines)
 │   └── runner.py              # Main loop (389 lines)
 ├── config/
-│   └── .env.example         # Configuration template
+│   └── env.example         # Configuration template
 ├── logs/                       # Log files
 └── data/
     └── automation.db       # SQLite database (auto-created)
@@ -157,11 +157,11 @@ pip install -r requirements.txt
 ### 2. Configuration
 
 ```bash
-# Copy example config
-cp config/.env.example .env
+# Copy example config (note: env.example, not .env.example)
+cp config/env.example .env
 
 # Edit .env with your values
-nano .env  # or use your editor
+nano .env  # or use your preferred editor
 ```
 
 ### 3. Initialize Database

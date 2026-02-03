@@ -195,7 +195,7 @@ core/
 
 1. **Configure Environment**
    ```bash
-   cp config/.env.example .env
+   cp config/env.example .env
    # Add ODDS_API_KEY and DISCORD_WEBHOOK_URL
    ```
 
