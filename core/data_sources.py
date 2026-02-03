@@ -115,8 +115,11 @@ class NBADataSource:
             # Find games for the specified date
             # scheduleLeagueV2 uses "MM/DD/YYYY" format for gameDate
             # date parameter is YYYY-MM-DD, so we need to match
-            target_month = date[5:7].lstrip('0')
-            target_day = date[8:10].lstrip('0')
+            # IMPORTANT: Do NOT strip leading zeros - API uses zero-padded format (MM/DD)
+            # This was the bug: lstrip('0') was causing "02/02/2026" to become "2/2/2026"
+            # which doesn't match the API format "02/02/2026 00:00:00"
+            target_month = date[5:7]  # Keep zero-padding (e.g., "02" not "2")
+            target_day = date[8:10]    # Keep zero-padding (e.g., "02" not "2")
             target_year = date[:4]
             
             games_list = None
