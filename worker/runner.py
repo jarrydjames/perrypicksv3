@@ -104,7 +104,7 @@ class AutomationRunner:
             Number of triggers processed
         """
         now_utc = datetime.now(timezone.utc)
-        window_start = now_utc - timedelta(seconds=30)
+        window_start = now_utc - timedelta(minutes=2)
         window_end = now_utc + timedelta(seconds=30)
         
         total_processed = 0
@@ -219,6 +219,113 @@ class AutomationRunner:
             logger.error(f"Error processing scheduled trigger {game_id} {trigger_type}: {e}")
             return False
     
+    def _process_game_state_trigger(
+        self,
+        game_id: str,
+        trigger_type: str,
+        game_state: Dict[str, Any]
+    ) -> bool:
+        """
+        Process a game-state trigger (halftime, Q3) that was just detected.
+        
+        Args:
+            game_id: NBA game ID
+            trigger_type: Type of trigger (HALFTIME, Q3)
+            game_state: Current game state from NBA API
+        
+        Returns:
+            True if processing succeeded, False otherwise
+        """
+        try:
+            logger.info(f"Processing game-state trigger: {game_id} {trigger_type}")
+            
+            # Refresh game data to get odds
+            data = self.data_source.refresh_game_data(
+                game_id=game_id,
+                reason=trigger_type,
+                db_path=self.db_path
+            )
+            
+            if not data['game_state']:
+                logger.warning(f"Game {game_id} not found; skipping trigger")
+                return False
+            
+            # Run analysis
+            picks = self.analysis_engine.run_analysis(
+                game_state=data['game_state'],
+                odds=data['odds'],
+                mode=trigger_type
+            )
+            
+            if not picks:
+                logger.warning(f"No picks generated for {game_id} {trigger_type}")
+                return False
+            
+            # Store picks
+            for pick in picks:
+                PickStorage.store_pick(
+                    game_id=game_id,
+                    trigger_type=trigger_type,
+                    bet_rank=pick['bet_rank'],
+                    bet_type=pick['bet_type'],
+                    side=pick['side'],
+                    line=pick.get('line'),
+                    odds=pick['odds'],
+                    book=pick['book'],
+                    probability=pick['probability'],
+                    edge=pick['edge'],
+                    rationale=pick.get('rationale'),
+                    payload=pick,
+                    db_path=self.db_path
+                )
+            
+            # Post to Discord (if not dry run)
+            if not self.dry_run:
+                message = self.discord_client.format_bet_post(
+                    trigger_type=trigger_type,
+                    game_data=data['game_state'],
+                    picks=picks,
+                    timestamp=datetime.now(timezone.utc)
+                )
+                
+                message_id = self.discord_client.post_message(message)
+                
+                if message_id:
+                    DiscordPostStorage.store_post(
+                        game_id=game_id,
+                        trigger_type=trigger_type,
+                        channel_id='main',  # Would be from webhook URL
+                        message_id=message_id,
+                        payload={
+                            'message': message,
+                            'picks': picks,
+                            'game_state': data['game_state']
+                        },
+                        db_path=self.db_path
+                    )
+            
+            # Mark trigger as fired (update status from 'scheduled' to 'fired')
+            # Get trigger ID for this game_id and trigger_type
+            all_triggers = TriggerStorage.get_triggers_for_game(game_id, db_path=self.db_path)
+            matching_trigger = [
+                t for t in all_triggers 
+                if t['trigger_type'] == trigger_type and t['status'] == 'scheduled'
+            ]
+            
+            if matching_trigger:
+                TriggerStorage.mark_triggered(
+                    trigger_id=matching_trigger[0]['id'],
+                fired_at_utc=datetime.now(timezone.utc),
+                db_path=self.db_path
+            )
+            
+            logger.info(f"Completed {trigger_type} trigger for {game_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error processing game-state trigger {game_id} {trigger_type}: {e}")
+            return False
+    
     def _process_active_game(self, game: dict) -> bool:
         """Process an active game for game-state triggers."""
         game_id = game['game_id']
@@ -252,8 +359,26 @@ class AutomationRunner:
             
             if triggers_fired > 0:
                 # Run analysis and post for each fired trigger
-                # Note: This is simplified - in production you'd batch these
-                pass
+                # Get all triggers for this game
+                all_triggers = TriggerStorage.get_triggers_for_game(game_id, db_path=self.db_path)
+                
+                # Filter for triggers created in last 2 minutes
+                now_utc = datetime.now(timezone.utc)
+                recent_cutoff = now_utc - timedelta(minutes=2)
+                
+                recent_triggers = [
+                    t for t in all_triggers
+                    if t['fired_at_utc'] and 
+                    datetime.fromisoformat(t['fired_at_utc']) > recent_cutoff
+                ]
+                
+                # Process each recent trigger
+                for trigger in recent_triggers:
+                    self._process_game_state_trigger(
+                        game_id=game_id,
+                        trigger_type=trigger['trigger_type'],
+                        game_state=game_state
+                    )
             
             return triggers_fired > 0
             
