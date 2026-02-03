@@ -169,6 +169,40 @@ class TriggerFirer:
         
         return triggers_fired
     
+    def fire_trigger(self, game_id: str, trigger_type: str) -> bool:
+        """
+        Manually fire a trigger for a game.
+        
+        This is a public method used by the monitoring portal to manually
+        trigger predictions (pre-game, halftime, Q3, etc.).
+        
+        Args:
+            game_id: NBA game ID
+            trigger_type: Type of trigger to fire (PRE_3H, HALFTIME, Q3, etc.)
+        
+        Returns:
+            True if trigger was fired successfully, False otherwise
+        """
+        try:
+            # Fetch current game state from database
+            game_state = GameStorage.get_game(game_id, self.db_path)
+            
+            if not game_state:
+                logger.error(f"Game {game_id} not found in database")
+                return False
+            
+            # Fire the trigger
+            success = self._fire_trigger(game_id, trigger_type, game_state)
+            
+            if success:
+                logger.info(f"Manually fired {trigger_type} trigger for {game_id}")
+            
+            return success
+            
+        except Exception as e:
+            logger.error(f"Error manually firing {trigger_type} trigger for {game_id}: {e}")
+            return False
+    
     def _fire_trigger(
         self,
         game_id: str,
