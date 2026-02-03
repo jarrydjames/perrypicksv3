@@ -16,20 +16,22 @@ All documented issues have been fixed and tested successfully!
 - Added `detect_game_state()` function in `src/predict_api.py`
 - Properly detects game state from NBA.com API:
   - **Pregame**: Period 0 or game not started
-  - **Halftime**: Period 2 with no period 3 data
-  - **Q3**: Period 3 or higher
+  - **Halftime**: Period 2 with no period 3 data, or early Q3 (before halfway)
+  - **Q3**: Period 3 (halfway or later), Period 4+, Final
   - **Final**: Game completed
 
 **2. Auto Mode Implementation (WORKING!)**
 - `mode='auto'` now automatically detects game state
 - Maps game state to correct model:
   ```
-  Game State    → Model Used
-  ──────────────────────────────
-  pregame      → PREGAME model (72 features!)
-  halftime      → HALFTIME model
-  q3            → Q3 model
-  final         → Q3 model
+  Game State                    → Model Used
+  ──────────────────────────────────────────
+  pregame (period 0)          → PREGAME model (72 features!)
+  halftime (period 2)           → HALFTIME model
+  early Q3 (< 6 min left)     → HALFTIME model
+  halfway Q3 (>= 6 min left)   → Q3 model
+  Q4+ (period 4+)             → Q3 model
+  final (game done)             → Q3 model
   ```
 
 **3. Team Tricode Extraction (WORKING!)**
@@ -46,6 +48,12 @@ All documented issues have been fixed and tested successfully!
 - Detailed docstring explaining game state logic
 - Clear mode usage guidelines
 - Auto-detection recommendations
+
+**6. Q3 Threshold Adjustment (NEW & WORKING!)**
+- Q3 model now activates at HALFWAY through Q3 (6 minutes remaining)
+- Early Q3 (more than 6 min remaining) → Still uses HALFTIME model
+- Halfway through Q3 (6 min or less remaining) → Switches to Q3 model
+- Q4 or OT → Uses Q3 model
 
 ---
 
@@ -130,12 +138,21 @@ UserWarning: X has feature names, but Ridge was fitted without feature names
   - Uses appropriate model
   - Returns consistent results
 
+### Q3 Threshold Tests:
+- ✅ Early Q3 (PT08M00.00S) → HALFTIME model (more than 6 min left)
+- ✅ Just before halfway (PT06M01.00S) → HALFTIME model
+- ✅ Exactly halfway (PT06M00.00S) → Q3 model
+- ✅ Just past halfway (PT05M59.00S) → Q3 model
+- ✅ Late Q3 (PT03M00.00S) → Q3 model
+- ✅ End of Q3 (PT00M30.00S) → Q3 model
+
 ### Key Metrics:
 - ✅ All modes return `status='success'` when predictions exist
 - ✅ All modes return `margin` and `total` keys
 - ✅ All modes return `game_state` and `mode_requested` metadata
 - ✅ Consistent error handling across all modes
 - ✅ Game state detection works correctly
+- ✅ Q3 threshold works as expected
 
 ---
 
@@ -170,24 +187,43 @@ UserWarning: X has feature names, but Ridge was fitted without feature names
        result = predict_q3(game_id, fetch_odds)
    ```
 
+### Q3 Activation Logic:
+
+```python
+if max_period == 3:
+    # Period 3 - check if we're halfway through
+    minutes_remaining = parse_clock(game_clock)
+    
+    if minutes_remaining <= 6.0:
+        # Halfway through Q3 or further (6 minutes or less remaining)
+        return ('q3', game)
+    else:
+        # Less than halfway through Q3 (more than 6 minutes remaining)
+        # Still use halftime model
+        return ('halftime', game)
+```
+
 ---
 
 ## 🚀 CURRENT STATUS
 
 ### Models ARE called at the right time:
 - ✅ **Pregame model** → Only when game hasn't started
-- ✅ **Halftime model** → Only at end of Q2
-- ✅ **Q3 model** → Only after end of Q3
+- ✅ **Halftime model** → At end of Q2, or early Q3 (before halfway)
+- ✅ **Q3 model** → Halfway through Q3 or later, Q4, OT
 
 ### Auto-detection logic:
 - ✅ Period 0 / not started → Uses pregame model
-- ✅ Period 2 (no q3 data) → Uses halftime model  
-- ✅ Period 3+ → Uses q3 model
+- ✅ Period 2 (no q3 data) → Uses halftime model
+- ✅ Period 3 (> 6 min left) → Uses halftime model (early Q3)
+- ✅ Period 3 (<= 6 min left) → Uses q3 model (halfway through Q3)
+- ✅ Period 4+ → Uses q3 model
 - ✅ Graceful fallbacks for API errors
 
 ### No more wrong model calls:
 - ✅ Won't call pregame model during Q4
 - ✅ Won't call Q3 model at halftime
+- ✅ Won't call Q3 model in early Q3 (before halfway)
 - ✅ Won't call halftime model for pregame games
 - ✅ Auto mode detects and uses appropriate model
 
@@ -198,13 +234,14 @@ UserWarning: X has feature names, but Ridge was fitted without feature names
 ### For Immediate Use:
 1. ✅ Use `mode='auto'` for automatic game state detection
 2. ✅ Use `mode='pregame'` for games that haven't started
-3. ✅ Use `mode='halftime'` at end of Q2
-4. ✅ Use `mode='q3'` after end of Q3
+3. ✅ Use `mode='halftime'` at end of Q2 or early Q3
+4. ✅ Use `mode='q3'` after halfway through Q3
 
 ### For Production:
 1. ✅ All critical issues resolved
 2. ✅ All modes tested and working
-3. ⚠️  Optional: Retrain models with feature names to eliminate warnings
+3. ✅ Q3 threshold optimized for better model switching
+4. ⚠️  Optional: Retrain models with feature names to eliminate warnings
 
 ---
 
@@ -215,18 +252,19 @@ UserWarning: X has feature names, but Ridge was fitted without feature names
 Game state detection is robust and working:
 - ✅ Properly detects pregame vs halftime vs Q3
 - ✅ Auto mode correctly maps state to model
+- ✅ Q3 model activates at halfway through Q3 (6 min remaining)
 - ✅ No more calling wrong models at wrong times
 - ✅ All modes return consistent structures
 - ✅ Odds caching works correctly
 
-**The MAIN REQUIREMENT "ensure models are called at the right time" is FULLY IMPLEMENTED AND TESTED!** 🎯
+**The MAIN REQUIREMENT "ensure models are called at the right time" is FULLY IMPLEMENTED, TESTED, AND PRODUCTION-READY!** 🎯
 
 ---
 
 ## 📁 Files Modified
 
 1. `src/odds/persistent_cache.py` - Added `get_or_fetch()` method
-2. `src/predict_api.py` - Complete rewrite with game state detection and fixed mode handling
+2. `src/predict_api.py` - Complete rewrite with game state detection, fixed mode handling, and Q3 threshold
 3. `PENDING_FIXES.md` - Updated to reflect all issues resolved
 
 ---
@@ -240,5 +278,7 @@ Game state detection is robust and working:
 - ✅ Return structures normalized
 - ✅ Odds caching works
 - ✅ All modes tested successfully
+- ✅ Q3 model activates at halfway through Q3 (6 min remaining)
+- ✅ Conservative model switching in early Q3
 
 **No pending issues!** 🚀
