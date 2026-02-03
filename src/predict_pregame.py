@@ -11,10 +11,12 @@ focused on core predictive features while we build full temporal features.
 from __future__ import annotations
 import logging
 from typing import Any, Dict, Optional
+from datetime import datetime
 import numpy as np
 import pandas as pd
 
 from src.modeling.pregame_model import PregameModel, get_pregame_model
+from src.data.historical_data import get_historical_data_manager, TRICODE_TO_TEAM_ID
 
 # Import nba_api for fetching team stats
 try:
@@ -69,22 +71,28 @@ def fetch_team_stats(team_id: int, season: str = '2025-26') -> Optional[pd.Serie
 def extract_core_features(
     home_stats: Optional[pd.Series],
     away_stats: Optional[pd.Series],
+    home_team_id: int,
+    away_team_id: int,
+    game_date: datetime,
 ) -> Dict[str, float]:
     """
-    Extract core pregame features from team stats.
+    Extract core pregame features from team stats + historical data.
     
-    This provides the most important features (from FINAL_REPORT analysis):
-    - home/away_off_rating (top features)
-    - home/away_pace (top features)
-    - home/away_ft_rate (top features)
-    - home/away_efg (top features)
-    - Differentials
-    
-    Total: 18 core features (matches what model expects)
+    This provides ALL 72 features:
+    - Basic team ratings (18 features): off/def rating, pace, efg, tov/orb/ft rate, win pct
+    - Schedule features (8 features): rest days, back-to-back
+    - Recent form features (11 features): recent points/allowed/margin/wins (last 10 games)
+    - Four factors / Net rating (20 features): net rating, TS proxy, four factor weighted
+    - Head-to-head features (13 features): H2H wins, total games, win pct, recent H2H
+    - Schedule strength features (2 features): opponent strength
     """
     features = {}
     
-    # Home team stats
+    # Get historical data manager
+    hist_mgr = get_historical_data_manager()
+    
+    # ===== BASIC TEAM RATINGS (18 features) =====
+    # Use current season stats if available, otherwise use historical averages
     if home_stats is not None:
         features['home_off_rating'] = home_stats.get('OFF_RATING', 110.0)
         features['home_def_rating'] = home_stats.get('DEF_RATING', 110.0)
@@ -96,6 +104,17 @@ def extract_core_features(
         gp = home_stats.get('GP', 1.0)
         wins = home_stats.get('W', 0)
         features['home_win_pct'] = wins / gp if gp > 0 else 0.5
+    elif hist_mgr and len(hist_mgr.get_team_games(home_team_id, before_date=game_date, n=20)) > 0:
+        # Use historical averages
+        home_hist = hist_mgr.get_team_games(home_team_id, before_date=game_date, n=20)
+        features['home_off_rating'] = float(home_hist['home_off_rating'].mean()) if 'home_off_rating' in home_hist else 110.0
+        features['home_def_rating'] = float(home_hist['home_def_rating'].mean()) if 'home_def_rating' in home_hist else 110.0
+        features['home_pace'] = float(home_hist['home_pace'].mean()) if 'home_pace' in home_hist else 100.0
+        features['home_efg'] = float(home_hist['home_efg'].mean()) if 'home_efg' in home_hist else 0.50
+        features['home_ft_rate'] = float(home_hist['home_ft_rate'].mean()) if 'home_ft_rate' in home_hist else 0.25
+        features['home_tov_rate'] = float(home_hist['home_tov_rate'].mean()) if 'home_tov_rate' in home_hist else 0.15
+        features['home_orb_rate'] = float(home_hist['home_orb_rate'].mean()) if 'home_orb_rate' in home_hist else 0.25
+        features['home_win_pct'] = float(home_hist['home_win_pct'].mean()) if 'home_win_pct' in home_hist else 0.5
     else:
         # Default values if stats unavailable
         for feat in ['off_rating', 'def_rating', 'pace', 'efg', 'ft_rate', 'tov_rate', 'orb_rate', 'win_pct']:
@@ -114,35 +133,56 @@ def extract_core_features(
         gp = away_stats.get('GP', 1.0)
         wins = away_stats.get('W', 0)
         features['away_win_pct'] = wins / gp if gp > 0 else 0.5
+    elif hist_mgr and len(hist_mgr.get_team_games(away_team_id, before_date=game_date, n=20)) > 0:
+        # Use historical averages
+        away_hist = hist_mgr.get_team_games(away_team_id, before_date=game_date, n=20)
+        features['away_off_rating'] = float(away_hist['away_off_rating'].mean()) if 'away_off_rating' in away_hist else 110.0
+        features['away_def_rating'] = float(away_hist['away_def_rating'].mean()) if 'away_def_rating' in away_hist else 110.0
+        features['away_pace'] = float(away_hist['away_pace'].mean()) if 'away_pace' in away_hist else 100.0
+        features['away_efg'] = float(away_hist['away_efg'].mean()) if 'away_efg' in away_hist else 0.50
+        features['away_ft_rate'] = float(away_hist['away_ft_rate'].mean()) if 'away_ft_rate' in away_hist else 0.25
+        features['away_tov_rate'] = float(away_hist['away_tov_rate'].mean()) if 'away_tov_rate' in away_hist else 0.15
+        features['away_orb_rate'] = float(away_hist['away_orb_rate'].mean()) if 'away_orb_rate' in away_hist else 0.25
+        features['away_win_pct'] = float(away_hist['away_win_pct'].mean()) if 'away_win_pct' in away_hist else 0.5
     else:
         for feat in ['off_rating', 'def_rating', 'pace', 'efg', 'ft_rate', 'tov_rate', 'orb_rate', 'win_pct']:
             features[f'away_{feat}'] = 110.0 if feat in ['off_rating', 'def_rating'] else (100.0 if feat == 'pace' else 0.5 if feat == 'efg' else 0.25)
         features['away_win_pct'] = 0.5
     
-    # Fill missing temporal/form features with defaults (we'll enhance these later)
-    # Schedule features
-    features['home_rest_days'] = 7.0  # Default
-    features['away_rest_days'] = 7.0
-    features['rest_days_diff'] = 0.0
-    features['home_is_b2b'] = 0.0
-    features['away_is_b2b'] = 0.0
-    features['home_b2b_x_home'] = 0.0
-    features['away_b2b_x_away'] = 0.0
-    features['b2b_diff'] = 0.0
+    # ===== SCHEDULE FEATURES (8 features) =====
+    # Use historical data for rest days and back-to-back
+    if hist_mgr:
+        schedule_features = hist_mgr.calculate_schedule_features(home_team_id, away_team_id, game_date)
+        features.update(schedule_features)
+    else:
+        features['home_rest_days'] = 7.0
+        features['away_rest_days'] = 7.0
+        features['rest_days_diff'] = 0.0
+        features['home_is_b2b'] = 0.0
+        features['away_is_b2b'] = 0.0
+        features['home_b2b_x_home'] = 0.0
+        features['away_b2b_x_away'] = 0.0
+        features['b2b_diff'] = 0.0
     
-    # Recent form features (simplified - use win pct as proxy)
-    features['home_recent_points'] = features['home_off_rating'] * 1.15  # Proxy
-    features['away_recent_points'] = features['away_off_rating'] * 1.15
-    features['home_recent_allowed'] = features['home_def_rating'] * 1.15
-    features['away_recent_allowed'] = features['away_def_rating'] * 1.15
-    features['home_recent_margin'] = (features['home_off_rating'] - features['home_def_rating']) * 1.0
-    features['away_recent_margin'] = (features['away_off_rating'] - features['away_def_rating']) * 1.0
-    features['home_recent_wins'] = features['home_win_pct']
-    features['away_recent_wins'] = features['away_win_pct']
-    features['recent_points_diff'] = features['home_recent_points'] - features['away_recent_points']
-    features['recent_allowed_diff'] = features['home_recent_allowed'] - features['away_recent_allowed']
-    features['recent_margin_diff'] = features['home_recent_margin'] - features['away_recent_margin']
-    features['recent_wins_diff'] = features['home_recent_wins'] - features['away_recent_wins']
+    # ===== RECENT FORM FEATURES (11 features) =====
+    # Use historical data for recent form
+    if hist_mgr:
+        recent_features = hist_mgr.calculate_recent_form(home_team_id, away_team_id, game_date)
+        features.update(recent_features)
+    else:
+        # Simplified proxies
+        features['home_recent_points'] = features['home_off_rating'] * 1.15
+        features['away_recent_points'] = features['away_off_rating'] * 1.15
+        features['home_recent_allowed'] = features['home_def_rating'] * 1.15
+        features['away_recent_allowed'] = features['away_def_rating'] * 1.15
+        features['home_recent_margin'] = (features['home_off_rating'] - features['home_def_rating']) * 1.0
+        features['away_recent_margin'] = (features['away_off_rating'] - features['away_def_rating']) * 1.0
+        features['home_recent_wins'] = features['home_win_pct']
+        features['away_recent_wins'] = features['away_win_pct']
+        features['recent_points_diff'] = features['home_recent_points'] - features['away_recent_points']
+        features['recent_allowed_diff'] = features['home_recent_allowed'] - features['away_recent_allowed']
+        features['recent_margin_diff'] = features['home_recent_margin'] - features['away_recent_margin']
+        features['recent_wins_diff'] = features['home_recent_wins'] - features['away_recent_wins']
     
     # Net rating features
     features['home_net_rating'] = features['home_off_rating'] - features['home_def_rating']
@@ -191,24 +231,34 @@ def extract_core_features(
     features['away_efficiency_score'] = features['away_net_rating']
     features['efficiency_diff'] = features['home_efficiency_score'] - features['away_efficiency_score']
     
-    # Head-to-head features (default - requires historical data lookup)
-    features['h2h_home_wins'] = 5.0  # Default avg
-    features['h2h_away_wins'] = 5.0
-    features['h2h_total_games'] = 10.0
-    features['h2h_home_win_pct'] = 0.5
-    features['h2h_recent_home_wins'] = 2.0
-    features['h2h_recent_away_wins'] = 2.0
-    features['h2h_recent_total'] = 5.0
-    features['h2h_recent_home_win_pct'] = 0.5
-    features['h2h_wins_diff'] = 0.0
-    features['h2h_win_pct_diff'] = 0.0
-    features['h2h_recent_wins_diff'] = 0.0
-    features['h2h_recent_win_pct_diff'] = 0.0
+    # ===== HEAD-TO-HEAD FEATURES (13 features) =====
+    # Use historical data for H2H lookup
+    if hist_mgr:
+        h2h_features = hist_mgr.calculate_h2h_features(home_team_id, away_team_id, game_date)
+        features.update(h2h_features)
+    else:
+        features['h2h_home_wins'] = 5.0
+        features['h2h_away_wins'] = 5.0
+        features['h2h_total_games'] = 10.0
+        features['h2h_home_win_pct'] = 0.5
+        features['h2h_recent_home_wins'] = 2.0
+        features['h2h_recent_away_wins'] = 2.0
+        features['h2h_recent_total'] = 5.0
+        features['h2h_recent_home_win_pct'] = 0.5
+        features['h2h_wins_diff'] = 0.0
+        features['h2h_win_pct_diff'] = 0.0
+        features['h2h_recent_wins_diff'] = 0.0
+        features['h2h_recent_win_pct_diff'] = 0.0
     
-    # Schedule strength features (default - requires historical data)
-    features['home_schedule_strength'] = 0.0
-    features['away_schedule_strength'] = 0.0
-    features['schedule_strength_diff'] = 0.0
+    # ===== SCHEDULE STRENGTH FEATURES (2 features) =====
+    # Use historical data for schedule strength
+    if hist_mgr:
+        ss_features = hist_mgr.calculate_schedule_strength(home_team_id, away_team_id, game_date)
+        features.update(ss_features)
+    else:
+        features['home_schedule_strength'] = 0.0
+        features['away_schedule_strength'] = 0.0
+        features['schedule_strength_diff'] = 0.0
     
     return features
 
@@ -277,8 +327,14 @@ def predict_from_game_id(
     home_stats = fetch_team_stats(home_id, season)
     away_stats = fetch_team_stats(away_id, season)
     
-    # Extract features
-    features = extract_core_features(home_stats, away_stats)
+    # For pregame predictions, we don't have the game_date from the API
+    # Use current date minus a day for historical lookup (simulating pregame context)
+    # In production, this should be fetched from the scoreboard or schedule API
+    # Use timezone-aware timestamp to match historical data (UTC)
+    game_datetime = pd.Timestamp.now('UTC') - pd.Timedelta(days=1)
+    
+    # Extract features with historical data
+    features = extract_core_features(home_stats, away_stats, home_id, away_id, game_datetime)
     
     logger.info(f"Extracted {len(features)} features for prediction")
     
