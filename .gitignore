@@ -15,12 +15,11 @@ venv/
 .streamlit/secrets.toml
 
 # Large / transient directories (do not commit these)
-./data/
+data/
 *.db
 *.sqlite
 *.sqlite3
 logs/
-AUTOMATION_VERIFICATION.md
 
 # Explicitly allow src/data/ package (needed for scoreboard import)
 !src/data/
