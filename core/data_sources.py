@@ -145,13 +145,31 @@ class NBADataSource:
                     continue
                 
                 # Get start time
-                # scheduleLeagueV2 has gameTimeUTC in format like "2026-02-03T03:00:00Z"
-                time_str = g.get('gameTimeUTC', '')
-                if time_str:
-                    game_time_utc = NBADataSource._parse_nba_datetime(time_str)
+                # API BEHAVIOR: scheduleLeagueV2's gameTimeUTC uses 1900-01-01 as placeholder date
+                # BUT the TIME (hour:minute) is correct!
+                # Example: gameTimeUTC='1900-01-01T00:30:00Z' means 00:30 UTC on the game date
+                time_str_utc = g.get('gameTimeUTC', '')
+                
+                if time_str_utc and '1900-01-01' in time_str_utc:
+                    # API returned placeholder date, extract the time component and combine with real date
+                    # Parse the time from the placeholder datetime
+                    placeholder_dt = datetime.fromisoformat(time_str_utc.replace('Z', '+00:00'))
+                    hour = placeholder_dt.hour
+                    minute = placeholder_dt.minute
+                    
+                    # Combine with the actual game date (from date parameter, YYYY-MM-DD)
+                    game_time_utc = datetime.strptime(f'{date}T{hour:02d}:{minute:02d}:00', '%Y-%m-%dT%H:%M:%S')
+                    game_time_utc = game_time_utc.replace(tzinfo=timezone.utc)
+                    
+                    logger.debug(f"Game {game_id}: Extracted time {hour:02d}:{minute:02d} from placeholder, combined with date {date}")
+                elif time_str_utc:
+                    # Use gameTimeUTC directly if it's valid
+                    game_time_utc = NBADataSource._parse_nba_datetime(time_str_utc)
+                    logger.debug(f"Game {game_id}: Using valid gameTimeUTC '{time_str_utc}'")
                 else:
-                    # Default to date at 00:00 UTC if no time
-                    game_time_utc = datetime.strptime(f'{date}T00:00:00', '%Y-%m-%dT%H:%M:%S')
+                    # No time at all - default to 8:00 PM EST (typical start time)
+                    logger.warning(f"Game {game_id}: No gameTimeUTC found, defaulting to {date}T20:00:00")
+                    game_time_utc = datetime.strptime(f'{date}T20:00:00', '%Y-%m-%dT%H:%M:%S')
                     game_time_utc = game_time_utc.replace(tzinfo=timezone.utc)
                 
                 if not game_time_utc:
