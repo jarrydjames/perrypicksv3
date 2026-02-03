@@ -20,6 +20,7 @@ data/
 *.sqlite
 *.sqlite3
 logs/
+SECURITY_NOTE.md
 
 # Explicitly allow src/data/ package (needed for scoreboard import)
 !src/data/
