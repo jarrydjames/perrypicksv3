@@ -1,6 +1,100 @@
 from __future__ import annotations
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Tuple
 import datetime as dt
+import pandas as pd
+
+def detect_game_state(game_id: str) -> Tuple[str, Optional[dict]]:
+    """
+    Detect current game state to determine which model to use.
+    
+    Returns:
+        Tuple of (game_state, game_data)
+        - game_state: 'pregame', 'halftime', 'q3', or 'final'
+        - game_data: Game data dict (if available)
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        from src.data.game_data import fetch_game_by_id
+        game = fetch_game_by_id(game_id)
+        
+        if not game:
+            # Game not found - assume pregame (might be upcoming)
+            logger.info(f"Game {game_id} not found, assuming pregame state")
+            return ('pregame', None)
+        
+        # Extract period and clock info
+        home_periods = (game.get("homeTeam", {}) or {}).get("periods", [])
+        away_periods = (game.get("awayTeam", {}) or {}).get("periods", [])
+        
+        # Count periods that have data
+        all_periods = home_periods + away_periods
+        periods_with_data = [p for p in all_periods if isinstance(p, dict)]
+        
+        if not periods_with_data:
+            # No period data - game hasn't started
+            return ('pregame', game)
+        
+        # Get highest period number
+        max_period = 0
+        for p in periods_with_data:
+            period_num = p.get("period", 0)
+            try:
+                period_int = int(float(period_num))
+                if period_int > max_period:
+                    max_period = period_int
+            except (ValueError, TypeError):
+                pass
+        
+        # Get game status
+        game_status = game.get("gameStatus", 0)
+        
+        # Determine game state
+        if max_period == 0:
+            # Game hasn't started
+            return ('pregame', game)
+        elif max_period == 2:
+            # Period 2 - could be halftime or in Q3
+            # Check if there's any period 3 data
+            has_period_3 = any(p.get('period') == 3 for p in periods_with_data)
+            if has_period_3:
+                return ('q3', game)
+            else:
+                # No period 3 data yet - assume halftime
+                return ('halftime', game)
+        elif max_period >= 3:
+            # Period 3 or higher - use Q3 model
+            return ('q3', game)
+        else:
+            # In progress (period 1 or in Q2)
+            return ('pregame', game)
+            
+    except Exception as e:
+        import logging
+        logger.warning(f"Failed to detect game state for {game_id}: {e}")
+        # Default to pregame if detection fails
+        return ('pregame', None)
+
+
+def extract_team_tricodes(game_data: Optional[dict], home_team: Optional[str], away_team: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
+    """
+    Extract team tricodes from game data if not provided.
+    """
+    if home_team and away_team:
+        return (home_team, away_team)
+    
+    if game_data is None:
+        return (None, None)
+    
+    home = game_data.get("homeTeam", {})
+    away = game_data.get("awayTeam", {})
+    
+    home_tri = home.get("teamTricode") if home else None
+    away_tri = away.get("teamTricode") if away else None
+    
+    return (home_tri, away_tri)
+
 
 def predict_game(
     game_input: str,
@@ -21,6 +115,19 @@ def predict_game(
     - team totals: derived from total+margin
     Returns rich dict (status, bands80, normal, labels, text, etc.).
     
+    IMPORTANT: Game State Detection
+    ------------------------------
+    The system now properly detects game state to ensure correct model usage:
+    - 'pregame':   Use pregame model (before game starts or early Q1)
+    - 'halftime':  Use halftime model (at end of Q2)
+    - 'q3':        Use Q3 model (after end of Q3, in Q4)
+    - 'final':     Use Q3 model (game finished)
+    
+    Auto-detection logic:
+    - Period 0 or not started → PREGAME
+    - Period 2 (no period 3 data) → HALFTIME
+    - Period 3 or higher → Q3
+    
     Args:
         game_input: Game ID or URL
         use_binned_intervals: Legacy parameter (deprecated)
@@ -29,10 +136,17 @@ def predict_game(
             - 'pregame': Force pregame model
             - 'halftime': Force halftime model  
             - 'q3': Force Q3 model
-            - 'auto': Auto-detect based on game state (default)
+            - 'auto': Auto-detect based on game state (DEFAULT - RECOMMENDED)
         home_team: Home team tricode (optional, helps avoid API calls)
         away_team: Away team tricode (optional, helps avoid API calls)
     
+    Returns:
+        Dict with prediction results including:
+        - status: 'success' or 'error'
+        - model_used: Which model was used
+        - margin, total: Predictions
+        - home_win_prob: Win probability
+        
     Raises:
         ValueError: If game input is invalid
         Exception: If prediction fails
@@ -46,17 +160,57 @@ def predict_game(
     
     # Call prediction with comprehensive error handling
     try:
-        # Determine which model to use based on mode
-        if mode == 'pregame':
-            # Force pregame model (FIXED - now using correct model!)
+        # Step 1: Detect game state (if auto mode)
+        game_state = None
+        game_data = None
+        
+        if mode == 'auto':
+            game_state, game_data = detect_game_state(game_input)
+            logger.info(f"Auto-detected game state for {game_input}: {game_state}")
+            
+            # Extract team tricodes from game data if not provided
+            if (home_team is None or away_team is None) and game_data:
+                home_team, away_team = extract_team_tricodes(game_data, home_team, away_team)
+        
+        # Step 2: Determine which model to use based on mode/state
+        use_model = mode
+        
+        if mode == 'auto' and game_state:
+            # Map game state to model
+            state_to_model = {
+                'pregame': 'pregame',
+                'halftime': 'halftime',
+                'q3': 'q3',
+                'final': 'q3',
+            }
+            use_model = state_to_model.get(game_state, 'pregame')
+        
+        # Step 3: Call appropriate model
+        result = None
+        
+        if use_model == 'pregame':
+            # PREGAME MODEL - Use for games that haven't started or early in Q1
             from src.predict_pregame import predict_from_game_id as predict_pregame
             
-            # Get team tricodes if not provided
-            if home_team is None or away_team is None:
-                # For pregame, we MUST have team tricodes
-                # Try to extract from game ID
-                home_team = home_team or 'UNK'
-                away_team = away_team or 'UNK'
+            # Validate we have team tricodes
+            if not home_team or not away_team:
+                # Try to extract from game data
+                if game_data is None:
+                    # Fetch game data to get team tricodes
+                    from src.data.game_data import fetch_game_by_id
+                    game_data = fetch_game_by_id(game_input)
+                
+                if game_data:
+                    home_team, away_team = extract_team_tricodes(game_data, home_team, away_team)
+                
+                # If still no team tricodes, return error
+                if not home_team or not away_team:
+                    return {
+                        "status": "error",
+                        "error": f"Unable to determine team tricodes for game {game_input}. Please provide home_team and away_team parameters.",
+                        "game_id": game_input,
+                        "model_used": "ERROR",
+                    }
             
             result = predict_pregame(
                 game_id=game_input,
@@ -64,11 +218,38 @@ def predict_game(
                 away_team=away_team,
                 fetch_odds=fetch_odds,
             )
+            
+            # Add game state info to result
+            if result and result.get('status') == 'success':
+                result['game_state'] = game_state if mode == 'auto' else 'pregame_forced'
+                result['mode_requested'] = mode
+        
+        elif use_model == 'halftime':
+            # HALFTIME MODEL - Use at end of Q2
+            from src.predict_from_gameid_v2_ci import predict_from_game_id as predict_halftime
+            result = predict_halftime(game_input)
+            
+            if result and result.get('status') == 'success':
+                result['game_state'] = game_state if mode == 'auto' else 'halftime_forced'
+                result['mode_requested'] = mode
+        
+        elif use_model == 'q3':
+            # Q3 MODEL - Use after end of Q3
+            from src.predict_from_gameid_v3_runtime import predict_from_game_id as predict_q3
+            result = predict_q3(game_input, fetch_odds=fetch_odds)
+            
+            if result and result.get('status') == 'success':
+                result['game_state'] = game_state if mode == 'auto' else 'q3_forced'
+                result['mode_requested'] = mode
         
         else:
-            # Halftime or Q3 models (or auto-detect)
-            from src.predict_from_gameid_v3_runtime import predict_from_game_id as predict_runtime
-            result = predict_runtime(game_input, fetch_odds=fetch_odds)
+            # Invalid mode
+            return {
+                "status": "error",
+                "error": f"Invalid mode: {mode}. Must be 'auto', 'pregame', 'halftime', or 'q3'.",
+                "game_id": game_input,
+                "model_used": "ERROR",
+            }
         
         # Validate that result is a dict (never a string or error)
         if not isinstance(result, dict):
