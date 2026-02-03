@@ -94,24 +94,102 @@ class AnalysisEngine:
         """
         Get prediction from appropriate model based on mode.
         
-        The predict_game function automatically selects the right model:
-        - Pregame modes: Uses pregame model
-        - HALFTIME: Uses halftime model (if Q3 data not available)
-        - Q3: Uses Q3 model (if Q3 data available)
+        Uses correct model for each trigger type:
+        - PRE_3H, PRE_1H, PRE_10M: Uses pregame model (no live data needed)
+        - HALFTIME: Uses halftime model (needs Q1+Q2 data)
+        - Q3: Uses Q3 model (needs Q1+Q2+Q3 data)
+        
+        This approach calls the correct model directly, avoiding the auto-detection
+        issues in predict_game which can cause KeyError('period') errors.
         """
         try:
-            # predict_game handles model selection and error handling
-            prediction = predict_game(game_id, fetch_odds=True)
+            # Determine which model to use based on trigger type
+            pregame_modes = ['PRE_3H', 'PRE_1H', 'PRE_10M']
             
-            if not prediction or prediction.get('status') == 'error':
-                error_msg = prediction.get('error', 'Unknown error') if prediction else 'No prediction returned'
+            if mode in pregame_modes:
+                # Use pregame model - NO LIVE DATA NEEDED
+                logger.info(f"Using pregame model for {game_id} ({mode})")
+                from src.predict_pregame import predict_from_game_id as predict_pregame
+                
+                home_team = game_state.get('home_team')
+                away_team = game_state.get('away_team')
+                
+                if not home_team or not away_team:
+                    logger.error(f"Missing team tricodes for pregame prediction: {game_id}")
+                    return None
+                
+                prediction = predict_pregame(
+                    game_id=game_id,
+                    home_team=home_team,
+                    away_team=away_team,
+                    fetch_odds=False
+                )
+                
+            elif mode == 'HALFTIME':
+                # Use halftime model - needs Q1+Q2 live data
+                logger.info(f"Using halftime model for {game_id}")
+                from src.predict_from_gameid_v2_ci import predict_from_game_id as predict_halftime
+                
+                prediction = predict_halftime(game_id)
+                
+                # Halftime model returns different structure - normalize it
+                if prediction and isinstance(prediction.get('status'), dict):
+                    pred = prediction.get('pred', {})
+                    prediction = {
+                        'game_id': prediction.get('game_id'),
+                        'home_name': prediction.get('home_name'),
+                        'away_name': prediction.get('away_name'),
+                        'margin': pred.get('pred_final_margin', 0),
+                        'total': pred.get('pred_final_total', 0),
+                        'margin_q10': pred.get('pred_final_margin', 0) - 10,
+                        'margin_q90': pred.get('pred_final_margin', 0) + 10,
+                        'total_q10': pred.get('pred_final_total', 0) - 15,
+                        'total_q90': pred.get('pred_final_total', 0) + 15,
+                        'home_win_prob': None,
+                        'margin_sd': None,
+                        'total_sd': None,
+                        'model_used': 'HALFTIME_V2_CI',
+                        'status': 'success',
+                    }
+                
+            elif mode == 'Q3':
+                # Use Q3 model - needs Q1+Q2+Q3 live data
+                logger.info(f"Using Q3 model for {game_id}")
+                from src.predict_from_gameid_v3_runtime import predict_from_game_id as predict_q3
+                
+                prediction = predict_q3(game_id, fetch_odds=False)
+                
+                # Q3 predictor doesn't set 'status' field - set it if we have valid prediction
+                if prediction and 'margin' in prediction and 'total' in prediction:
+                    prediction['status'] = 'success'
+                
+            else:
+                logger.warning(f"Unknown mode: {mode}")
+                return None
+            
+            # Validate prediction
+            if not prediction:
+                logger.warning(f"No prediction returned for {game_id}")
+                return None
+            
+            if prediction.get('status') == 'error':
+                error_msg = prediction.get('error', 'Unknown error')
                 logger.warning(f"Prediction error for {game_id}: {error_msg}")
+                return None
+            
+            # Ensure required fields are present
+            required_fields = ['game_id', 'home_name', 'away_name', 'margin', 'total']
+            missing_fields = [f for f in required_fields if f not in prediction]
+            if missing_fields:
+                logger.error(f"Prediction missing required fields: {missing_fields}")
                 return None
             
             return prediction
             
         except Exception as e:
-            logger.error(f"Error getting prediction for {game_id}: {e}")
+            logger.error(f"Error getting prediction for {game_id} (mode={mode}): {e}")
+            import traceback
+            logger.error(traceback.format_exc())
             return None
     
     def _build_market_inputs(
