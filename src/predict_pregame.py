@@ -41,10 +41,8 @@ TEAM_IDS = {
 }
 
 # Features from training data - ONLY these to avoid mismatch
-# Add some additional features that model might need but we don't have stats for
-# Use defaults for missing features
+# OLD pregame model expects 34 features (from pregame_feature_list.txt)
 PREGAME_FEATURES = [
-    # Core stats (32 features from pregame_feature_list.txt)
     'home_off_rating',
     'away_off_rating',
     'home_def_rating',
@@ -61,6 +59,8 @@ PREGAME_FEATURES = [
     'away_ft_rate',
     'home_win_pct',
     'away_win_pct',
+    'home_home_win_pct',
+    'away_road_win_pct',
     'off_rating_diff',
     'def_rating_diff',
     'pace_diff',
@@ -77,9 +77,6 @@ PREGAME_FEATURES = [
     'expected_margin',
     'off_x_pace',
     'pace_diff_x_home_adv',
-    # Additional features (may not have stats, use defaults)
-    'home_home_win_pct',
-    'away_road_win_pct',
 ]
 
 def get_team_id(tricode: str) -> Optional[int]:
