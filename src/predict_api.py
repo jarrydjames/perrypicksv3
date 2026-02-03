@@ -47,8 +47,24 @@ def detect_game_state(game_id: str) -> Tuple[str, Optional[dict]]:
             except (ValueError, TypeError):
                 pass
         
-        # Get game status
+        # Get game status and clock
         game_status = game.get("gameStatus", 0)
+        game_clock = game.get("gameClock", "PT00M00.00S")
+        
+        # Helper function to parse game clock (format: PT{minutes}M{seconds}.{milliseconds}S)
+        def parse_clock(clock_str):
+            try:
+                if not clock_str or not clock_str.startswith('PT'):
+                    return 0
+                # Extract minutes
+                parts = clock_str.replace('PT', '').replace('S', '').split('M')
+                if len(parts) >= 2:
+                    minutes = float(parts[0])
+                    seconds = float(parts[1].split('.')[0])
+                    return minutes + seconds / 60
+                return 0
+            except (ValueError, IndexError, AttributeError):
+                return 0
         
         # Determine game state
         if max_period == 0:
@@ -63,8 +79,20 @@ def detect_game_state(game_id: str) -> Tuple[str, Optional[dict]]:
             else:
                 # No period 3 data yet - assume halftime
                 return ('halftime', game)
-        elif max_period >= 3:
-            # Period 3 or higher - use Q3 model
+        elif max_period == 3:
+            # Period 3 - check if we're halfway through
+            # Q3 is 12 minutes; halfway is 6 minutes remaining
+            minutes_remaining = parse_clock(game_clock)
+            
+            if minutes_remaining <= 6.0:
+                # Halfway through Q3 or further (6 minutes or less remaining)
+                return ('q3', game)
+            else:
+                # Less than halfway through Q3 (more than 6 minutes remaining)
+                # Still use halftime model
+                return ('halftime', game)
+        elif max_period >= 4:
+            # Period 4 or higher (Q4, OT) - use Q3 model
             return ('q3', game)
         else:
             # In progress (period 1 or in Q2)
@@ -117,14 +145,16 @@ def predict_game(
     ------------------------------
     The system now properly detects game state to ensure correct model usage:
     - 'pregame':   Use pregame model (before game starts or early Q1)
-    - 'halftime':  Use halftime model (at end of Q2)
-    - 'q3':        Use Q3 model (after end of Q3, in Q4)
+    - 'halftime':  Use halftime model (at end of Q2, or early Q3 before halfway)
+    - 'q3':        Use Q3 model (halfway through Q3 or later, Q4, OT)
     - 'final':     Use Q3 model (game finished)
     
     Auto-detection logic:
     - Period 0 or not started → PREGAME
     - Period 2 (no period 3 data) → HALFTIME
-    - Period 3 or higher → Q3
+    - Period 3 (< 6 min remaining) → HALFTIME (early Q3)
+    - Period 3 (>= 6 min remaining) → Q3 (halfway through Q3 or later)
+    - Period 4+ → Q3
     
     Args:
         game_input: Game ID or URL
