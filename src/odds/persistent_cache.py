@@ -127,3 +127,22 @@ class PersistentOddsCache:
             return True
         
         return row["expires_at_utc"] < time.time()
+    
+    def get_or_fetch(self, home: str, away: str) -> Optional[OddsAPIMarketSnapshot]:
+        """Get odds from cache, or fetch if not available/expired."""
+        # Check cache first
+        snapshot = self.get(home, away)
+        
+        if snapshot is not None:
+            return snapshot
+        
+        # Not in cache or expired - fetch from API
+        from src.odds.odds_api import fetch_nba_odds_snapshot, OddsAPIError
+        try:
+            snapshot = fetch_nba_odds_snapshot(home, away)
+            if snapshot:
+                # Store in cache
+                self.set(home, away, snapshot)
+            return snapshot
+        except OddsAPIError:
+            return None

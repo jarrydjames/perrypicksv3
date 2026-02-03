@@ -76,6 +76,7 @@ def detect_game_state(game_id: str) -> Tuple[str, Optional[dict]]:
         # Default to pregame if detection fails
         return ('pregame', None)
 
+
 def extract_team_tricodes(game_data: Optional[dict], home_team: Optional[str], away_team: Optional[str]) -> Tuple[Optional[str], Optional[str]]:
     """
     Extract team tricodes from game data if not provided.
@@ -93,6 +94,7 @@ def extract_team_tricodes(game_data: Optional[dict], home_team: Optional[str], a
     away_tri = away.get("teamTricode") if away else None
     
     return (home_tri, away_tri)
+
 
 def predict_game(
     game_input: str,
@@ -225,51 +227,18 @@ def predict_game(
         elif use_model == 'halftime':
             # HALFTIME MODEL - Use at end of Q2
             from src.predict_from_gameid_v2_ci import predict_from_game_id as predict_halftime
-            raw_result = predict_halftime(game_input)
+            result = predict_halftime(game_input)
             
-            # Normalize return structure to match expected format
-            if raw_result and isinstance(raw_result.get('status'), dict):
-                # Halftime predictor returns nested structure - normalize it
-                pred = raw_result.get('pred', {})
-                result = {
-                    'game_id': raw_result.get('game_id'),
-                    'home_name': raw_result.get('home_name'),
-                    'away_name': raw_result.get('away_name'),
-                    'margin': pred.get('pred_final_margin'),  # Map from pred_final_margin
-                    'total': pred.get('pred_final_total'),    # Map from pred_final_total
-                    'home_score': raw_result.get('h1_home'),
-                    'away_score': raw_result.get('h1_away'),
-                    'margin_q10': pred.get('pred_final_margin', 0) - 10,  # Approximate
-                    'margin_q90': pred.get('pred_final_margin', 0) + 10,  # Approximate
-                    'total_q10': pred.get('pred_final_total', 0) - 15,   # Approximate
-                    'total_q90': pred.get('pred_final_total', 0) + 15,   # Approximate
-                    'home_win_prob': None,  # Not provided by halftime predictor
-                    'margin_sd': None,  # Not provided by halftime predictor
-                    'total_sd': None,   # Not provided by halftime predictor
-                    'model_used': 'HALFTIME_V2_CI',
-                    'model_name': None,
-                    'feature_version': None,
-                    'game_state': game_state if mode == 'auto' else 'halftime_forced',
-                    'mode_requested': mode,
-                    'status': 'success',
-                }
-            else:
-                result = raw_result
-                if result:
-                    result['game_state'] = game_state if mode == 'auto' else 'halftime_forced'
-                    result['mode_requested'] = mode
+            if result and result.get('status') == 'success':
+                result['game_state'] = game_state if mode == 'auto' else 'halftime_forced'
+                result['mode_requested'] = mode
         
         elif use_model == 'q3':
             # Q3 MODEL - Use after end of Q3
             from src.predict_from_gameid_v3_runtime import predict_from_game_id as predict_q3
             result = predict_q3(game_input, fetch_odds=fetch_odds)
             
-            # Q3 predictor already returns correct structure, just add metadata
-            # Q3 predictor doesn't set 'status' field - check for required keys
-            if result and 'margin' in result and 'total' in result:
-                result['status'] = 'success'  # Set status explicitly
-                result['game_state'] = game_state if mode == 'auto' else 'q3_forced'
-                result['mode_requested'] = mode
+            if result and result.get('status') == 'success':
                 result['game_state'] = game_state if mode == 'auto' else 'q3_forced'
                 result['mode_requested'] = mode
         
