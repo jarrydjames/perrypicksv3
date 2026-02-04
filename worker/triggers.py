@@ -222,14 +222,14 @@ class TriggerFirer:
         3. Return True (caller handles analysis and Discord)
         """
         try:
-            now_utc = now_utc()
+            current_time = now_utc()
             
             # Store as fired trigger
             # Note: This is called when trigger is detected, not scheduled
             # So we need to mark it as fired retroactively
             
             # For game-state triggers, we create them on-the-fly
-            trigger_id = self._create_fired_trigger(game_id, trigger_type, now_utc)
+            trigger_id = self._create_fired_trigger(game_id, trigger_type, current_time)
             
             if not trigger_id:
                 return False
@@ -237,7 +237,7 @@ class TriggerFirer:
             # Create tracking snapshot
             TrackingStorage.store_snapshot(
                 game_id=game_id,
-                timestamp_utc=now_utc,
+                timestamp_utc=to_iso(current_time),
                 poll_type='trigger',
                 trigger_type=trigger_type,
                 quarter=game_state.get('current_period'),

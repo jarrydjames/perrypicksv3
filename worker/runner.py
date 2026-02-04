@@ -441,7 +441,7 @@ class AutomationRunner:
     
     def _create_periodic_snapshots(self, games: list):
         """Create periodic tracking snapshots for all games."""
-        now_utc = now_utc()
+        current_time = now_utc()
         
         for game in games:
             game_id = game['game_id']
@@ -457,7 +457,7 @@ class AutomationRunner:
                 # Create snapshot
                 TrackingStorage.store_snapshot(
                     game_id=game_id,
-                    timestamp_utc=now_utc,
+                    timestamp_utc=to_iso(current_time),
                     poll_type='periodic',
                     quarter=game.get('current_period'),
                     game_clock=game.get('game_clock'),
@@ -892,6 +892,14 @@ def main():
         logger.error("DISCORD_WEBHOOK_URL environment variable not set")
         sys.exit(1)
     
+    # Convert 'today' to actual date (use UTC date for consistency)
+    if args.date == 'today':
+        from core.timezone import now_utc
+        date_str = now_utc().format('YYYY-MM-DD')
+        logger.info(f"Converting 'today' to date: {date_str}")
+    else:
+        date_str = args.date
+    
     # Create and initialize runner
     runner = AutomationRunner(
         db_path=db_path,
@@ -899,7 +907,7 @@ def main():
         discord_webhook_url=discord_webhook_url,
         poll_interval=args.poll_interval,
         dry_run=args.dry_run,
-        date=args.date
+        date=date_str
     )
     
     if not runner.initialize():
