@@ -6,9 +6,11 @@ Detects halftime and end of Q3 triggers from live game data.
 import logging
 from typing import List, Optional, Dict, Any
 from pathlib import Path
-from datetime import datetime
+
+import pendulum
 
 from core.storage import GameStorage, TriggerStorage, TrackingStorage
+from core.timezone import now_utc, to_iso
 from worker.scheduler import GameStateTracker
 
 logger = logging.getLogger(__name__)
@@ -220,7 +222,7 @@ class TriggerFirer:
         3. Return True (caller handles analysis and Discord)
         """
         try:
-            now_utc = datetime.now()
+            now_utc = now_utc()
             
             # Store as fired trigger
             # Note: This is called when trigger is detected, not scheduled

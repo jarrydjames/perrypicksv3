@@ -214,7 +214,7 @@ class NBADataSource:
                     validate_future_datetime(game['start_time_utc'], hours_ahead=48)
                     valid_games.append(game)
                 except ValueError as e:
-                    logger.warning(f"Skipping game {game['game_id']}: {e}
+                    logger.warning(f"Skipping game {game['game_id']}: {e}")
             
             logger.info(f"Fetched {len(games)} games for date {date}, {len(valid_games)} valid after time validation")
             return valid_games

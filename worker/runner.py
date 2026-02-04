@@ -6,12 +6,13 @@ Local event-driven automation: monitors games, fires triggers, posts to Discord.
 import logging
 import signal
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta  # Keep timedelta for time arithmetic
 from pathlib import Path
 from typing import Optional, Dict, Any
 import argparse
 import os
-import pytz
+
+import pendulum
 
 # Load environment variables from .env file (if it exists)
 try:
@@ -31,7 +32,10 @@ from core.discord_client import DiscordWebhookClient
 from core.analysis import AnalysisEngine
 from worker.scheduler import TriggerScheduler
 from worker.triggers import TriggerFirer
+from core.timezone import now_utc, to_iso, parse_date_str, parse_iso_utc
+from core.validation import validate_schedule_date, validate_system_clock
 
+logger = logging.getLogger(__name__)
 logger = logging.getLogger(__name__)
 
 
@@ -43,14 +47,28 @@ class AutomationRunner:
         db_path: Path,
         odds_api_key: str,
         discord_webhook_url: str,
+        date: str,  # MUST be explicit YYYY-MM-DD format
         poll_interval: int = 60,
-        dry_run: bool = False,
-        date: str = 'today'
+        dry_run: bool = False
     ):
         self.db_path = db_path
         self.poll_interval = poll_interval
         self.dry_run = dry_run
         self.running = False
+        
+        # Validate date format (no more 'today' support!)
+        if date == 'today':
+            raise ValueError(
+                "Relative dates not supported. Use explicit YYYY-MM-DD format. "
+                "Example: --date 2025-02-03"
+            )
+        
+        # Validate date is reasonable (not in past, not too far in future)
+        try:
+            validate_schedule_date(date)
+        except ValueError as e:
+            raise ValueError(f"Invalid date '{date}': {e}") from e
+        
         self.date = date
         
         # Initialize components
@@ -70,26 +88,24 @@ class AutomationRunner:
         self.running = False
     
     def initialize(self) -> bool:
-        """Initialize database and schedule triggers for today's games."""
+        """Initialize database and schedule triggers for games."""
         try:
             # Initialize database
             init_database(self.db_path)
             logger.info("Database initialized")
             
-            # Schedule games for the specified date
-            # IMPORTANT: Use CST (Eastern time) for 'today' since NBA games are
-            # scheduled in EST/CST timezone. Using UTC here would cause issues
-            # with games that cross the UTC date boundary (e.g., 9pm CST games).
-            if self.date == 'today':
-                cst_tz = pytz.timezone('America/Chicago')
-                now_cst = datetime.now(timezone.utc).astimezone(cst_tz)
-                schedule_date = now_cst.strftime('%Y-%m-%d')
+            # Validate system clock
+            clock_result = validate_system_clock()
+            if not clock_result['valid']:
+                logger.warning(f"System clock issue detected: {clock_result['warning']}")
             else:
-                schedule_date = self.date
+                logger.info(f"System clock validated: {clock_result['drift_seconds']:.1f}s drift")
             
-            games_scheduled = self.scheduler.schedule_games_for_date(schedule_date)
+            # Schedule games for the specified date
+            # (Date was already validated in __init__)
+            games_scheduled = self.scheduler.schedule_games_for_date(self.date)
             
-            logger.info(f"Initialized {games_scheduled} games for {schedule_date}")
+            logger.info(f"Initialized {games_scheduled} games for {self.date}")
             return True
             
         except Exception as e:
@@ -103,9 +119,9 @@ class AutomationRunner:
         Returns:
             Number of triggers processed
         """
-        now_utc = datetime.now(timezone.utc)
-        window_start = now_utc - timedelta(minutes=2)
-        window_end = now_utc + timedelta(seconds=30)
+        now_utc_val = now_utc()
+        window_start = now_utc_val - pendulum.duration(minutes=2)
+        window_end = now_utc_val + pendulum.duration(seconds=30)
         
         total_processed = 0
         
@@ -198,7 +214,7 @@ class AutomationRunner:
                     trigger_type=trigger_type,
                     game_data=data['game_state'],
                     picks=picks,
-                    timestamp=datetime.now(timezone.utc)
+                    timestamp=now_utc()
                 )
                 
                 message_id = self.discord_client.post_message(message)
@@ -220,7 +236,7 @@ class AutomationRunner:
             # Mark trigger as fired
             TriggerStorage.mark_triggered(
                 trigger_id=trigger['id'],
-                fired_at_utc=datetime.now(timezone.utc),
+                fired_at_utc=now_utc(),
                 db_path=self.db_path
             )
             
@@ -301,7 +317,7 @@ class AutomationRunner:
                     trigger_type=trigger_type,
                     game_data=data['game_state'],
                     picks=picks,
-                    timestamp=datetime.now(timezone.utc)
+                    timestamp=now_utc()
                 )
                 
                 message_id = self.discord_client.post_message(message)
@@ -331,7 +347,7 @@ class AutomationRunner:
             if matching_trigger:
                 TriggerStorage.mark_triggered(
                     trigger_id=matching_trigger[0]['id'],
-                fired_at_utc=datetime.now(timezone.utc),
+                fired_at_utc=now_utc(),
                 db_path=self.db_path
             )
             
@@ -379,8 +395,8 @@ class AutomationRunner:
                 all_triggers = TriggerStorage.get_triggers_for_game(game_id, db_path=self.db_path)
                 
                 # Filter for triggers created in last 2 minutes
-                now_utc = datetime.now(timezone.utc)
-                recent_cutoff = now_utc - timedelta(minutes=2)
+                now_utc = now_utc()
+                recent_cutoff = now_utc - pendulum.duration(minutes=2)
                 
                 recent_triggers = [
                     t for t in all_triggers
@@ -404,7 +420,7 @@ class AutomationRunner:
     
     def _create_periodic_snapshots(self, games: list):
         """Create periodic tracking snapshots for all games."""
-        now_utc = datetime.now(timezone.utc)
+        now_utc = now_utc()
         
         for game in games:
             game_id = game['game_id']
@@ -517,7 +533,7 @@ class AutomationRunner:
             if not self.dry_run:
                 message = self.discord_client.format_daily_summary_post(
                     predictions=predictions,
-                    timestamp=datetime.now(timezone.utc),
+                    timestamp=now_utc(),
                     date=date
                 )
                 
@@ -540,7 +556,7 @@ class AutomationRunner:
             # Mark trigger as fired
             TriggerStorage.mark_triggered(
                 trigger_id=trigger['id'],
-                fired_at_utc=datetime.now(timezone.utc),
+                fired_at_utc=now_utc(),
                 db_path=self.db_path
             )
             
@@ -627,7 +643,7 @@ class AutomationRunner:
                     trigger_type='PRE_GAME',
                     game_data=game_state,
                     picks=picks[:3],  # Top 3 bets with highest edge
-                    timestamp=datetime.now(timezone.utc)
+                    timestamp=now_utc()
                 )
                 
                 message_id = self.discord_client.post_message(message)
@@ -649,7 +665,7 @@ class AutomationRunner:
             # Mark trigger as fired
             TriggerStorage.mark_triggered(
                 trigger_id=trigger['id'],
-                fired_at_utc=datetime.now(timezone.utc),
+                fired_at_utc=now_utc(),
                 db_path=self.db_path
             )
             
@@ -719,7 +735,7 @@ class AutomationRunner:
                 message = self.discord_client.format_halftime_post(
                     game_data=game_state,
                     prediction=prediction,
-                    timestamp=datetime.now(timezone.utc)
+                    timestamp=now_utc()
                 )
                 
                 message_id = self.discord_client.post_message(message)
@@ -748,7 +764,7 @@ class AutomationRunner:
             if halftime_trigger:
                 TriggerStorage.mark_triggered(
                     trigger_id=halftime_trigger[0]['id'],
-                    fired_at_utc=datetime.now(timezone.utc),
+                    fired_at_utc=now_utc(),
                     db_path=self.db_path
                 )
             

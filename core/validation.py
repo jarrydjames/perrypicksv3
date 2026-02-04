@@ -112,10 +112,10 @@ def validate_future_datetime(
         logger.error(error_msg)
         raise ValueError(error_msg)
     
-    logger.debug(
-        f"Datetime {to_iso(dt_utc)} validated: "
-        f"{hours_delta:.1f} hours ahead"
-    )
+    logger.debug("Datetime {} validated: {} hours ahead".format(
+        to_iso(dt_utc),
+        hours_delta
+    ))
     return True
 
 
