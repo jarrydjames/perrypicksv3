@@ -8,6 +8,8 @@ pyarrow
 streamlit-autorefresh
 pypdf
 pytz
+pendulum==3.0.0
+time-machine>=2.6.0
 nba_api
 xgboost
 lightgbm

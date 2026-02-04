@@ -5,14 +5,17 @@ Handles NBA API and Odds API calls with caching and rate limiting.
 
 import logging
 import requests
-from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any, List
 from pathlib import Path
-
+from datetime import timedelta  # Keep for timedelta operations
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
+import pendulum
+
 from core.storage import OddsCacheStorage
+from core.timezone import parse_iso_utc, to_iso, parse_date_str, now_utc
+from core.validation import validate_future_datetime, validate_nba_schedule
 from nba_api.stats.endpoints import boxscoretraditionalv2
 
 logger = logging.getLogger(__name__)
@@ -29,7 +32,7 @@ class NBADataSource:
     """NBA API data source."""
     
     @staticmethod
-    def _parse_nba_datetime(dt_input: Any) -> Optional[datetime]:
+    def _parse_nba_datetime(dt_input: Any) -> Optional[pendulum.DateTime]:
         """
         Parse NBA API datetime to timezone-aware UTC datetime.
         
@@ -38,7 +41,7 @@ class NBADataSource:
         - ISO 8601 strings (with or without timezone)
         - Naive datetime objects
         
-        Always returns timezone-aware datetime in UTC.
+        Always returns timezone-aware pendulum.DateTime in UTC.
         """
         if dt_input is None:
             return None
@@ -47,41 +50,37 @@ class NBADataSource:
             # Handle pandas Timestamp
             if hasattr(dt_input, 'to_pydatetime'):
                 dt = dt_input.to_pydatetime()
-                # Ensure timezone-aware
-                if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return dt
+                # Convert to pendulum DateTime
+                if isinstance(dt, datetime):
+                    return pendulum.instance(dt).in_timezone('UTC')
+                return pendulum.parse(str(dt)).in_timezone('UTC')
             
             # Handle string inputs
             elif isinstance(dt_input, str):
                 dt_str = dt_input.strip()
                 
-                # Try ISO format first
+                # Try ISO format first (using pendulum)
                 try:
-                    dt = datetime.fromisoformat(dt_str.replace('Z', '+00:00'))
-                    # Ensure timezone-aware
-                    if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
-                        dt = dt.replace(tzinfo=timezone.utc)
-                    return dt
-                except ValueError:
+                    dt = pendulum.parse(dt_str, strict=True)
+                    return dt.in_timezone('UTC')
+                except Exception:
                     pass
                 
                 # Try parsing other common formats
                 for fmt in ('%Y-%m-%d %H:%M:%S', '%Y-%m-%d'):
                     try:
-                        dt = datetime.strptime(dt_str, fmt)
-                        return dt.replace(tzinfo=timezone.utc)
+                        # Use datetime.strptime for these, then convert to pendulum
+                        import datetime as dt_module
+                        dt = dt_module.datetime.strptime(dt_str, fmt)
+                        return pendulum.instance(dt, tz='UTC')
                     except ValueError:
                         continue
                 
                 return None
             
-            # Handle datetime objects
+            # Handle datetime objects (old datetime module)
             elif isinstance(dt_input, datetime):
-                dt = dt_input
-                if dt.tzinfo is None or dt.tzinfo.utcoffset(dt) is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return dt
+                return pendulum.instance(dt_input, tz='UTC')
             
             return None
             
@@ -111,6 +110,16 @@ class NBADataSource:
             
             league = data.get('leagueSchedule', {})
             game_dates = league.get('gameDates', [])
+            
+            # Validate NBA schedule response
+            validation_result = validate_nba_schedule(data, date)
+            if not validation_result['valid']:
+                logger.error(f"NBA schedule validation failed for {date}: {validation_result['issues']}")
+                return []
+            
+            # Log warnings
+            for warning in validation_result.get('warnings', []):
+                logger.warning(warning)
             
             # Find games for the specified date
             # scheduleLeagueV2 uses "MM/DD/YYYY" format for gameDate
@@ -152,14 +161,16 @@ class NBADataSource:
                 
                 if time_str_utc and '1900-01-01' in time_str_utc:
                     # API returned placeholder date, extract the time component and combine with real date
-                    # Parse the time from the placeholder datetime
-                    placeholder_dt = datetime.fromisoformat(time_str_utc.replace('Z', '+00:00'))
+                    # Parse the time from the placeholder datetime using pendulum
+                    placeholder_dt = pendulum.parse(time_str_utc)
                     hour = placeholder_dt.hour
                     minute = placeholder_dt.minute
                     
                     # Combine with the actual game date (from date parameter, YYYY-MM-DD)
-                    game_time_utc = datetime.strptime(f'{date}T{hour:02d}:{minute:02d}:00', '%Y-%m-%dT%H:%M:%S')
-                    game_time_utc = game_time_utc.replace(tzinfo=timezone.utc)
+                    # Use pendulum to parse the date and set the time
+                    game_time_utc = pendulum.parse(date)
+                    game_time_utc = game_time_utc.set(hour=hour, minute=minute, second=0, microsecond=0)
+                    game_time_utc = game_time_utc.in_timezone('UTC')
                     
                     logger.debug(f"Game {game_id}: Extracted time {hour:02d}:{minute:02d} from placeholder, combined with date {date}")
                 elif time_str_utc:
@@ -169,8 +180,9 @@ class NBADataSource:
                 else:
                     # No time at all - default to 8:00 PM EST (typical start time)
                     logger.warning(f"Game {game_id}: No gameTimeUTC found, defaulting to {date}T20:00:00")
-                    game_time_utc = datetime.strptime(f'{date}T20:00:00', '%Y-%m-%dT%H:%M:%S')
-                    game_time_utc = game_time_utc.replace(tzinfo=timezone.utc)
+                    game_time_utc = pendulum.parse(date)
+                    game_time_utc = game_time_utc.set(hour=20, minute=0, second=0, microsecond=0)
+                    game_time_utc = game_time_utc.in_timezone('UTC')
                 
                 if not game_time_utc:
                     logger.warning(f"Could not parse game time for {game_id}")
@@ -195,8 +207,17 @@ class NBADataSource:
                     'score_away': 0
                 })
             
-            logger.info(f"Fetched {len(games)} games for date {date}")
-            return games
+            # Validate game times are in the future
+            valid_games = []
+            for game in games:
+                try:
+                    validate_future_datetime(game['start_time_utc'], hours_ahead=48)
+                    valid_games.append(game)
+                except ValueError as e:
+                    logger.warning(f"Skipping game {game['game_id']}: {e}
+            
+            logger.info(f"Fetched {len(games)} games for date {date}, {len(valid_games)} valid after time validation")
+            return valid_games
             
         except Exception as e:
             logger.error(f"Error fetching games for date {date}: {e}")
@@ -234,7 +255,7 @@ class NBADataSource:
                 'score_away': away_score,
                 'home_team': game_header.get('HOME_TEAM_ABBREVIATION', ''),
                 'away_team': game_header.get('VISITOR_TEAM_ABBREVIATION', ''),
-                'last_updated': datetime.now(timezone.utc)
+                'last_updated': now_utc()
             }
             
         except Exception as e:
