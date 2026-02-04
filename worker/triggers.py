@@ -126,10 +126,14 @@ class GameTriggerDetector:
         """
         Check if trigger should fire (not already fired).
         Uses DB dedupe to prevent duplicate triggers.
+        
+        IMPORTANT: Only check for FIRED triggers, not scheduled ones!
+        This allows re-firing if a game reaches the state again after
+        a missed scheduled trigger (e.g., wrong scheduling date).
         """
-        # Check if trigger already exists (fired or scheduled)
-        if TriggerStorage.check_trigger_exists(game_id, trigger_type, db_path=self.db_path):
-            logger.debug(f"Trigger {trigger_type} already exists for {game_id}")
+        # Check if trigger already FIRED (not just scheduled)
+        if TriggerStorage.check_trigger_fired(game_id, trigger_type, db_path=self.db_path):
+            logger.debug(f"Trigger {trigger_type} already fired for {game_id}")
             return False
         
         return True

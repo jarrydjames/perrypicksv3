@@ -195,13 +195,13 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
         if not home or not away:
             raise ValueError(f"Invalid game data: Missing team information for game {gid}")
         
-        # Get tri-codes
+        # Get tri-codes (use tricodes for consistency across the system)
         home_tri = home.get("teamTricode", "HOME")
         away_tri = away.get("teamTricode", "AWAY")
         
-        # Get full names
-        home_name = home.get("teamName", home_tri)
-        away_name = away.get("teamName", away_tri)
+        # Use tricodes for consistency (not full names)
+        home_name = home_tri
+        away_name = away_tri
         
         # Extract Q3 scores
         q3_home, q3_away = third_quarter_score(game)

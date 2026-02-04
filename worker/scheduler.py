@@ -18,15 +18,13 @@ class TriggerScheduler:
     """Schedules time-based triggers for games."""
     
     # Trigger types
-    PRE_3H = 'PRE_3H'
-    PRE_1H = 'PRE_1H'
-    PRE_10M = 'PRE_10M'
+    DAILY_SUMMARY = 'DAILY_SUMMARY'  # 3h before earliest game
+    PRE_GAME = 'PRE_GAME'           # 1h before each game
+    HALFTIME = 'HALFTIME'          # At halftime
     
     # Time offsets for triggers
     TRIGGER_OFFSETS = {
-        PRE_3H: timedelta(hours=-3),
-        PRE_1H: timedelta(hours=-1),
-        PRE_10M: timedelta(minutes=-10)
+        PRE_GAME: timedelta(hours=-1),
     }
     
     def __init__(self, db_path: Path):
@@ -49,6 +47,39 @@ class TriggerScheduler:
         if not games:
             logger.info(f"No games found for date {date}")
             return 0
+        
+        # Sort games by start time
+        games_sorted = sorted(games, key=lambda g: g['start_time_utc'])
+        
+        # Schedule DAILY_SUMMARY trigger (3h before earliest game)
+        if games_sorted:
+            earliest_game = games_sorted[0]
+            summary_time = earliest_game['start_time_utc'] + timedelta(hours=-3)
+            
+            # Store as a special game_id for daily summary
+            summary_game_id = f"DAILY_{date.replace('-', '')}"
+            
+            if not TriggerStorage.check_trigger_exists(summary_game_id, self.DAILY_SUMMARY, db_path=self.db_path):
+                # Convert datetime objects to ISO strings for JSON serialization
+                games_serializable = []
+                for game in games:
+                    game_copy = game.copy()
+                    # Convert datetime to ISO string
+                    if 'start_time_utc' in game_copy and isinstance(game_copy['start_time_utc'], datetime):
+                        game_copy['start_time_utc'] = game_copy['start_time_utc'].isoformat()
+                    games_serializable.append(game_copy)
+                
+                TriggerStorage.schedule_trigger(
+                    game_id=summary_game_id,
+                    trigger_type=self.DAILY_SUMMARY,
+                    scheduled_time_utc=summary_time,
+                    payload={
+                        'date': date,
+                        'games': games_serializable
+                    },
+                    db_path=self.db_path
+                )
+                logger.info(f"Scheduled DAILY_SUMMARY for {date} at {summary_time} UTC")
         
         scheduled_count = 0
         for game in games:
@@ -84,25 +115,21 @@ class TriggerScheduler:
         
         any_scheduled = False
         
-        # Schedule each trigger type
-        for trigger_type, offset in self.TRIGGER_OFFSETS.items():
-            scheduled_time = start_time + offset
-            
-            # Check if trigger already exists
-            if not TriggerStorage.check_trigger_exists(game_id, trigger_type, db_path=self.db_path):
-                # Schedule trigger
-                TriggerStorage.schedule_trigger(
-                    game_id=game_id,
-                    trigger_type=trigger_type,
-                    scheduled_time_utc=scheduled_time,
-                    payload={
-                        'home_team': game['home_team'],
-                        'away_team': game['away_team']
-                    },
-                    db_path=self.db_path
-                )
-                logger.debug(f"Scheduled {trigger_type} for {game_id} at {scheduled_time}")
-                any_scheduled = True
+        # Schedule PRE_GAME trigger (1h before game)
+        scheduled_time = start_time + timedelta(hours=-1)
+        
+        if not TriggerStorage.check_trigger_exists(game_id, self.PRE_GAME, db_path=self.db_path):
+            TriggerStorage.schedule_trigger(
+                game_id=game_id,
+                trigger_type=self.PRE_GAME,
+                scheduled_time_utc=scheduled_time,
+                payload={
+                    'home_team': game['home_team'],
+                    'away_team': game['away_team']
+                },
+                db_path=self.db_path
+            )
+            any_scheduled = True
         
         return any_scheduled
     

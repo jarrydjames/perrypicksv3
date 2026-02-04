@@ -350,6 +350,31 @@ class TriggerStorage:
             return cursor.fetchone()[0] > 0
     
     @staticmethod
+    def check_trigger_fired(
+        game_id: str,
+        trigger_type: str,
+        db_path: Path = DEFAULT_DB_PATH
+    ) -> bool:
+        """
+        Check if a trigger has already been fired.
+        
+        This is used to prevent duplicate game-state triggers (HALFTIME, Q3).
+        Unlike check_trigger_exists, this only checks for FIRED triggers,
+        allowing re-firing if a game reaches the state again after a
+        missed scheduled trigger.
+        """
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """SELECT COUNT(*) FROM triggers 
+                   WHERE game_id = ? 
+                   AND trigger_type = ? 
+                   AND status = 'fired'""",
+                (game_id, trigger_type)
+            )
+            return cursor.fetchone()[0] > 0
+    
+    @staticmethod
     def get_triggers_for_game(
         game_id: str,
         db_path: Path = DEFAULT_DB_PATH

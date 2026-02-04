@@ -27,7 +27,8 @@ def _clamp_sd(x: float, lo: float) -> float:
 
 def _safe_team_name(team_block: dict, fallback: str) -> str:
     # NBA endpoints vary; be defensive
-    for k in ("teamName", "teamCity", "teamTricode", "name"):
+    # PREFER tricodes for consistency across the system
+    for k in ("teamTricode", "teamName", "teamCity", "name"):
         v = team_block.get(k)
         if isinstance(v, str) and v.strip():
             return v.strip()
