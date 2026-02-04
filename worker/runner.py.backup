@@ -419,13 +419,10 @@ class AutomationRunner:
                 now_utc = now_utc()
                 recent_cutoff = now_utc - pendulum.duration(minutes=2)
                 
-                # FIX: Use created_at_utc instead of fired_at_utc
-                # Game-state triggers are created on-the-fly with fired_at_utc=NULL
-                # created_at_utc is set immediately, allowing them to be picked up
                 recent_triggers = [
                     t for t in all_triggers
-                    if t['created_at_utc'] and 
-                    datetime.fromisoformat(t['created_at_utc']) > recent_cutoff
+                    if t['fired_at_utc'] and 
+                    datetime.fromisoformat(t['fired_at_utc']) > recent_cutoff
                 ]
                 
                 # Process each recent trigger

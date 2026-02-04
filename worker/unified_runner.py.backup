@@ -310,13 +310,10 @@ class UnifiedRunner:
                 now_utc = datetime.now(timezone.utc)
                 recent_cutoff = now_utc - timedelta(minutes=2)
                 
-                # FIX: Use created_at_utc instead of fired_at_utc
-                # Game-state triggers are created on-the-fly with fired_at_utc=NULL
-                # created_at_utc is set immediately, allowing them to be picked up
                 recent_triggers = [
                     t for t in all_triggers
-                    if t['created_at_utc'] and 
-                    datetime.fromisoformat(t['created_at_utc']) > recent_cutoff
+                    if t['fired_at_utc'] and 
+                    datetime.fromisoformat(t['fired_at_utc']) > recent_cutoff
                 ]
                 
                 for trigger in recent_triggers:
