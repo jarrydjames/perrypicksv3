@@ -8,8 +8,10 @@ if _project_root not in sys.path:
     sys.path.insert(0, _project_root)
 
 import re
-from datetime import datetime, timezone
-import pytz
+from datetime import timedelta  # Keep timedelta for time arithmetic
+
+import pendulum
+import streamlit as st
 
 import streamlit as st
 
@@ -33,6 +35,10 @@ from src.odds.streamlit_cache import get_cached_nba_odds
 from src.odds.odds_api import OddsAPIError
 from src.ui.log_monitor import render_log_monitor
 from src.data.scoreboard import fetch_scoreboard, format_game_label
+
+# Import timezone utilities
+from core.timezone import now_utc, to_local, format_local, parse_date_str
+from core.validation import validate_schedule_date
 
 # -----------------------------
 # Page + Theme UX
@@ -60,7 +66,7 @@ def extract_gid_safe(s: str) -> str | None:
 
 
 def now_utc_iso() -> str:
-    return datetime.now(timezone.utc).isoformat(timespec="seconds")
+    return to_iso(now_utc())
 
 
 def sd_from_q10_q90(lo: float, hi: float) -> float:
@@ -286,8 +292,9 @@ with st.container():
         with st.expander("Pick game by date (no more nba.com copy/paste)", expanded=False):
             import datetime as _dt
 
-            TZ = pytz.timezone(os.getenv("TZ", "America/Chicago"))
-            st.session_state.setdefault("pp_pick_date", datetime.now(TZ).date())
+            # Use UTC date for consistency, but display in CST
+            local_now = to_local(now_utc(), tz="America/Chicago")
+            st.session_state.setdefault("pp_pick_date", local_now.date())
             # Streamlit: don't pass both `value=` and a `key=` with session_state pre-set.
             pick_date = st.date_input("Date", key="pp_pick_date")
 
