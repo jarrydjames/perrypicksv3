@@ -6,9 +6,10 @@ Handles NBA API and Odds API calls with caching and rate limiting.
 import logging
 import requests
 import time
-from typing import Optional, Dict, Any, List, Tuple
+import json
+from typing import Optional, Dict, Any, List
 from pathlib import Path
-from datetime import timedelta
+from datetime import timedelta  # Keep for timedelta operations
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -37,7 +38,6 @@ NBA_HEADERS = {
     "Accept-Language": "en-US,en;q=0.9",
 }
 
-
 class NBADataSource:
     """NBA API data source with caching and retry logic.
     
@@ -50,41 +50,7 @@ class NBADataSource:
     """
     
     # Simple in-memory cache (class-level, shared across instances)
-    # Format: {key: (value, timestamp)}
     _cache: Dict[str, Tuple[Any, float]] = {}
-    
-    # Cache TTL values (in seconds)
-    CACHE_TTL = {
-        'schedule': 3600,      # 1 hour - schedule doesn't change often
-        'game_state': 30,      # 30 seconds - game state changes frequently
-        'game_stats': 300,     # 5 minutes - team stats change slowly
-    }
-    
-    @classmethod
-    def _get_cached(cls, cache_type: str, key: str) -> Optional[Any]:
-        """Get from cache if fresh."""
-        full_key = f'{cache_type}:{key}'
-        if full_key not in cls._cache:
-            return None
-        
-        value, timestamp = cls._cache[full_key]
-        ttl = cls.CACHE_TTL.get(cache_type, 600)
-        
-        if time.time() - timestamp > ttl:
-            # Expired - remove from cache
-            del cls._cache[full_key]
-            return None
-        
-        return value
-    
-    @classmethod
-    def _set_cached(cls, cache_type: str, key: str, value: Any):
-        """Set cache value."""
-        full_key = f'{cache_type}:{key}'
-        cls._cache[full_key] = (value, time.time())
-    
-    @staticmethod
-    def _parse_nba_datetime(dt_input: Any) -> Optional[pendulum.DateTime]:
         """
         Parse NBA API datetime to timezone-aware UTC datetime.
         
@@ -140,8 +106,8 @@ class NBADataSource:
             logger.warning(f"Failed to parse datetime {dt_input}: {e}")
             return None
     
-    @classmethod
-    def fetch_games_for_date(cls, date: str) -> List[Dict[str, Any]]:
+    @staticmethod
+    def fetch_games_for_date(date: str) -> List[Dict[str, Any]]:
         """
         Fetch all games for a specific date (YYYY-MM-DD).
         Uses scheduleLeagueV2.json which has all scheduled games
@@ -149,15 +115,14 @@ class NBADataSource:
         
         Returns list of game dicts with game_id, start_time, teams, etc.
         """
-        # Check cache first
-        cached = cls._get_cached('schedule', date)
-        if cached:
-            logger.debug(f"Using cached schedule for date {date}")
-            return cached
-        
         try:
             # Fetch schedule
-            response = requests.get(SCHEDULE_URL, headers=NBA_HEADERS, timeout=NBA_API_TIMEOUT)
+            headers = {
+                'User-Agent': 'Mozilla/5.0',
+                'Accept': 'application/json,text/plain,*/*',
+                'Referer': 'https://www.nba.com/',
+            }
+            response = requests.get(SCHEDULE_URL, headers=headers, timeout=30)
             response.raise_for_status()
             data = response.json()
             
@@ -174,12 +139,12 @@ class NBADataSource:
             for warning in validation_result.get('warnings', []):
                 logger.warning(warning)
             
-            # Find games for specified date
+            # Find games for the specified date
             # scheduleLeagueV2 uses "MM/DD/YYYY" format for gameDate
             # date parameter is YYYY-MM-DD, so we need to match
             # IMPORTANT: Do NOT strip leading zeros - API uses zero-padded format (MM/DD)
-            # This was bug: lstrip('0') was causing "02/02/2026" to become "2/2/2026"
-            # which doesn't match API format "02/02/2026 00:00:00"
+            # This was the bug: lstrip('0') was causing "02/02/2026" to become "2/2/2026"
+            # which doesn't match the API format "02/02/2026 00:00:00"
             target_month = date[5:7]  # Keep zero-padding (e.g., "02" not "2")
             target_day = date[8:10]    # Keep zero-padding (e.g., "02" not "2")
             target_year = date[:4]
@@ -213,14 +178,14 @@ class NBADataSource:
                 time_str_utc = g.get('gameTimeUTC', '')
                 
                 if time_str_utc and '1900-01-01' in time_str_utc:
-                    # API returned placeholder date, extract time component and combine with real date
-                    # Parse time from placeholder datetime using pendulum
+                    # API returned placeholder date, extract the time component and combine with real date
+                    # Parse the time from the placeholder datetime using pendulum
                     placeholder_dt = pendulum.parse(time_str_utc)
                     hour = placeholder_dt.hour
                     minute = placeholder_dt.minute
                     
-                    # Combine with actual game date (from date parameter, YYYY-MM-DD)
-                    # Use pendulum to parse date and set time
+                    # Combine with the actual game date (from date parameter, YYYY-MM-DD)
+                    # Use pendulum to parse the date and set the time
                     game_time_utc = pendulum.parse(date)
                     game_time_utc = game_time_utc.set(hour=hour, minute=minute, second=0, microsecond=0)
                     game_time_utc = game_time_utc.in_timezone('UTC')
@@ -228,7 +193,7 @@ class NBADataSource:
                     logger.debug(f"Game {game_id}: Extracted time {hour:02d}:{minute:02d} from placeholder, combined with date {date}")
                 elif time_str_utc:
                     # Use gameTimeUTC directly if it's valid
-                    game_time_utc = cls._parse_nba_datetime(time_str_utc)
+                    game_time_utc = NBADataSource._parse_nba_datetime(time_str_utc)
                     logger.debug(f"Game {game_id}: Using valid gameTimeUTC '{time_str_utc}'")
                 else:
                     # No time at all - default to 8:00 PM EST (typical start time)
@@ -269,9 +234,6 @@ class NBADataSource:
                 except ValueError as e:
                     logger.warning(f"Skipping game {game['game_id']}: {e}")
             
-            # Cache the result
-            cls._set_cached('schedule', date, valid_games)
-            
             logger.info(f"Fetched {len(games)} games for date {date}, {len(valid_games)} valid after time validation")
             return valid_games
             
@@ -279,208 +241,43 @@ class NBADataSource:
             logger.error(f"Error fetching games for date {date}: {e}")
             return []
     
-    @classmethod
-    def fetch_game_state(cls, game_id: str) -> Optional[Dict[str, Any]]:
+    @staticmethod
+    def fetch_game_state(game_id: str) -> Optional[Dict[str, Any]]:
         """
         Fetch current game state (score, period, clock, status).
-        
-        Uses CDN-based boxscore API (reliable, no timeouts).
-        Includes caching and retry logic with fallback to schedule API.
-        
-        Returns:
-            Dict with game_id, status, period, clock, scores, teams, last_updated
-            None if game not found
-        """
-        # Check cache first
-        cached = cls._get_cached('game_state', game_id)
-        if cached:
-            logger.debug(f"Using cached game state for {game_id}")
-            return cached
-        
-        # Try CDN boxscore API with retry logic
-        for attempt in range(3):
-            try:
-                url = BOXSCORE_URL.format(gid=game_id)
-                response = requests.get(url, headers=NBA_HEADERS, timeout=NBA_API_TIMEOUT)
-                response.raise_for_status()
-                data = response.json()
-                
-                game = data.get('game')
-                if not game:
-                    logger.warning(f"No game data found in response for {game_id}")
-                    return None
-                
-                # Extract game state
-                home_team_obj = game.get('homeTeam', {})
-                away_team_obj = game.get('awayTeam', {})
-                
-                # Parse period
-                period = game.get('period', 0)
-                try:
-                    period = int(period) if period else 0
-                except (ValueError, TypeError):
-                    period = 0
-                
-                # Parse game clock
-                game_clock = game.get('gameClock', 'PT00M00.00S')
-                
-                # Get status
-                game_status = game.get('gameStatusText', 'Unknown')
-                
-                # Get scores
-                home_score = home_team_obj.get('score', 0)
-                away_score = away_team_obj.get('score', 0)
-                
-                result = {
-                    'game_id': game_id,
-                    'status': game_status,
-                    'current_period': period,
-                    'game_clock': game_clock,
-                    'score_home': home_score,
-                    'score_away': away_score,
-                    'home_team': home_team_obj.get('teamTricode', ''),
-                    'away_team': away_team_obj.get('teamTricode', ''),
-                    'home_name': home_team_obj.get('teamName', ''),
-                    'away_name': away_team_obj.get('teamName', ''),
-                    'last_updated': now_utc()
-                }
-                
-                # Cache the result
-                cls._set_cached('game_state', game_id, result)
-                
-                logger.info(f"Fetched game state for {game_id}: {game_status} Q{period}")
-                return result
-                
-            except requests.HTTPError as e:
-                # Check for 403/429 errors (rate limiting or game not started)
-                if e.response.status_code in (403, 429):
-                    if attempt < 2:  # Retry once before falling back
-                        wait_time = 2 ** attempt  # Exponential backoff
-                        logger.warning(f"Boxscore API returned {e.response.status_code} for {game_id}, retrying in {wait_time}s (attempt {attempt+1}/3)")
-                        time.sleep(wait_time)
-                        continue
-                    else:
-                        # Fallback to schedule API
-                        logger.warning(f"Boxscore API unavailable for {game_id} (status {e.response.status_code}), falling back to schedule API")
-                        return cls._get_game_state_from_schedule(game_id)
-                else:
-                    # Other HTTP errors - re-raise
-                    logger.error(f"HTTP error fetching game state for {game_id}: {e}")
-                    raise
-                    
-            except requests.Timeout as e:
-                if attempt < 2:
-                    wait_time = 2 ** attempt
-                    logger.warning(f"Timeout fetching game state for {game_id}, retrying in {wait_time}s (attempt {attempt+1}/3)")
-                    time.sleep(wait_time)
-                    continue
-                else:
-                    logger.error(f"All retries timed out for {game_id}: {e}")
-                    return None
-            
-            except Exception as e:
-                logger.error(f"Unexpected error fetching game state for {game_id}: {e}")
-                return None
-        
-        return None
-    
-    @classmethod
-    def _get_game_state_from_schedule(cls, game_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Get basic game info from schedule API (fallback when boxscore unavailable).
-        
-        This is used for games that haven't started yet or don't have
-        boxscore data available.
-        
-        Args:
-            game_id: NBA game ID
-            
-        Returns:
-            Minimal game dict with game_id, teams, status, period, clock, scores (all zero)
+        Returns None if game not found.
         """
         try:
-            # Fetch schedule (can be cached)
-            response = requests.get(SCHEDULE_URL, headers=NBA_HEADERS, timeout=NBA_API_TIMEOUT)
-            response.raise_for_status()
-            data = response.json()
+            boxscore = boxscoretraditionalv2.BoxScoreTraditionalV2(
+                game_id=game_id,
+                timeout=NBA_API_TIMEOUT
+            )
+            data = boxscore.get_dict()
             
-            league = data.get('leagueSchedule', {})
-            game_dates = league.get('gameDates', [])
-            
-            # Search for the game in schedule
-            for gd in game_dates:
-                games = gd.get('games', [])
-                for game in games:
-                    if game.get('gameId') == game_id:
-                        # Found the game - return minimal game state
-                        home_team_obj = game.get('homeTeam', {})
-                        away_team_obj = game.get('awayTeam', {})
-                        
-                        result = {
-                            'game_id': game_id,
-                            'status': 'Scheduled',
-                            'current_period': 0,
-                            'game_clock': 'PT00M00.00S',
-                            'score_home': 0,
-                            'score_away': 0,
-                            'home_team': home_team_obj.get('teamTricode', ''),
-                            'away_team': away_team_obj.get('teamTricode', ''),
-                            'home_name': home_team_obj.get('teamName', ''),
-                            'away_name': away_team_obj.get('teamName', ''),
-                            'last_updated': now_utc()
-                        }
-                        
-                        # Cache the result
-                        cls._set_cached('game_state', game_id, result)
-                        
-                        return result
-            
-            # Game not found in schedule
-            logger.warning(f"Game {game_id} not found in schedule API")
-            return None
-            
-        except Exception as e:
-            logger.error(f"Error getting game {game_id} from schedule: {e}")
-            return None
-    
-    @classmethod
-    def fetch_game_stats(cls, game_id: str) -> Optional[Dict[str, Any]]:
-        """
-        Fetch detailed game statistics for a game.
-        
-        Returns full boxscore data including team stats, player stats, etc.
-        This is used by halftime and Q3 prediction models.
-        
-        Args:
-            game_id: NBA game ID
-            
-        Returns:
-            Full game data dict (includes all statistics)
-        """
-        try:
-            url = BOXSCORE_URL.format(gid=game_id)
-            response = requests.get(url, headers=NBA_HEADERS, timeout=NBA_API_TIMEOUT)
-            response.raise_for_status()
-            data = response.json()
-            
-            game = data.get('game')
-            if not game:
-                logger.warning(f"No game data found for {game_id}")
+            if not data or 'GameHeader' not in data:
+                logger.warning(f"No data found for game {game_id}")
                 return None
             
-            logger.info(f"Fetched detailed stats for {game_id}")
-            return game
+            game_header = data['GameHeader'][0]
             
-        except requests.HTTPError as e:
-            if e.response.status_code in (403, 429):
-                # Fall back to schedule for basic info
-                logger.warning(f"Boxscore unavailable for {game_id}, falling back to schedule")
-                return cls._get_game_state_from_schedule(game_id)
-            else:
-                logger.error(f"HTTP error fetching stats for {game_id}: {e}")
-                return None
+            # Get scores from boxscore
+            home_score = game_header.get('HOME_SCORE', 0)
+            away_score = game_header.get('VISITOR_SCORE', 0)
+            
+            return {
+                'game_id': game_id,
+                'status': game_header.get('GAME_STATUS_TEXT', 'Unknown'),
+                'current_period': game_header.get('PERIOD', 0),
+                'game_clock': game_header.get('GAME_CLOCK', '0:00'),
+                'score_home': home_score,
+                'score_away': away_score,
+                'home_team': game_header.get('HOME_TEAM_ABBREVIATION', ''),
+                'away_team': game_header.get('VISITOR_TEAM_ABBREVIATION', ''),
+                'last_updated': now_utc()
+            }
+            
         except Exception as e:
-            logger.error(f"Error fetching game stats for {game_id}: {e}")
+            logger.error(f"Error fetching game state for {game_id}: {e}")
             return None
 
 
