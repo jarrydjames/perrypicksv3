@@ -179,9 +179,54 @@ class GameStateTracker:
         return status in ['In Progress', 'Halftime']
     
     @staticmethod
-    def get_active_trigger_types(status: str, period: int) -> List[str]:
+    def _parse_game_clock_minutes(game_clock: str) -> Optional[float]:
+        """
+        Parse NBA game_clock format to extract minutes remaining.
+        
+        Format: "PT10M30.000S" = 10 minutes 30 seconds remaining
+        
+        Returns:
+            Minutes remaining as float, or None if game_clock is empty/invalid
+        """
+        if not game_clock or game_clock.strip() == '':
+            return None
+        
+        try:
+            # Remove "PT" prefix and "S" suffix
+            # e.g., "PT10M30.000S" -> "10M30.000"
+            clock_str = game_clock.replace("PT", "").replace("S", "")
+            
+            # Split by "M" to get minutes and seconds
+            # e.g., "10M30.000" -> ["10", "30.000"]
+            parts = clock_str.split("M")
+            
+            if len(parts) != 2:
+                return None
+            
+            minutes = int(parts[0])
+            seconds = float(parts[1])
+            
+            # Convert to minutes
+            total_minutes = minutes + (seconds / 60.0)
+            
+            return total_minutes
+        except Exception as e:
+            logger.error(f"Error parsing game_clock '{game_clock}': {e}")
+            return None
+    
+    @staticmethod
+    def get_active_trigger_types(
+        status: str, 
+        period: int, 
+        game_clock: Optional[str] = None
+    ) -> List[str]:
         """
         Determine which trigger types are valid for current game state.
+        
+        Args:
+            status: Game status from NBA API
+            period: Current quarter (1-4, 0 for halftime)
+            game_clock: Time remaining in current period (e.g., "PT10M30.000S")
         
         Returns:
             List of trigger types that should fire
@@ -195,9 +240,14 @@ class GameStateTracker:
         if status == 'Halftime':
             triggers.append('HALFTIME')
         
-        # End of Q3 detection
+        # Q3 detection - fire when 5 minutes or less remain in Q3
         if period == 3 and status == 'In Progress':
-            triggers.append('Q3')
+            # Parse game clock to get minutes remaining
+            minutes_remaining = GameStateTracker._parse_game_clock_minutes(game_clock)
+            
+            # Fire Q3 trigger when 5 minutes or less remain
+            if minutes_remaining is not None and minutes_remaining <= 5:
+                triggers.append('Q3')
         
         return triggers
 

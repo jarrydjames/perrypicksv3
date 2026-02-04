@@ -90,17 +90,17 @@ class GameTriggerDetector:
         game_state: Dict[str, Any]
     ) -> bool:
         """
-        Detect if game just ended Q3.
+        Detect if game has 5 minutes or less remaining in Q3.
         
         Rules:
-        - Period 3 AND clock is 0:00 OR
+        - Period 3 AND clock is 5:00 or less
         - Transition from Q3 to Q4 (period 4)
         """
-        # Check if we're in Q3 and clock is full
-        if current_period == 3 and self._is_full_period_clock(game_clock):
+        # Check if we're in Q3 and clock shows 5 minutes or less
+        if current_period == 3 and self._is_five_minutes_or_less(game_clock):
             return True
         
-        # Check if transitioned to Q4
+        # Check if transitioned to Q4 (already passed the 5-minute mark)
         if current_period == 4:
             # Verify previous state was Q3
             last_snapshot = self._get_last_snapshot(game_state.get('game_id'))
@@ -109,6 +109,20 @@ class GameTriggerDetector:
                 if last_period == 3:
                     return True
         
+        return False
+    
+    def _is_five_minutes_or_less(self, clock: str) -> bool:
+        """Check if clock shows 5 minutes or less remaining."""
+        try:
+            # Parse clock (format 'MM:SS' or 'M:SS')
+            parts = clock.split(':')
+            if len(parts) == 2:
+                minutes = int(parts[0])
+                seconds = int(parts[1])
+                # Check if 5 minutes or less remaining
+                return minutes < 5 or (minutes == 5 and seconds == 0)
+        except:
+            pass
         return False
     
     def _is_full_period_clock(self, clock: str) -> bool:
