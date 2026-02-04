@@ -200,3 +200,99 @@ class GameStateTracker:
             triggers.append('Q3')
         
         return triggers
+
+
+class AutoScheduler:
+    """Automatically schedules games for upcoming dates."""
+    
+    def __init__(self, db_path: Path):
+        self.db_path = db_path
+        self.trigger_scheduler = TriggerScheduler(db_path)
+    
+    def auto_schedule_upcoming_games(
+        self,
+        days_ahead: int = 3,
+        today_date: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Automatically schedule games for the next N days.
+        
+        Checks which dates already have games in the database and only
+        schedules games for dates that don't have any.
+        
+        Args:
+            days_ahead: Number of days to look ahead (default: 3)
+            today_date: Optional explicit date for 'today' (YYYY-MM-DD)
+                       If None, calculates today's date
+        
+        Returns:
+            Dict with scheduling results:
+            - dates_checked: List of dates checked
+            - dates_scheduled: List of dates that had games scheduled
+            - games_scheduled: Total number of games scheduled
+            - dates_skipped: List of dates skipped (already have games)
+            - errors: List of errors encountered
+        """
+        results = {
+            'dates_checked': [],
+            'dates_scheduled': [],
+            'games_scheduled': 0,
+            'dates_skipped': [],
+            'errors': []
+        }
+        
+        # Determine today's date
+        if today_date is None:
+            now_cst = now_utc().in_timezone('America/Chicago')
+            today = now_cst.format('YYYY-MM-DD')
+        else:
+            today = today_date
+        
+        # Check upcoming dates
+        for days in range(days_ahead + 1):  # +1 to include today
+            target_date = (parse_date_str(today).add(days=days)).format('YYYY-MM-DD')
+            results['dates_checked'].append(target_date)
+            
+            # Check if date already has games
+            if GameStorage.has_games_for_date(target_date, db_path=self.db_path):
+                logger.debug(f"Date {target_date} already has games, skipping")
+                results['dates_skipped'].append(target_date)
+                continue
+            
+            # Try to schedule games for this date
+            try:
+                games_count = self.trigger_scheduler.schedule_games_for_date(target_date)
+                
+                if games_count > 0:
+                    logger.info(f"✅ Auto-scheduled {games_count} games for {target_date}")
+                    results['dates_scheduled'].append(target_date)
+                    results['games_scheduled'] += games_count
+                else:
+                    logger.info(f"ℹ️  No games available for {target_date} yet")
+                    # Don't mark as skipped - might have games later
+            except ValueError as e:
+                if 'past' in str(e).lower():
+                    logger.debug(f"Date {target_date} is in the past, skipping")
+                    results['dates_skipped'].append(target_date)
+                else:
+                    error_msg = f"Failed to schedule {target_date}: {e}"
+                    logger.error(error_msg)
+                    results['errors'].append(error_msg)
+            except Exception as e:
+                error_msg = f"Unexpected error scheduling {target_date}: {e}"
+                logger.error(error_msg, exc_info=True)
+                results['errors'].append(error_msg)
+        
+        # Log summary
+        if results['dates_scheduled']:
+            logger.info(
+                f"Auto-scheduling complete: scheduled {results['games_scheduled']} games "
+                f"for {len(results['dates_scheduled'])} date(s): {results['dates_scheduled']}"
+            )
+        elif not results['dates_skipped']:
+            # Only log if nothing was scheduled AND nothing was skipped (all dates failed)
+            logger.warning(
+                f"Auto-scheduling: no games scheduled for any of {results['dates_checked']}"
+            )
+        
+        return results

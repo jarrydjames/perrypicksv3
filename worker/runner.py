@@ -30,9 +30,9 @@ from core.storage import init_database, GameStorage, TriggerStorage, PickStorage
 from core.data_sources import CombinedDataSource
 from core.discord_client import DiscordWebhookClient
 from core.analysis import AnalysisEngine
-from worker.scheduler import TriggerScheduler
+from worker.scheduler import TriggerScheduler, AutoScheduler
 from worker.triggers import TriggerFirer
-from core.timezone import now_utc, to_iso, parse_date_str, parse_iso_utc
+from core.timezone import now_utc, to_iso, parse_date_str
 from core.validation import validate_schedule_date, validate_system_clock
 
 logger = logging.getLogger(__name__)
@@ -49,12 +49,18 @@ class AutomationRunner:
         discord_webhook_url: str,
         date: str,  # MUST be explicit YYYY-MM-DD format
         poll_interval: int = 60,
-        dry_run: bool = False
+        dry_run: bool = False,
+        auto_schedule: bool = True,  # Enable automatic game scheduling
+        auto_schedule_days: int = 3,  # Schedule N days ahead
     ):
         self.db_path = db_path
         self.poll_interval = poll_interval
         self.dry_run = dry_run
         self.running = False
+        
+        # Auto-scheduling settings
+        self.auto_schedule = auto_schedule
+        self.auto_schedule_days = auto_schedule_days
         
         # Validate date format (no more 'today' support!)
         if date == 'today':
@@ -76,6 +82,7 @@ class AutomationRunner:
         self.discord_client = DiscordWebhookClient(discord_webhook_url)
         self.analysis_engine = AnalysisEngine()
         self.scheduler = TriggerScheduler(db_path)
+        self.auto_scheduler = AutoScheduler(db_path)  # Auto-schedule games
         self.trigger_firer = TriggerFirer(db_path, dry_run)
         
         # Setup signal handlers for graceful shutdown
@@ -125,7 +132,21 @@ class AutomationRunner:
         
         total_processed = 0
         
-        # 1. Process scheduled time-based triggers
+        # 0. Auto-schedule upcoming games (if enabled)
+        if self.auto_schedule:
+            try:
+                results = self.auto_scheduler.auto_schedule_upcoming_games(
+                    days_ahead=self.auto_schedule_days
+                )
+                if results['games_scheduled'] > 0:
+                    logger.info(
+                        f"Auto-scheduled {results['games_scheduled']} new games "
+                        f"for {len(results['dates_scheduled'])} date(s)"
+                    )
+            except Exception as e:
+                logger.error(f"Auto-scheduling failed: {e}", exc_info=True)
+        
+        # 1. Process scheduled time-based triggers", 
         due_triggers = TriggerStorage.get_due_triggers(
             window_start, window_end, db_path=self.db_path
         )

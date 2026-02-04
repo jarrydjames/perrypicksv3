@@ -262,6 +262,22 @@ class GameStorage:
                 "SELECT * FROM games WHERE status IN ('In Progress', 'Halftime') ORDER BY start_time_utc"
             )
             return [dict(row) for row in cursor.fetchall()]
+    
+    @staticmethod
+    def has_games_for_date(
+        date: str,  # YYYY-MM-DD
+        db_path: Path = DEFAULT_DB_PATH
+    ) -> bool:
+        """Check if any games exist for a specific date."""
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) as count FROM games WHERE game_date = ?",
+                (date,)
+            )
+            row = cursor.fetchone()
+            return row['count'] > 0 if row else False
+    
 
 
 class TriggerStorage:
