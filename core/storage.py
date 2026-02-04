@@ -6,11 +6,15 @@ Handles SQLite database operations with proper schema, migrations, and deduping.
 import sqlite3
 import json
 import logging
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta  # Keep timedelta for time arithmetic
 from pathlib import Path
 from typing import Optional, List, Dict, Any, Tuple
 from contextlib import contextmanager
 import hashlib
+
+import pendulum
+
+from core.timezone import now_utc, to_iso, parse_iso_utc
 
 logger = logging.getLogger(__name__)
 
@@ -189,11 +193,17 @@ class GameStorage:
         """Insert or update a game."""
         with get_db_connection(db_path) as conn:
             cursor = conn.cursor()
-            now_utc = datetime.now(timezone.utc)
+            now_utc_val = now_utc()
             
-            # Convert datetime to ISO string for SQLite
-            start_time_str = start_time_utc.isoformat() if start_time_utc else None
-            now_str = now_utc.isoformat()
+            # Convert datetime to ISO string for SQLite (using pendulum's to_iso8601_string)
+            if isinstance(start_time_utc, pendulum.DateTime):
+                start_time_str = to_iso(start_time_utc)
+            elif start_time_utc:
+                # Handle legacy datetime objects
+                start_time_str = start_time_utc.isoformat()
+            else:
+                start_time_str = None
+            now_str = to_iso(now_utc_val)
             
             cursor.execute("""
                 INSERT INTO games (
@@ -445,8 +455,8 @@ class OddsCacheStorage:
         Cache odds with TTL.
         """
         cache_key = OddsCacheStorage._generate_cache_key(game_id, reason, endpoint)
-        now_utc = datetime.now(timezone.utc)
-        expires_at_utc = now_utc + timedelta(seconds=ttl_seconds)
+        now_utc_val = now_utc()
+        expires_at_utc = now_utc_val + pendulum.duration(seconds=ttl_seconds)
         
         with get_db_connection(db_path) as conn:
             cursor = conn.cursor()
