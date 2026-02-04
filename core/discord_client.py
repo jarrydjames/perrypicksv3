@@ -7,6 +7,7 @@ import logging
 import requests
 from typing import Optional, Dict, Any
 from datetime import datetime, timezone
+import pytz
 
 logger = logging.getLogger(__name__)
 
@@ -74,15 +75,14 @@ class DiscordWebhookClient:
         """
         # Format trigger type
         trigger_display = {
-            'PRE_3H': '⏰ T-3H',
-            'PRE_1H': '⏰ T-1H',
-            'PRE_10M': '⏰ T-10M',
+            'DAILY_SUMMARY': '📊 DAILY SUMMARY',
+            'PRE_GAME': '⏰ PRE-GAME',
             'HALFTIME': '🏀 HALFTIME',
             'Q3': '🏀 END Q3'
         }.get(trigger_type, trigger_type)
         
         # Format local time (America/Chicago)
-        local_time = timestamp.astimezone(timezone('America/Chicago'))
+        local_time = timestamp.astimezone(pytz.timezone('America/Chicago'))
         local_time_str = local_time.strftime('%I:%M %p %Z')
         
         # Build header
@@ -128,6 +128,136 @@ class DiscordWebhookClient:
         # Build footer
         footer = f"\n_📊 Data: {timestamp.strftime('%Y-%m-%d %H:%M:%S')} UTC_"
         footer += f"\n_⚠️ Odds cached; check freshness before placing bets_"
+        
+        # Combine all parts
+        full_message = f"{header}\n{''.join(body_lines)}{footer}"
+        
+        return full_message
+    
+    def format_daily_summary_post(
+        self,
+        predictions: list,
+        timestamp: datetime,
+        date: str
+    ) -> str:
+        """
+        Format a daily summary post with predictions for all games.
+        
+        Args:
+            predictions: List of game predictions with:
+                - game_id, away_name, home_name
+                - predicted_away_score, predicted_home_score
+                - predicted_winner, predicted_margin
+                - predicted_total
+            timestamp: Current timestamp
+            date: Date string (YYYY-MM-DD)
+        
+        Returns:
+            Formatted Discord message
+        """
+        # Format local time
+        local_time = timestamp.astimezone(pytz.timezone('America/Chicago'))
+        local_time_str = local_time.strftime('%I:%M %p %Z')
+        
+        # Build header
+        header = f"**📊 DAILY SUMMARY — {date}**"
+        header += f"\n_Posted at {local_time_str}_"
+        
+        # Build predictions list
+        body_lines = []
+        body_lines.append("\n**Today's Games:**\n")
+        
+        for pred in predictions:
+            away_name = pred.get('away_name', 'Away')
+            home_name = pred.get('home_name', 'Home')
+            pred_away = pred.get('predicted_away_score', 0)
+            pred_home = pred.get('predicted_home_score', 0)
+            pred_total = pred.get('predicted_total', 0)
+            pred_margin = pred.get('predicted_margin', 0)
+            pred_winner = pred.get('predicted_winner', 'Unknown')
+            
+            # Format margin with sign
+            if pred_margin < 0:
+                margin_str = f"{home_name} by {abs(pred_margin):.1f}"
+            else:
+                margin_str = f"{away_name} by {pred_margin:.1f}"
+            
+            # Format game line
+            game_line = f"🏀 **{away_name} @ {home_name}**"
+            game_line += f"\n   Pred: {away_name} {pred_away:.1f} - {home_name} {pred_home:.1f}"
+            game_line += f"\n   Winner: {pred_winner} ({margin_str})"
+            game_line += f"\n   Total: {pred_total:.1f}\n"
+            
+            body_lines.append(game_line)
+        
+        # Build footer
+        footer = f"\n_📊 Data: {timestamp.strftime('%Y-%m-%d %H:%M:%S')} UTC_"
+        footer += f"\n_⚠️ Predictions may change closer to game time_"
+        
+        # Combine all parts
+        full_message = f"{header}\n{''.join(body_lines)}{footer}"
+        
+        return full_message
+    
+    def format_halftime_post(
+        self,
+        game_data: Dict[str, Any],
+        prediction: Dict[str, Any],
+        timestamp: datetime
+    ) -> str:
+        """
+        Format a halftime prediction post.
+        
+        Args:
+            game_data: Game state with current scores
+            prediction: Prediction results
+            timestamp: Current timestamp
+        
+        Returns:
+            Formatted Discord message
+        """
+        # Format local time
+        local_time = timestamp.astimezone(pytz.timezone('America/Chicago'))
+        local_time_str = local_time.strftime('%I:%M %p %Z')
+        
+        # Get team names
+        away_name = game_data.get('away_name', game_data.get('away_team', 'Away'))
+        home_name = game_data.get('home_name', game_data.get('home_team', 'Home'))
+        
+        # Get current scores
+        current_away = game_data.get('score_away', 0)
+        current_home = game_data.get('score_home', 0)
+        
+        # Get prediction
+        pred_away = prediction.get('predicted_away_score', 0)
+        pred_home = prediction.get('predicted_home_score', 0)
+        pred_total = prediction.get('predicted_total', 0)
+        pred_margin = prediction.get('predicted_margin', 0)
+        
+        # Determine winner
+        if pred_margin < 0:
+            pred_winner = home_name
+            abs_margin = abs(pred_margin)
+        else:
+            pred_winner = away_name
+            abs_margin = pred_margin
+        
+        # Build header
+        header = f"**🏀 HALFTIME UPDATE — {away_name} @ {home_name}**"
+        header += f"\n_Posted at {local_time_str}_"
+        
+        # Build body
+        body_lines = []
+        body_lines.append("\n**Halftime Score:**\n")
+        body_lines.append(f"{away_name} {current_away} - {home_name} {current_home}\n")
+        
+        body_lines.append("**Final Score Prediction:**\n")
+        body_lines.append(f"{away_name} {pred_away:.1f} - {home_name} {pred_home:.1f}")
+        body_lines.append(f"Winner: {pred_winner} by {abs_margin:.1f}")
+        body_lines.append(f"Total: {pred_total:.1f}\n")
+        
+        # Build footer
+        footer = f"\n_📊 Data: {timestamp.strftime('%Y-%m-%d %H:%M:%S')} UTC_"
         
         # Combine all parts
         full_message = f"{header}\n{''.join(body_lines)}{footer}"

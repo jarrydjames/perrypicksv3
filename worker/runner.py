@@ -8,7 +8,7 @@ import signal
 import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Dict, Any
 import argparse
 import os
 import pytz
@@ -140,6 +140,10 @@ class AutomationRunner:
         try:
             logger.info(f"Processing scheduled trigger: {game_id} {trigger_type}")
             
+            # Handle DAILY_SUMMARY trigger (special case)
+            if trigger_type == 'DAILY_SUMMARY':
+                return self._process_daily_summary(trigger)
+            
             # Refresh game data
             data = self.data_source.refresh_game_data(
                 game_id=game_id,
@@ -162,7 +166,15 @@ class AutomationRunner:
                 logger.warning(f"No picks generated for {game_id} {trigger_type}")
                 return False
             
-            # Store picks
+            # Handle PRE_GAME trigger (special formatting with odds and top 3 bets)
+            if trigger_type == 'PRE_GAME':
+                return self._process_pre_game_trigger(trigger, data, picks)
+            
+            # Handle HALFTIME trigger (special formatting without bets)
+            if trigger_type == 'HALFTIME':
+                return self._process_halftime_trigger(game_id, data['game_state'])
+            
+            # Store picks for other trigger types (Q3)
             for pick in picks:
                 PickStorage.store_pick(
                     game_id=game_id,
@@ -261,7 +273,11 @@ class AutomationRunner:
                 logger.warning(f"No picks generated for {game_id} {trigger_type}")
                 return False
             
-            # Store picks
+            # Handle HALFTIME trigger (special formatting without bets)
+            if trigger_type == 'HALFTIME':
+                return self._process_halftime_trigger(game_id, data['game_state'])
+            
+            # Store picks for other trigger types (Q3)
             for pick in picks:
                 PickStorage.store_pick(
                     game_id=game_id,
@@ -415,6 +431,333 @@ class AutomationRunner:
                 
             except Exception as e:
                 logger.error(f"Error creating periodic snapshot for {game_id}: {e}")
+    
+    def _process_daily_summary(self, trigger: dict) -> bool:
+        """
+        Process DAILY_SUMMARY trigger - post predictions for all games today.
+        
+        Args:
+            trigger: DAILY_SUMMARY trigger with game list in payload
+        
+        Returns:
+            True if processing succeeded, False otherwise
+        """
+        try:
+            # Parse payload_json (it's stored as JSON string in DB)
+            import json
+            payload_json = trigger.get('payload_json', '{}')
+            payload = json.loads(payload_json) if payload_json else {}
+            games = payload.get('games', [])
+            date = payload.get('date', '')
+            
+            if not games:
+                logger.warning("No games in DAILY_SUMMARY payload")
+                return False
+            
+            logger.info(f"Processing DAILY_SUMMARY for {date} ({len(games)} games)")
+            
+            # Generate predictions for all games
+            predictions = []
+            for game in games:
+                game_id = game['game_id']
+                
+                try:
+                    # Add delay between requests to avoid NBA API rate limiting
+                    if predictions:  # Don't delay on first game
+                        import time
+                        time.sleep(5)  # 5 second delay between games to avoid 403 errors
+                    
+                    # Get pregame prediction
+                    from src.predict_api import predict_game
+                    result = predict_game(
+                        game_input=game_id,
+                        mode='pregame',
+                        fetch_odds=False  # Don't need odds for summary
+                    )
+                    
+                    if result.get('status') == 'success':
+                        # Calculate individual scores from total and margin
+                        total = result.get('total', 0)
+                        margin = result.get('margin', 0)
+                        pred_home = (total - margin) / 2
+                        pred_away = (total + margin) / 2
+                        
+                        # Determine winner
+                        if margin < 0:
+                            pred_winner = result.get('home_name', 'Home')
+                        else:
+                            pred_winner = result.get('away_name', 'Away')
+                        
+                        predictions.append({
+                            'game_id': game_id,
+                            'away_name': result.get('away_name', 'Away'),
+                            'home_name': result.get('home_name', 'Home'),
+                            'predicted_away_score': pred_away,
+                            'predicted_home_score': pred_home,
+                            'predicted_total': total,
+                            'predicted_margin': margin,
+                            'predicted_winner': pred_winner
+                        })
+                        
+                except Exception as e:
+                    logger.error(f"Error generating prediction for {game_id}: {e}")
+                    # Add placeholder prediction even if failed
+                    predictions.append({
+                        'game_id': game_id,
+                        'away_name': game.get('away_team', 'Away'),
+                        'home_name': game.get('home_team', 'Home'),
+                        'predicted_away_score': 0,
+                        'predicted_home_score': 0,
+                        'predicted_total': 0,
+                        'predicted_margin': 0,
+                        'predicted_winner': 'Unknown'
+                    })
+            
+            # Post to Discord
+            if not self.dry_run:
+                message = self.discord_client.format_daily_summary_post(
+                    predictions=predictions,
+                    timestamp=datetime.now(timezone.utc),
+                    date=date
+                )
+                
+                message_id = self.discord_client.post_message(message)
+                
+                # Store post record (even if message_id is None - some webhooks return 204 without ID)
+                DiscordPostStorage.store_post(
+                    game_id=trigger['game_id'],
+                    trigger_type='DAILY_SUMMARY',
+                    channel_id='main',
+                    message_id=message_id if message_id else 'webhook-204',
+                    payload={
+                        'message': message,
+                        'predictions': predictions,
+                        'date': date
+                    },
+                    db_path=self.db_path
+                )
+            
+            # Mark trigger as fired
+            TriggerStorage.mark_triggered(
+                trigger_id=trigger['id'],
+                fired_at_utc=datetime.now(timezone.utc),
+                db_path=self.db_path
+            )
+            
+            logger.info(f"Completed DAILY_SUMMARY for {date}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error processing DAILY_SUMMARY: {e}")
+            return False
+    
+    def _process_pre_game_trigger(
+        self,
+        trigger: dict,
+        data: dict,
+        picks: list
+    ) -> bool:
+        """
+        Process PRE_GAME trigger - post prediction with odds and top 3 bets.
+        
+        Args:
+            trigger: PRE_GAME trigger
+            data: Game data with game_state and odds
+            picks: Analysis picks
+        
+        Returns:
+            True if processing succeeded, False otherwise
+        """
+        try:
+            game_id = trigger['game_id']
+            game_state = data['game_state']
+            odds = data['odds']
+            
+            # Store picks
+            for pick in picks:
+                PickStorage.store_pick(
+                    game_id=game_id,
+                    trigger_type='PRE_GAME',
+                    bet_rank=pick['bet_rank'],
+                    bet_type=pick['bet_type'],
+                    side=pick['side'],
+                    line=pick.get('line'),
+                    odds=pick['odds'],
+                    book=pick['book'],
+                    probability=pick['probability'],
+                    edge=pick['edge'],
+                    rationale=pick.get('rationale'),
+                    payload=pick,
+                    db_path=self.db_path
+                )
+            
+            # Post to Discord (if not dry run)
+            if not self.dry_run:
+                # Get prediction from pregame model
+                from src.predict_api import predict_game
+                prediction_result = predict_game(
+                    game_input=game_id,
+                    mode='pregame',
+                    fetch_odds=False
+                )
+                
+                if prediction_result.get('status') == 'success':
+                    # Add prediction to game_state for formatting
+                    total = prediction_result.get('total', 0)
+                    margin = prediction_result.get('margin', 0)
+                    pred_home = (total - margin) / 2
+                    pred_away = (total + margin) / 2
+                    
+                    if margin < 0:
+                        pred_winner = prediction_result.get('home_name', 'Home')
+                    else:
+                        pred_winner = prediction_result.get('away_name', 'Away')
+                    
+                    game_state['predicted_away_score'] = pred_away
+                    game_state['predicted_home_score'] = pred_home
+                    game_state['predicted_total'] = total
+                    game_state['predicted_margin'] = margin
+                    game_state['predicted_winner'] = pred_winner
+                    
+                    # Use team names instead of tricodes for display
+                    game_state['away_name'] = prediction_result.get('away_name', game_state.get('away_team', 'Away'))
+                    game_state['home_name'] = prediction_result.get('home_name', game_state.get('home_team', 'Home'))
+                
+                message = self.discord_client.format_bet_post(
+                    trigger_type='PRE_GAME',
+                    game_data=game_state,
+                    picks=picks[:3],  # Top 3 bets with highest edge
+                    timestamp=datetime.now(timezone.utc)
+                )
+                
+                message_id = self.discord_client.post_message(message)
+                
+                if message_id:
+                    DiscordPostStorage.store_post(
+                        game_id=game_id,
+                        trigger_type='PRE_GAME',
+                        channel_id='main',
+                        message_id=message_id,
+                        payload={
+                            'message': message,
+                            'picks': picks[:3],
+                            'game_state': game_state
+                        },
+                        db_path=self.db_path
+                    )
+            
+            # Mark trigger as fired
+            TriggerStorage.mark_triggered(
+                trigger_id=trigger['id'],
+                fired_at_utc=datetime.now(timezone.utc),
+                db_path=self.db_path
+            )
+            
+            logger.info(f"Completed PRE_GAME trigger for {game_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error processing PRE_GAME trigger for {trigger['game_id']}: {e}")
+            return False
+    
+    def _process_halftime_trigger(
+        self,
+        game_id: str,
+        game_state: Dict[str, Any]
+    ) -> bool:
+        """
+        Process HALFTIME trigger - post halftime prediction without bets.
+        
+        Args:
+            game_id: NBA game ID
+            game_state: Current game state from NBA API
+        
+        Returns:
+            True if processing succeeded, False otherwise
+        """
+        try:
+            logger.info(f"Processing HALFTIME trigger: {game_id}")
+            
+            # Get halftime prediction
+            from src.predict_api import predict_game
+            prediction_result = predict_game(
+                game_input=game_id,
+                mode='halftime',
+                fetch_odds=False  # Don't need odds for halftime
+            )
+            
+            if prediction_result.get('status') != 'success':
+                logger.warning(f"Halftime prediction failed for {game_id}")
+                return False
+            
+            # Extract prediction data
+            total = prediction_result.get('total', 0)
+            margin = prediction_result.get('margin', 0)
+            pred_home = (total - margin) / 2
+            pred_away = (total + margin) / 2
+            
+            # Determine winner
+            if margin < 0:
+                pred_winner = prediction_result.get('home_name', 'Home')
+            else:
+                pred_winner = prediction_result.get('away_name', 'Away')
+            
+            prediction = {
+                'predicted_away_score': pred_away,
+                'predicted_home_score': pred_home,
+                'predicted_total': total,
+                'predicted_margin': margin,
+                'predicted_winner': pred_winner
+            }
+            
+            # Add team names to game_state
+            game_state['away_name'] = prediction_result.get('away_name', game_state.get('away_team', 'Away'))
+            game_state['home_name'] = prediction_result.get('home_name', game_state.get('home_team', 'Home'))
+            
+            # Post to Discord (if not dry run)
+            if not self.dry_run:
+                message = self.discord_client.format_halftime_post(
+                    game_data=game_state,
+                    prediction=prediction,
+                    timestamp=datetime.now(timezone.utc)
+                )
+                
+                message_id = self.discord_client.post_message(message)
+                
+                if message_id:
+                    DiscordPostStorage.store_post(
+                        game_id=game_id,
+                        trigger_type='HALFTIME',
+                        channel_id='main',
+                        message_id=message_id,
+                        payload={
+                            'message': message,
+                            'prediction': prediction,
+                            'game_state': game_state
+                        },
+                        db_path=self.db_path
+                    )
+            
+            # Mark HALFTIME trigger as fired (it was already stored in triggers table)
+            all_triggers = TriggerStorage.get_triggers_for_game(game_id, db_path=self.db_path)
+            halftime_trigger = [
+                t for t in all_triggers 
+                if t['trigger_type'] == 'HALFTIME' and t['status'] == 'scheduled'
+            ]
+            
+            if halftime_trigger:
+                TriggerStorage.mark_triggered(
+                    trigger_id=halftime_trigger[0]['id'],
+                    fired_at_utc=datetime.now(timezone.utc),
+                    db_path=self.db_path
+                )
+            
+            logger.info(f"Completed HALFTIME trigger for {game_id}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error processing HALFTIME trigger for {game_id}: {e}")
+            return False
     
     def run(self):
         """Main loop - runs until stopped."""
