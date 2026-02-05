@@ -468,6 +468,24 @@ class TriggerStorage:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM triggers WHERE game_id = ?", (game_id,))
             return [dict(row) for row in cursor.fetchall()]
+    
+    @staticmethod
+    def get_trigger(
+        game_id: str,
+        trigger_type: str,
+        db_path: Path = DEFAULT_DB_PATH
+    ) -> Optional[Dict[str, Any]]:
+        """Fetch most recent trigger matching (game_id, trigger_type)."""
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                SELECT * FROM triggers
+                WHERE game_id = ? AND trigger_type = ?
+                ORDER BY scheduled_time_utc DESC
+                LIMIT 1
+            """, (game_id, trigger_type))
+            row = cursor.fetchone()
+            return dict(row) if row else None
 
 
 class OddsCacheStorage:

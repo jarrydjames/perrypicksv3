@@ -586,6 +586,75 @@ class CombinedDataSource:
         self.nba = NBADataSource()
         self.odds = OddsDataSource(odds_api_key)
     
+    def fetch_games_for_cst_date(self, cst_date: str) -> List[Dict[str, Any]]:
+        """
+        NEW (correct): fetch schedule data covering CST date window,
+        then bucket locally by CST day and filter to requested CST date.
+        This avoids API "date semantics" bugs (ET/UTC/league-day).
+        """
+        # CST window: [cst_date 00:00, next day 00:00)
+        cst_start = pendulum.parse(cst_date).in_timezone(CST).start_of("day")
+        cst_end = cst_start.add(days=1)
+        utc_start = cst_start.in_timezone("UTC")
+        utc_end = cst_end.in_timezone("UTC")
+        
+        # We don't trust the API date semantics, so we fetch a small surrounding set
+        # and then filter by utc_start/utc_end.
+        # Many NBA schedule endpoints are keyed by "calendar date" in ET or UTC;
+        # fetching utc_start.date() and utc_end.date() plus one buffer day is safest.
+        fetch_dates = sorted({
+            utc_start.to_date_string(),
+            utc_end.to_date_string(),
+            utc_start.subtract(days=1).to_date_string(),
+        })
+        
+        raw_games: List[Dict[str, Any]] = []
+        for d in fetch_dates:
+            try:
+                raw_games.extend(self.nba.fetch_games_for_date(d))
+            except Exception as e:
+                logger.warning(f"NBA schedule fetch failed for {d}: {e}")
+        
+        # De-dupe by game_id
+        by_id = {}
+        for g in raw_games:
+            gid = g.get("game_id") or g.get("id") or g.get("gameId")
+            if gid:
+                by_id[gid] = g
+        
+        normalized: List[Dict[str, Any]] = []
+        for g in by_id.values():
+            # Normalize start_time_utc to ISO string if needed
+            st = g.get("start_time_utc") or g.get("game_time_utc") or g.get("startTimeUTC")
+            if not st:
+                continue
+            try:
+                dt_utc = parse_iso_utc(st) if isinstance(st, str) else st
+            except Exception:
+                continue
+            
+            # Filter to UTC window (this ensures correct slate for CST day)
+            if dt_utc < utc_start or dt_utc >= utc_end:
+                continue
+            
+            # Compute authoritative CST game date
+            game_date_cst = cst_game_date_from_start_time_utc(dt_utc, tz=CST)
+            
+            # Build normalized record (keep existing fields you rely on)
+            normalized.append({
+                "game_id": g.get("game_id") or g.get("id") or g.get("gameId"),
+                "start_time_utc": dt_utc.to_iso8601_string() if hasattr(dt_utc, "to_iso8601_string") else str(st),
+                "home_team": g.get("home_team") or g.get("homeTeam") or g.get("teamTricode"),
+                "away_team": g.get("away_team") or g.get("awayTeam"),
+                "status": g.get("status") or "Scheduled",
+                "game_date": game_date_cst,
+            })
+        
+        # Final filter strictly to requested CST date
+        final = [g for g in normalized if g.get("game_date") == cst_date]
+        logger.info(f"Fetched {len(final)} games for CST date {cst_date} (UTC window {utc_start}..{utc_end})")
+        return final
+    
     def refresh_game_data(
         self,
         game_id: str,

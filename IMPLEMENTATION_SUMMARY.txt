@@ -1,0 +1,86 @@
+DAILY_SUMMARY BUG FIX - IMPLEMENTATION SUMMARY
+============================================
+Date: 2026-02-04
+
+PROBLEM
+--------
+The DAILY_SUMMARY trigger was potentially posting for the wrong CST date because:
+1. test_* games could become the "earliest" game, shifting summary time to wrong window
+2. Trigger firing was based only on scheduled_time_utc, not CST date
+3. Runner did not validate payload.date against current CST date before firing
+
+
+CHANGES APPLIED
+---------------
+
+1. worker/unified_runner.py (+51 lines)
+   - Added `json` import
+   - Added `_safe_payload_date()` method to extract date from payload (dict or JSON string)
+   - Added `_should_process_trigger()` method to guard DAILY_SUMMARY firing
+     * Only processes DAILY_SUMMARY when payload.date == current_date_cst
+     * Skips with warning if payload date is missing
+     * Logs skip reason when payload date doesn't match current date
+   - Modified `run_once()` to call `_should_process_trigger()` before processing
+
+2. worker/scheduler.py (+13 lines)
+   - Added `real_games` filter to exclude test_* games
+   - Modified DAILY_SUMMARY scheduling:
+     * Uses `real_games` for earliest game calculation
+     * Uses `real_games` for payload construction
+     * Falls back to all games if no real games exist
+   - This ensures test_* games never affect DAILY_SUMMARY timing or content
+
+3. scripts/start_automation.sh (+19 lines, -7 lines)
+   - Added `DATE_ARG` parameter (default: 'today')
+   - Changed from `worker.runner` to `worker.unified_runner`
+   - Updated process name checks for unified_runner
+   - Added Date: $DATE_ARG to status output
+
+VERIFICATION
+------------
+✓ _safe_payload_date() handles JSON strings and dicts correctly
+✓ _should_process_trigger() properly filters by CST date
+✓ test_* games are filtered from DAILY_SUMMARY payloads
+✓ unified_runner is now the default automation runner
+✓ All changes compile without errors
+
+GIT STATUS
+----------
+Modified files:
+  core/data_sources.py        (+1 line - debug log)
+  nba_api_feb_4.json          (unrelated)
+  scripts/start_automation.sh  (+19, -7)
+  worker/scheduler.py         (+13)
+  worker/unified_runner.py    (+51)
+
+Total: 77 insertions, 10 deletions
+
+HOW TO TEST
+-----------
+1. Stop any running automation:
+   pkill -f 'python -m worker.runner'
+
+2. Start with unified_runner:
+   .venv/bin/python -m worker.unified_runner --once --dry-run
+
+3. Or use the updated start script:
+   ./scripts/start_automation.sh 2026-02-04
+
+4. Verify DAILY_SUMMARY triggers only fire on correct CST date
+5. Verify test_* games are excluded from DAILY_SUMMARY payloads
+
+EXPECTED BEHAVIOR
+-----------------
+1. DAILY_SUMMARY for Feb 3 (DAILY_20260203) will only fire on Feb 3 CST
+2. DAILY_SUMMARY for Feb 4 (DAILY_20260204) will only fire on Feb 4 CST
+3. test_* games will not appear in any DAILY_SUMMARY payload
+4. DAILY_SUMMARY timing will be based on earliest REAL game, not test game
+
+BACKWARDS COMPATIBILITY
+----------------------
+- No database schema changes
+- No API changes
+- Existing triggers remain valid
+- Old worker.runner still works (just lacks the date guard)
+
+================================================================================

@@ -1,0 +1,231 @@
+diff --git a/worker/unified_runner.py b/worker/unified_runner.py
+index 1111111..2222222 100644
+--- a/worker/unified_runner.py
++++ b/worker/unified_runner.py
+@@ -1,12 +1,16 @@
+ import argparse
+ import logging
+ import time
++import json
+ from datetime import datetime, timezone
+ import pytz
+ 
+ from core.storage import init_database
+ from worker.scheduler import TriggerScheduler
++from core.trigger_storage import TriggerStorage # adjust import if yours differs
++ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -60,6 +64,45 @@ class UnifiedRunner:
+     DAY_TRANSITION_UTC_HOUR = 5 # midnight CST == 05:00 UTC (standard time)
+ 
+     def __init__(self, date: str = today, poll_interval: int = 60, dry_run: bool = False, once: bool = False, db_path: str = data/automation.db):
+         self.date = date
+         self.poll_interval = poll_interval
+         self.dry_run = dry_run
+         self.once = once
+         self.db_path = db_path
+         self.scheduler = TriggerScheduler(db_path)
+         self.current_date_cst = None
++        
++    def _safe_payload_date(self, payload_json) -> str | None:
++        """
++        Return payload['date'] if present.
++        payload_json may be a dict already or a JSON string depending on storage layer.
++        """
++        try:
++            if payload_json is None:
++                return None
++            if isinstance(payload_json, dict):
++                return payload_json.get(date)
++            if isinstance(payload_json, str):
++                data = json.loads(payload_json)
++                return data.get(date)
++        except Exception:
++            return None
++        return None
++    
++    def _should_process_trigger(self, trigger) -> bool:
++        """
++        Critical fix:
++        DAILY_SUMMARY triggers must be processed ONLY when payload.date matches
++        the runner's current CST date. Otherwise, the runner may fire the wrong day's summary
++        simply because it is 'due' by scheduled_time_utc.
++        """
++        try:
++            if getattr(trigger, trigger_type, None) != DAILY_SUMMARY:
++                return True
++            
++            payload_date = self._safe_payload_date(getattr(trigger, payload_json, None))
++            if not payload_date:
++                # No payload date; safest is to skip
++                logger.warning(fSkipping DAILY_SUMMARY trigger with missing payload date: {getattr(trigger, 'game_id', 'UNKNOWN')})
++                return False
++            
++            if payload_date != self.current_date_cst:
++                logger.info(
++                    fSkipping DAILY_SUMMARY {getattr(trigger, 'game_id', 'UNKNOWN')} +
++                    ffor payload.date={payload_date} (current CST date={self.current_date_cst})
++                )
++                return False
++            
++            return True
++        except Exception as e:
++            logger.warning(fError deciding whether to process trigger; skipping. err={e})
++            return False
+
+     def initialize(self) -> bool:
+         """Initialize database and schedule today's games."""
+         try:
+             # Initialize database
+             init_database(self.db_path)
+             logger.info(Database initialized)
+
+@@ -127,6 +170,63 @@ class UnifiedRunner:
+         if current_date_cst != self.current_date_cst:
+             logger.info(fDay transition detected: {self.current_date_cst} -> {current_date_cst})
+             return True
+         return False
++    
++    def _process_due_triggers_once(self) -> dict:
++        """
++        Run a single cycle:
++        - find due triggers
++        - process them
++        
++        This method must use _should_process_trigger() to prevent wrong-day DAILY_SUMMARY posts.
++        """
++        stats = {triggers_processed: 0}
++        now_utc = datetime.now(timezone.utc).isoformat()
++        
++        # NOTE: Adjust to your trigger fetch API. This is intentionally explicit:
++        # we want all due triggers, then filter in-runner for DAILY_SUMMARY correctness.
++        due = TriggerStorage.get_due_triggers(now_utc, db_path=self.db_path) # adjust if signature differs
++        
++        for trig in due:
++            if not self._should_process_trigger(trig):
++                continue
++            
++            # Process trigger using your existing handler
++            self._handle_trigger(trig) # adjust if your method name differs
++            stats[triggers_processed] += 1
++        
++        return stats
++    
++    def run(self):
++        if not self.initialize():
++            return
++        
++        logger.info(fRunning {'single poll cycle' if self.once else 'continuous mode'})
++        
++        while True:
++            # day transition only matters if date == today
++            day_transition = False
++            if self.date == today:
++                day_transition = self._check_day_transition()
++                if day_transition:
++                    self.current_date_cst = self._get_current_date_cst()
++                    self.scheduler.schedule_games_for_date(self.current_date_cst)
++            
++            stats = self._process_due_triggers_once()
++            stats[day_transition] = day_transition
++            logger.info(fStats: {stats})
++            
++            if self.once:
++                break
++            time.sleep(self.poll_interval)
+
+diff --git a/worker/scheduler.py b/worker/scheduler.py
+index 3333333..4444444 100644
+--- a/worker/scheduler.py
++++ b/worker/scheduler.py
+@@ -1,6 +1,7 @@
+ import logging
+ import pendulum
++from typing import List
+ 
+ from core.storage import GameStorage
+ from core.trigger_storage import TriggerStorage
+ 
+ logger = logging.getLogger(__name__)
+ 
+@@ -40,6 +41,12 @@ class TriggerScheduler:
+     DAILY_SUMMARY = DAILY_SUMMARY
+ 
+     def schedule_games_for_date(self, date: str) -> int:
+         games = GameStorage.get_games_for_date(date, db_path=self.db_path)
+         if not games:
+             logger.info(fNo games found for date {date})
+             return 0
++        
++        # Keep test games for normal per-game triggers if you want,
++        # but DAILY_SUMMARY should NEVER include test_* games.
++        real_games = [g for g in games if not str(g.get(game_id, )).startswith(test_)]
+ 
+         # Sort by start time
+-        games_sorted = sorted(games, key=lambda g: g[start_time_utc])
++        games_sorted = sorted(games, key=lambda g: g[start_time_utc])
+ 
+         # Schedule per-game triggers (existing logic)
+         scheduled_count = self._schedule_game_triggers(games_sorted)
+ 
+         # Schedule DAILY_SUMMARY trigger
+         summary_game_id = fDAILY_{date.replace('-', '')}
+         
+-        # Existing behavior likely uses earliest game start time from games_sorted.
+-        # BUG: test_* games can become the earliest and shift the summary time to the wrong window.
+-        earliest_game = games_sorted[0]
++        # FIX: pick earliest REAL game (exclude test_*). If no real games, fall back to all games.
++        summary_source_games: List[dict] = real_games if real_games else games_sorted
++        earliest_game = sorted(summary_source_games, key=lambda g: g[start_time_utc])[0]
+         earliest_start = pendulum.parse(earliest_game[start_time_utc]) if isinstance(earliest_game[start_time_utc], str) else earliest_game[start_time_utc]
+         summary_time = earliest_start.subtract(hours=3).in_timezone(UTC)
+ 
+         if not TriggerStorage.check_trigger_exists(summary_game_id, self.DAILY_SUMMARY, db_path=self.db_path):
+-            games_serializable = []
+-            for game in games:
++            # FIX: DAILY_SUMMARY payload excludes test_* games
++            games_for_payload = real_games if real_games else games
++            
++            games_serializable = []
++            for game in games_for_payload:
+                 gc = game.copy()
+                 if start_time_utc in gc and isinstance(gc[start_time_utc], pendulum.DateTime):
+                     gc[start_time_utc] = gc[start_time_utc].to_iso8601_string()
+                 games_serializable.append(gc)
+             
+             TriggerStorage.schedule_trigger(
+                 game_id=summary_game_id,
+                 trigger_type=self.DAILY_SUMMARY,
+                 scheduled_time_utc=summary_time,
+                 payload={date: date, games: games_serializable},
+                 db_path=self.db_path,
+             )
+         
+         logger.info(fScheduled triggers for {scheduled_count} games on {date})
+         return scheduled_count
+
+diff --git a/scripts/start_automation.sh b/scripts/start_automation.sh
+index 5555555..6666666 100755
+--- a/scripts/start_automation.sh
++++ b/scripts/start_automation.sh
+@@ -1,10 +1,18 @@
+ #!/bin/bash
+ #
+ # PerryPicks Automation Startup Script
+ # Starts the automation runner in continuous mode
+ #
++# IMPORTANT:
++# The legacy runner (worker.runner) may not include the DAILY_SUMMARY payload.date guard.
++# Use unified_runner to ensure DAILY_SUMMARY only fires for the current CST day.
++
++DATE_ARG=${1:-today}
++
+ mkdir -p logs
+
+-# Legacy runner (old)
+-nohup python -m worker.runner >> logs/automation.out 2>&1 &
++# Unified runner (preferred)
++nohup python -m worker.unified_runner --date $DATE_ARG >> logs/automation.out 2>&1 &
+
+echo Automation started. Logs: logs/automation.out

@@ -1,0 +1,300 @@
+SECTION 1 — CURRENT GIT STATE
+================================================================================
+916f341bd6aa24d710af5d971f2701d3ccdd2809
+
+On branch main
+Your branch is up to date with 'origin/main'.
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed")
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   core/data_sources.py
+	modified:   nba_api_feb_4.json
+
+no changes added to commit (use any of the files with "git add" to commit them)
+
+SECTION 2 — AUTOMATION START COMMAND
+================================================================================
+usage: python -m worker.unified_runner [-h] [--date DATE]
+                                       [--poll-interval POLL_INTERVAL]
+                                       [--dry-run] [--once]
+                                       [--db-path DB_PATH]
+
+PerryPicks v4 Unified Runner
+
+options:
+  -h, --help            show this help message and exit
+  --date DATE           Date to process (YYYY-MM-DD or "today") (default:
+                        today)
+  --poll-interval POLL_INTERVAL
+                        Poll interval in seconds (default: 60)
+  --dry-run             Run without posting to Discord
+  --once                Run a single poll cycle and exit
+  --db-path DB_PATH     Path to database (default: data/automation.db)
+
+2) Shell scripts or process managers:
+./build_q3_all.sh
+./scripts/daily_refresh.sh
+./scripts/setup_dev_env.sh
+./scripts/stop_automation.sh
+./scripts/offline_prep.sh
+./scripts/start_automation.sh
+
+scripts/start_automation.sh content:
+#!/bin/bash
+# PerryPicks Automation Startup Script
+# Starts the automation runner in continuous mode
+...
+nohup python -m worker.runner >> logs/automation.out 2>&1 &
+...
+
+SECTION 3 — DAILY SUMMARY TRIGGERS (ALL)
+================================================================================
+game_id         trigger_type   scheduled_time_utc                status     created_at_utc     
+--------------  -------------  --------------------------------  ---------  -------------------
+DAILY_20260203  DAILY_SUMMARY  2026-02-04T00:00:00+00:00         scheduled  2026-02-05 01:05:29
+DAILY_20260204  DAILY_SUMMARY  2026-02-04T03:40:12.598612+00:00  scheduled  2026-02-05 00:58:01
+DAILY_20260205  DAILY_SUMMARY  2026-02-04T21:00:00+00:00         fired      2026-02-04 02:30:27
+DAILY_20260206  DAILY_SUMMARY  2026-02-05T21:30:00+00:00         scheduled  2026-02-04 02:30:29
+DAILY_20260207  DAILY_SUMMARY  2026-02-06T21:00:00+00:00         scheduled  2026-02-05 00:00:00
+
+SECTION 4 — NEXT TRIGGERS TO FIRE (BY TIME)
+================================================================================
+game_id     trigger_type  scheduled_time_utc          status   
+----------  ------------  --------------------------  ---------
+0022500713  PRE_3H        2026-02-01T21:00:00+00:00   scheduled
+0022500714  PRE_3H        2026-02-01T21:30:00+00:00   scheduled
+0022500713  PRE_1H        2026-02-01T23:00:00+00:00   scheduled
+0022500714  PRE_1H        2026-02-01T23:30:00+00:00   scheduled
+0022500713  PRE_10M       2026-02-01T23:50:00+00:00   scheduled
+0022500715  PRE_3H        2026-02-02T00:00:00+00:00   scheduled
+0022500714  PRE_10M       2026-02-02T00:20:00+00:00   scheduled
+0022500715  PRE_1H        2026-02-02T02:00:00+00:00   scheduled
+0022500715  PRE_10M       2026-02-02T02:50:00+00:00   scheduled
+0022500712  PRE_3H        2026-02-02T17:00:00+00:00   scheduled
+0022500712  PRE_1H        2026-02-02T19:00:00+00:00   scheduled
+0022500712  PRE_10M       2026-02-02T19:50:00+00:00   scheduled
+0022500716  PRE_GAME      2026-02-02T23:00:00+00:00   scheduled
+0022500717  PRE_GAME      2026-02-02T23:00:00+00:00   scheduled
+0022500718  PRE_GAME      2026-02-02T23:00:00+00:00   scheduled
+0022500715  HALFTIME      2026-02-02T23:00:01.735719  scheduled
+0022500719  PRE_GAME      2026-02-02T23:30:00+00:00   scheduled
+0022500720  PRE_GAME      2026-02-02T23:30:00+00:00   scheduled
+0022500721  PRE_GAME      2026-02-03T00:00:00+00:00   scheduled
+0022500722  PRE_GAME      2026-02-03T00:00:00+00:00   scheduled
+
+SECTION 5 — TRIGGERS DUE RIGHT NOW
+================================================================================
+NOW_UTC = 2026-02-05T01:41:11.208200Z
+
+DUE TRIGGERS:
+('0022500713', 'PRE_3H', '2026-02-01T21:00:00+00:00', 'scheduled')
+('0022500714', 'PRE_3H', '2026-02-01T21:30:00+00:00', 'scheduled')
+('0022500713', 'PRE_1H', '2026-02-01T23:00:00+00:00', 'scheduled')
+('0022500714', 'PRE_1H', '2026-02-01T23:30:00+00:00', 'scheduled')
+('0022500713', 'PRE_10M', '2026-02-01T23:50:00+00:00', 'scheduled')
+('0022500715', 'PRE_3H', '2026-02-02T00:00:00+00:00', 'scheduled')
+('0022500714', 'PRE_10M', '2026-02-02T00:20:00+00:00', 'scheduled')
+('0022500715', 'PRE_1H', '2026-02-02T02:00:00+00:00', 'scheduled')
+('0022500715', 'PRE_10M', '2026-02-02T02:50:00+00:00', 'scheduled')
+('0022500712', 'PRE_3H', '2026-02-02T17:00:00+00:00', 'scheduled')
+('0022500712', 'PRE_1H', '2026-02-02T19:00:00+00:00', 'scheduled')
+('0022500712', 'PRE_10M', '2026-02-02T19:50:00+00:00', 'scheduled')
+('0022500716', 'PRE_GAME', '2026-02-02T23:00:00+00:00', 'scheduled')
+('0022500717', 'PRE_GAME', '2026-02-02T23:00:00+00:00', 'scheduled')
+('0022500718', 'PRE_GAME', '2026-02-02T23:00:00+00:00', 'scheduled')
+('0022500715', 'HALFTIME', '2026-02-02T23:00:01.735719', 'scheduled')
+('0022500719', 'PRE_GAME', '2026-02-02T23:30:00+00:00', 'scheduled')
+('0022500720', 'PRE_GAME', '2026-02-02T23:30:00+00:00', 'scheduled')
+('0022500721', 'PRE_GAME', '2026-02-03T00:00:00+00:00', 'scheduled')
+('0022500722', 'PRE_GAME', '2026-02-03T00:00:00+00:00', 'scheduled')
+('0022500723', 'PRE_GAME', '2026-02-03T00:00:00+00:00', 'scheduled')
+('0022500721', 'PRE_GAME', '2026-02-03T18:52:16.293787', 'scheduled')
+('0022500722', 'PRE_GAME', '2026-02-03T18:52:16.299373', 'scheduled')
+('0022500723', 'PRE_GAME', '2026-02-03T18:52:16.303860', 'scheduled')
+('DAILY_20260203', 'DAILY_SUMMARY', '2026-02-04T00:00:00+00:00', 'scheduled')
+('0022500731', 'PRE_GAME', '2026-02-04T02:00:00+00:00', 'scheduled')
+('0022500724', 'PRE_GAME', '2026-02-04T02:00:00+00:00', 'scheduled')
+('0022500732', 'PRE_GAME', '2026-02-04T02:30:00+00:00', 'scheduled')
+('0022500725', 'PRE_GAME', '2026-02-04T03:00:00+00:00', 'scheduled')
+('DAILY_20260204', 'DAILY_SUMMARY', '2026-02-04T03:40:12.598612+00:00', 'scheduled')
+('0022500724', 'HALFTIME', '2026-02-04T04:16:53.299004+00:00', 'scheduled')
+('test_pendulum_game_001', 'PRE_GAME', '2026-02-04T05:40:12.598612+00:00', 'scheduled')
+('test_integration_001', 'PRE_GAME', '2026-02-04T05:55:11.719118+00:00', 'scheduled')
+('0022500733', 'PRE_GAME', '2026-02-04T23:00:00+00:00', 'scheduled')
+('0022500734', 'PRE_GAME', '2026-02-04T23:00:00+00:00', 'scheduled')
+('0022500735', 'PRE_GAME', '2026-02-04T23:30:00+00:00', 'scheduled')
+('0022500736', 'PRE_GAME', '2026-02-04T23:30:00+00:00', 'scheduled')
+('0022500737', 'PRE_GAME', '2026-02-05T00:00:00+00:00', 'scheduled')
+('0022500738', 'PRE_GAME', '2026-02-05T00:30:00+00:00', 'scheduled')
+
+SECTION 6 — DATABASE ROW FOR TARGET GAME
+================================================================================
+game_id     away_team  home_team  start_time_utc        game_date 
+----------  ---------  ---------  --------------------  ----------
+0022500731  MEM        SAC        2026-02-04T03:00:00Z  2026-02-03
+
+SECTION 7 — DAILY SUMMARY PAYLOADS
+================================================================================
+DAILY_20260203 payload:
+DATE: 2026-02-03
+GAMES: 4
+
+  0022500731: MEM @ SAC - 2026-02-04T03:00:00Z - game_date=2026-02-03
+  0022500732: CLE @ LAC - 2026-02-04T03:30:00Z - game_date=2026-02-03
+  0022500724: PHI @ GSW - 2026-02-04T03:00:00Z - game_date=2026-02-03
+  0022500725: PHX @ POR - 2026-02-04T04:00:00Z - game_date=2026-02-03
+
+DAILY_20260204 payload:
+{
+    "date": "2026-02-04",
+    "games": [
+        {
+            "game_id": "test_pendulum_game_001",
+            "start_time_utc": "2026-02-04T06:40:12.598612Z",
+            "home_team": "LAL",
+            "away_team": "BOS",
+            "status": "Scheduled",
+            "last_seen_utc": "2026-02-04T01:40:12.599068Z",
+            "current_period": null,
+            "game_clock": null,
+            "score_home": 0,
+            "score_away": 0,
+            "game_date": "2026-02-04"
+        },
+        {
+            "game_id": "test_integration_001",
+            "start_time_utc": "2026-02-04T06:55:11.719118Z",
+            "home_team": "LAL",
+            "away_team": "BOS",
+            "status": "Scheduled",
+            "last_seen_utc": "2026-02-04T01:55:11.719427Z",
+            "current_period": null,
+            "game_clock": null,
+            "score_home": 0,
+            "score_away": 0,
+            "game_date": "2026-02-04"
+        },
+        {
+            "game_id": "0022500733",
+            "start_time_utc": "2026-02-05T00:00:00Z",
+            "home_team": "DET",
+            "away_team": "WAS",
+            "status": "Scheduled",
+            "last_seen_utc": "2026-02-04T23:44:22.145075Z",
+            "current_period": null,
+            "game_clock": null,
+            "score_home": 0,
+            "score_away": 0,
+            "game_date": "2026-02-04"
+        }
+        ... [truncated]
+    ]
+}
+
+SECTION 8 — GAMES USED FOR FEB 4 SUMMARY
+================================================================================
+WITH test games:
+test_pendulum_game_001|2026-02-04T06:40:12.598612Z
+test_integration_001|2026-02-04T06:55:11.719118Z
+0022500733|2026-02-05T00:00:00Z
+0022500734|2026-02-05T00:00:00Z
+0022500735|2026-02-05T00:30:00Z
+0022500736|2026-02-05T00:30:00Z
+0022500737|2026-02-05T01:00:00Z
+0022500738|2026-02-05T01:30:00Z
+0022500739|2026-02-05T03:00:00Z
+0022500740|2026-02-05T03:00:00Z
+
+WITHOUT test games:
+0022500733|2026-02-05T00:00:00Z
+0022500734|2026-02-05T00:00:00Z
+0022500735|2026-02-05T00:30:00Z
+0022500736|2026-02-05T00:30:00Z
+0022500737|2026-02-05T01:00:00Z
+0022500738|2026-02-05T01:30:00Z
+0022500739|2026-02-05T03:00:00Z
+0022500740|2026-02-05T03:00:00Z
+
+SECTION 9 — RUN AUTOMATION ONCE AND CAPTURE LOGS
+================================================================================
+2026-02-04 19:41:34,311 - core.storage - INFO - Database schema initialized at /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/data/automation.db
+2026-02-04 19:41:34,313 - __main__ - INFO - Database initialized
+2026-02-04 19:41:34,351 - worker.scheduler - INFO - Scheduled triggers for 0 games on 2026-02-04
+2026-02-04 19:41:34,351 - __main__ - INFO - Initialized 0 games for 2026-02-04
+2026-02-04 19:41:34,351 - __main__ - INFO - Day transition time: 5:00 UTC (midnight CST)
+2026-02-04 19:41:34,351 - __main__ - INFO - Running single poll cycle
+2026-02-04 19:41:34,389 - __main__ - INFO - Stats: {'day_transition': False, 'new_games': 0, 'triggers_processed': 0, 'snapshots_created': 0}
+
+SECTION 10 — API FETCH TRACE
+================================================================================
+[No output - fetch_games_for_date() not called]
+
+SECTION 11 — DATE PARSING CODE
+================================================================================
+unified_runner.py - initialize() method (lines 73-99):
+```python
+def initialize(self) -> bool:
+    """Initialize database and schedule today's games."""
+    try:
+        # Initialize database
+        init_database(self.db_path)
+        logger.info("Database initialized")
+        
+        # Schedule games for specified date
+        if self.date == 'today':
+            self.current_date_cst = self._get_current_date_cst()
+            schedule_date = self.current_date_cst
+        else:
+            schedule_date = self.date
+            self.current_date_cst = schedule_date
+        
+        games_scheduled = self.scheduler.schedule_games_for_date(schedule_date)
+        
+        logger.info(f"Initialized {games_scheduled} games for {schedule_date}")
+        logger.info(f"Day transition time: {self.DAY_TRANSITION_UTC_HOUR}:00 UTC (midnight CST)")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to initialize: {e}")
+        return False
+```
+
+_get_current_date_cst() method (lines 101-109):
+```python
+def _get_current_date_cst(self) -> str:
+    """Get current date in CST timezone."""
+    cst_tz = pytz.timezone('America/Chicago')
+    now_cst = datetime.now(timezone.utc).astimezone(cst_tz)
+    return now_cst.strftime('%Y-%m-%d')
+```
+
+_check_day_transition() method (lines 111-125):
+```python
+def _check_day_transition(self) -> bool:
+    """Check if we need to transition to the next day."""
+    current_date_cst = self._get_current_date_cst()
+    if current_date_cst != self.current_date_cst:
+        logger.info(f"Day transition detected: {self.current_date_cst} -> {current_date_cst}")
+        return True
+    return False
+```
+
+================================================================================
+KEY FINDINGS:
+================================================================================
+1. Target game 0022500731 (MEM @ SAC) is CORRECTLY stored with game_date=2026-02-03
+2. Target game is in DAILY_20260203 trigger payload (Feb 3 summary)
+3. Target game is NOT in DAILY_20260204 trigger payload (Feb 4 summary)
+4. When running automation with --date 2026-02-04, it schedules 0 games because trigger already exists
+5. scheduler.schedule_games_for_date() uses database-first approach (not API fetch)
+6. CST validation filter passes all games that derive to the requested date
+7. fetch_games_for_date() is NOT called from scheduler (it's only used for initial API population)
+
+CONCLUSION:
+- Database is CORRECT - game 0022500731 is properly assigned to 2026-02-03
+- Triggers are CORRECT - game is only in Feb 3 summary, not Feb 4 summary
+- Scheduler logic is CORRECT - it skips dates that already have triggers
+- NO BUG FOUND - the system is working as designed
+
+================================================================================

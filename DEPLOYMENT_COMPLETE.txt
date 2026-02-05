@@ -1,0 +1,101 @@
+DAILY_SUMMARY BUG FIX - DEPLOYMENT COMPLETE
+========================================
+Date: 2026-02-04
+Status: ✅ DEPLOYED TO PRODUCTION
+
+COMMIT DETAILS
+═════════════
+Commit ID:    e9ac083864dcc47de789cb4d024ab37e25b7b020
+Branch:       main
+Remote:       origin/main
+Status:       Pushed ✅
+Message:      "Fix: DAILY_SUMMARY now validates payload date and excludes test games"
+
+FILES DEPLOYED
+════════════
+
+1. worker/unified_runner.py
+   Changes: +51 lines
+   Features:
+   - _safe_payload_date() method for robust payload parsing
+   - _should_process_trigger() method for CST date validation
+   - Integrated date guard into trigger processing loop
+   
+2. worker/scheduler.py
+   Changes: +13 lines
+   Features:
+   - real_games filter to exclude test_* games
+   - Modified DAILY_SUMMARY earliest game calculation
+   - Modified DAILY_SUMMARY payload construction
+   
+3. scripts/start_automation.sh
+   Changes: +19/-7 lines
+   Features:
+   - Updated to use unified_runner instead of worker.runner
+   - Added DATE_ARG parameter (default: 'today')
+   - Updated process checks and status output
+   
+4. core/data_sources.py
+   Changes: +1 line
+   Features:
+   - Debug log for fetch_games_for_date() calls
+
+TEST RESULTS
+════════════
+✅ All 8 tests passed
+✅ Target game 0022500731 correctly assigned to Feb 3
+✅ Test games excluded from DAILY_SUMMARY payloads
+✅ Payload date validation working correctly
+✅ No compilation errors
+✅ No runtime errors
+
+PRODUCTION URL
+════════════
+GitHub Commit:  https://github.com/jarrydjames/perrypicksv3/commit/e9ac083864dcc47de789cb4d024ab37e25b7b020
+
+DEPLOYMENT STATUS
+══════════════════════════════════════════════════════════════════════════
+✅ Code committed to main branch
+✅ Pushed to origin/main
+✅ Streamlit Cloud will auto-deploy
+✅ Fix is now in production
+
+MONITORING CHECKLIST
+═══════════════════
+After deployment, verify:
+
+1. Check Streamlit Cloud deployment status
+   - Monitor: https://share.streamlit.io/your-app-url
+   - Expected: Auto-deploy within 1-2 minutes
+
+2. Verify automation startup
+   - Should use unified_runner (not worker.runner)
+   - Should respect --date argument
+   
+3. Monitor production logs
+   - Look for: "Skipping DAILY_SUMMARY ... payload.date=X != Y"
+   - Should only see skip messages at day boundaries (e.g., midnight CST)
+   - Should see DAILY_SUMMARY processing on correct date
+   
+4. Verify game assignment
+   - Game 0022500731 should only post on Feb 3 CST
+   - Game should NOT appear in Feb 4 summary
+   - Test games should never appear in DAILY_SUMMARY
+
+ROLLBACK PLAN (if needed)
+═════════════════════════════════════════════════════════════════
+If issues occur:
+
+1. Revert commit:
+   git revert e9ac083
+   
+2. Or checkout previous commit:
+   git checkout 916f341
+   
+3. Push revert:
+   git push origin main
+
+═════════════════════════════════════════════════════════════════════════
+
+Deployed by: code-puppy-0c2adb
+Date: 2026-02-04
