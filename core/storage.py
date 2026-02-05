@@ -223,6 +223,9 @@ class GameStorage:
             # Convert datetime to ISO string for SQLite (using pendulum's to_iso8601_string)
             if isinstance(start_time_utc, pendulum.DateTime):
                 start_time_str = to_iso(start_time_utc)
+            elif isinstance(start_time_utc, str):
+                # Already an ISO string (from DB or API)
+                start_time_str = start_time_utc
             elif start_time_utc:
                 # Handle legacy datetime objects
                 start_time_str = start_time_utc.isoformat()

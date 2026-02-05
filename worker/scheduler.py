@@ -13,7 +13,10 @@ import pendulum
 
 from core.storage import GameStorage, TriggerStorage
 from core.data_sources import NBADataSource
-from core.timezone import now_utc, to_iso, parse_date_str, cst_game_date_from_start_time_utc, CST
+from core.timezone import (
+    now_utc, to_iso, parse_date_str, parse_iso_utc,
+    cst_game_date_from_start_time_utc, CST
+)
 from core.validation import validate_schedule_date
 from core.data_sources import NBADataSource
 
@@ -76,7 +79,12 @@ class TriggerScheduler:
         # Schedule DAILY_SUMMARY trigger (3h before earliest game)
         if games_sorted:
             earliest_game = games_sorted[0]
-            summary_time = earliest_game['start_time_utc'] + timedelta(hours=-3)
+            # Parse start_time_utc (may be string from DB)
+            if isinstance(earliest_game['start_time_utc'], str):
+                earliest_time = parse_iso_utc(earliest_game['start_time_utc'])
+            else:
+                earliest_time = earliest_game['start_time_utc']
+            summary_time = earliest_time + timedelta(hours=-3)
             
             # Store as a special game_id for daily summary
             summary_game_id = f"DAILY_{date.replace('-', '')}"
@@ -136,7 +144,11 @@ class TriggerScheduler:
             True if any new triggers scheduled, False otherwise
         """
         game_id = game['game_id']
-        start_time = game['start_time_utc']
+        # Parse start_time_utc (may be string from DB)
+        if isinstance(game['start_time_utc'], str):
+            start_time = parse_iso_utc(game['start_time_utc'])
+        else:
+            start_time = game['start_time_utc']
         
         any_scheduled = False
         
@@ -166,7 +178,11 @@ class TriggerScheduler:
             True if rescheduled, False otherwise
         """
         game_id = game['game_id']
-        new_start_time = game['start_time_utc']
+        # Parse new_start_time (may be string from DB)
+        if isinstance(game['start_time_utc'], str):
+            new_start_time = parse_iso_utc(game['start_time_utc'])
+        else:
+            new_start_time = game['start_time_utc']
         
         # Get existing game from DB
         existing_game = GameStorage.get_game(game_id, db_path=self.db_path)
@@ -175,7 +191,11 @@ class TriggerScheduler:
             logger.warning(f"Game {game_id} not in database; scheduling from scratch")
             return self._schedule_game_triggers(game)
         
-        old_start_time = existing_game['start_time_utc']
+        # Parse old_start_time (may be string from DB)
+        if isinstance(existing_game['start_time_utc'], str):
+            old_start_time = parse_iso_utc(existing_game['start_time_utc'])
+        else:
+            old_start_time = existing_game['start_time_utc']
         
         # Check if start time changed significantly (> 1 minute difference)
         if abs((new_start_time - old_start_time).total_seconds()) > 60:
