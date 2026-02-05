@@ -45,6 +45,8 @@ class UnifiedRunner:
     # Day transition time: midnight CST = 5am UTC
     DAY_TRANSITION_UTC_HOUR = 5
     
+    # Trigger types
+    DAILY_SUMMARY = 'DAILY_SUMMARY'
     def __init__(
         self,
         db_path: Path,
@@ -104,7 +106,7 @@ class UnifiedRunner:
         simply because it is 'due' by scheduled_time_utc.
         """
         try:
-            if trigger.get('trigger_type', None) != 'DAILY_SUMMARY':
+            if trigger.get('trigger_type', None) != self.DAILY_SUMMARY:
                 return True
             
             payload_date = self._safe_payload_date(trigger.get('payload_json', None))
@@ -248,6 +250,10 @@ class UnifiedRunner:
         trigger_type = trigger['trigger_type']
         
         try:
+            # Handle DAILY_SUMMARY triggers specially
+            if trigger_type == self.DAILY_SUMMARY:
+                return self._process_daily_summary(trigger)
+            
             logger.info(f"Processing scheduled trigger: {game_id} {trigger_type}")
             
             data = self.data_source.refresh_game_data(
@@ -325,6 +331,126 @@ class UnifiedRunner:
             
         except Exception as e:
             logger.error(f"Error processing scheduled trigger {game_id} {trigger_type}: {e}")
+            return False
+    
+    def _process_daily_summary(self, trigger: dict) -> bool:
+        """
+        Process DAILY_SUMMARY trigger - post predictions for all games today.
+        
+        Args:
+            trigger: DAILY_SUMMARY trigger with game list in payload
+        
+        Returns:
+            True if processing succeeded, False otherwise
+        """
+        try:
+            # Parse payload_json (it's stored as JSON string in DB)
+            import json
+            import time
+            
+            payload_json = trigger.get('payload_json', '{}')
+            payload = json.loads(payload_json) if payload_json else {}
+            games = payload.get('games', [])
+            date = payload.get('date', '')
+            
+            if not games:
+                logger.warning("No games in DAILY_SUMMARY payload")
+                return False
+            
+            logger.info(f"Processing DAILY_SUMMARY for {date} ({len(games)} games)")
+            
+            # Generate predictions for all games
+            predictions = []
+            for game in games:
+                game_id = game['game_id']
+                
+                try:
+                    # Add delay between requests to avoid NBA API rate limiting
+                    if predictions:  # Don't delay on first game
+                        time.sleep(5)  # 5 second delay between games to avoid 403 errors
+                    
+                    # Get pregame prediction
+                    from src.predict_api import predict_game
+                    result = predict_game(
+                        game_input=game_id,
+                        mode='pregame',
+                        fetch_odds=False  # Don't need odds for summary
+                    )
+                    
+                    if result.get('status') == 'success':
+                        # Calculate individual scores from total and margin
+                        total = result.get('total', 0)
+                        margin = result.get('margin', 0)
+                        pred_home = (total - margin) / 2
+                        pred_away = (total + margin) / 2
+                        
+                        # Determine winner
+                        if margin < 0:
+                            pred_winner = result.get('home_name', 'Home')
+                        else:
+                            pred_winner = result.get('away_name', 'Away')
+                        
+                        predictions.append({
+                            'game_id': game_id,
+                            'away_name': result.get('away_name', 'Away'),
+                            'home_name': result.get('home_name', 'Home'),
+                            'predicted_away_score': pred_away,
+                            'predicted_home_score': pred_home,
+                            'predicted_total': total,
+                            'predicted_margin': margin,
+                            'predicted_winner': pred_winner
+                        })
+                        
+                except Exception as e:
+                    logger.error(f"Error generating prediction for {game_id}: {e}")
+                    # Add placeholder prediction even if failed
+                    predictions.append({
+                        'game_id': game_id,
+                        'away_name': game.get('away_team', 'Away'),
+                        'home_name': game.get('home_team', 'Home'),
+                        'predicted_away_score': 0,
+                        'predicted_home_score': 0,
+                        'predicted_total': 0,
+                        'predicted_margin': 0,
+                        'predicted_winner': 'Unknown'
+                    })
+            
+            # Post to Discord
+            if not self.dry_run:
+                message = self.discord_client.format_daily_summary_post(
+                    predictions=predictions,
+                    timestamp=datetime.now(timezone.utc),
+                    date=date
+                )
+                
+                message_id = self.discord_client.post_message(message)
+                
+                # Store post record (even if message_id is None - some webhooks return 204 without ID)
+                DiscordPostStorage.store_post(
+                    game_id=trigger['game_id'],
+                    trigger_type='DAILY_SUMMARY',
+                    channel_id='main',
+                    message_id=message_id if message_id else 'webhook-204',
+                    payload={
+                        'message': message,
+                        'predictions': predictions,
+                        'date': date
+                    },
+                    db_path=self.db_path
+                )
+            
+            # Mark trigger as fired
+            TriggerStorage.mark_triggered(
+                trigger_id=trigger['id'],
+                fired_at_utc=datetime.now(timezone.utc),
+                db_path=self.db_path
+            )
+            
+            logger.info(f"Completed DAILY_SUMMARY for {date}")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Error processing DAILY_SUMMARY: {e}")
             return False
     
     def _process_active_game(self, game: dict) -> bool:
