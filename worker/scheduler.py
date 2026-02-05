@@ -52,10 +52,12 @@ class TriggerScheduler:
         """
         # 1) Always begin DB-first
         games = GameStorage.get_games_for_date(date, db_path=self.db_path)
+        logger.debug(f"Found {len(games)} total games for date {date}")
 
         # 2) If DB empty OR clearly stale (e.g., only test games), hydrate from schedule sources
         # IMPORTANT: Use CST-window fetching so we don't inherit any API date semantics bugs.
         real_games_db = [g for g in games if not str(g.get('game_id', '')).startswith('test_')]
+        logger.debug(f"Found {len(real_games_db)} real games (non-test) for date {date}")
         if not real_games_db:
             logger.info(f"No real games in DB for {date}; hydrating from schedule sources (CST window).")
             try:
@@ -93,10 +95,13 @@ class TriggerScheduler:
                 derived_date = cst_game_date_from_start_time_utc(g['start_time_utc'], tz=CST)
                 if derived_date == date:
                     filtered_games.append(g)
+                else:
+                    logger.debug(f"Game {g['game_id']} excluded: derived_date={derived_date}, requested_date={date}")
             except Exception:
                 # if parsing fails, keep it (better than dropping silently)
                 filtered_games.append(g)
         games = filtered_games
+        logger.debug(f"After CST validation: {len(games)} games remain")
 
         if not games:
             logger.info(f"No games found for date {date} after CST validation")
@@ -161,6 +166,7 @@ class TriggerScheduler:
                 logger.info(f"Scheduled DAILY_SUMMARY for {date} at {summary_time} UTC")
         
         scheduled_count = 0
+        logger.debug(f"Starting per-game trigger scheduling for {len(games)} games")
         for game in games:
             # Upsert game into database
             GameStorage.upsert_game(
@@ -175,9 +181,10 @@ class TriggerScheduler:
             
             # Schedule triggers for this game
             scheduled = self._schedule_game_triggers(game)
+            logger.debug(f"Game {game['game_id']}: scheduled={scheduled}, start_time_utc={game['start_time_utc']}")
             if scheduled:
                 scheduled_count += 1
-        
+
         logger.info(f"Scheduled triggers for {scheduled_count} games on {date}")
         return scheduled_count
     
@@ -185,7 +192,7 @@ class TriggerScheduler:
         """
         Schedule all time-based triggers for a single game.
         Only schedules if triggers don't already exist.
-        
+
         Returns:
             True if any new triggers scheduled, False otherwise
         """
@@ -195,13 +202,15 @@ class TriggerScheduler:
             start_time = parse_iso_utc(game['start_time_utc'])
         else:
             start_time = game['start_time_utc']
-        
+
         any_scheduled = False
-        
+        logger.debug(f"_schedule_game_triggers for {game_id}: start_time_utc={start_time}, PRE_GAME={self.PRE_GAME}, HALFTIME={self.HALFTIME}")
+
         # Schedule PRE_GAME trigger (1h before game)
         scheduled_time = start_time + timedelta(hours=-1)
-        
+
         if not TriggerStorage.check_trigger_exists(game_id, self.PRE_GAME, db_path=self.db_path):
+            logger.debug(f"PRE_GAME trigger does NOT exist for {game_id}, scheduling...")
             TriggerStorage.schedule_trigger(
                 game_id=game_id,
                 trigger_type=self.PRE_GAME,
@@ -213,9 +222,31 @@ class TriggerScheduler:
                 db_path=self.db_path
             )
             any_scheduled = True
-        
+        else:
+            logger.debug(f"PRE_GAME trigger already exists for {game_id}, skipping")
+
+        # Schedule HALFTIME trigger (at halftime)
+        scheduled_time = start_time + timedelta(hours=1, minutes=48)
+
+        if not TriggerStorage.check_trigger_exists(game_id, self.HALFTIME, db_path=self.db_path):
+            logger.debug(f"HALFTIME trigger does NOT exist for {game_id}, scheduling...")
+            TriggerStorage.schedule_trigger(
+                game_id=game_id,
+                trigger_type=self.HALFTIME,
+                scheduled_time_utc=scheduled_time,
+                payload={
+                    'home_team': game['home_team'],
+                    'away_team': game['away_team']
+                },
+                db_path=self.db_path
+            )
+            any_scheduled = True
+        else:
+            logger.debug(f"HALFTIME trigger already exists for {game_id}, skipping")
+
+        logger.debug(f"_schedule_game_triggers for {game_id}: any_scheduled={any_scheduled}")
         return any_scheduled
-    
+
     def reschedule_if_needed(self, game: Dict[str, Any]) -> bool:
         """
         Reschedule triggers if game start time changed.

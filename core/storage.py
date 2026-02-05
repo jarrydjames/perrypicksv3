@@ -261,7 +261,7 @@ class GameStorage:
                     last_seen_utc, current_period, game_clock, score_home, score_away, game_date,
                     local_day_cst, league_day
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(game_id) DO UPDATE SET
                     start_time_utc = excluded.start_time_utc,
                     home_team = excluded.home_team,
