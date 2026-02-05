@@ -217,7 +217,7 @@ class GameStorage:
             # AUTHORITATIVE: Always derive local_day_cst from start_time_utc in CST
             # This prevents any upstream (API) date bucketing bugs from polluting DB.
             local_day_cst = None
-            league_day_val = league_day  # Preserve input league_day
+            league_day = league_day  # Preserve input league_day
             if start_time_utc:
                 try:
                     # Normalize to pendulum DateTime UTC first
@@ -259,9 +259,9 @@ class GameStorage:
                 INSERT INTO games (
                     game_id, start_time_utc, home_team, away_team, status,
                     last_seen_utc, current_period, game_clock, score_home, score_away, game_date,
-                    local_day_cst, league_day_val
+                    local_day_cst, league_day
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
                 ON CONFLICT(game_id) DO UPDATE SET
                     start_time_utc = excluded.start_time_utc,
                     home_team = excluded.home_team,
@@ -278,7 +278,7 @@ class GameStorage:
             """, (
                 game_id, start_time_str, home_team, away_team, status,
                 now_str, current_period, game_clock, score_home, score_away, game_date,
-                local_day_cst, league_day_val
+                local_day_cst, league_day
             ))
     
     @staticmethod
