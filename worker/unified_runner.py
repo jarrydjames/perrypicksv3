@@ -13,6 +13,7 @@ import argparse
 import os
 import time
 import pytz
+import pendulum
 
 # Load environment variables from .env file (if it exists)
 try:
@@ -652,22 +653,25 @@ class UnifiedRunner:
         return True
 
     def run(self):
+        """Main loop."""
         # Update current day tracking
         self._update_current_day()
-        """Main loop."""
         logger.info(f"Starting unified runner (poll_interval={self.poll_interval}s)")
         self.running = True
         
         while self.running:
             try:
                 stats = self.run_once()
-                
+
+                # Log stats every cycle
+                logger.info(f"Poll cycle stats: day_transition={stats['day_transition']}, new_games={stats['new_games']}, triggers_processed={stats['triggers_processed']}, snapshots_created={stats['snapshots_created']}")
+
                 if stats['day_transition']:
                     logger.info(f"Day transition - {stats['new_games']} new games scheduled")
-                
+
                 if stats['triggers_processed'] > 0:
                     logger.info(f"Processed {stats['triggers_processed']} triggers this cycle")
-                
+
                 time.sleep(self.poll_interval)
                 
             except Exception as e:
@@ -720,7 +724,7 @@ def main():
     
     # Setup logging
     logging.basicConfig(
-        level=logging.DEBUG,
+        level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         handlers=[
             logging.FileHandler('logs/unified_automation.log'),
