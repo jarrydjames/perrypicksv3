@@ -401,14 +401,17 @@ Once core files are modified:
 
 | Item | Status | Notes |
 |------|--------|-------|
-| Migration script | ✅ Committed | `scripts/migrate_league_day.py` |
-| Test framework | ✅ Committed | `tests/test_league_day.py` |
-| core/storage.py | ⚠️ Pending | Schema + methods |
-| core/data_sources.py | ⚠️ Pending | `fetch_games_for_league_day()` |
-| worker/scheduler.py | ⚠️ Pending | `schedule_games_for_league_day()` |
-| worker/unified_runner.py | ⚠️ Pending | League day tracking |
+| Migration script | ✅ Complete | `scripts/migrate_league_day.py` |
+| Test framework | ✅ Complete | `tests/test_league_day.py` |
+| core/storage.py | ✅ Complete | Schema + methods |
+| core/data_sources.py | ✅ Complete | `fetch_games_for_league_day()` |
+| worker/scheduler.py | ✅ Complete | `schedule_games_for_league_day()` |
+| worker/unified_runner.py | ✅ Complete | League day tracking |
 
-**Progress:** ~20% complete (scripts done, core implementation pending)
+**Progress:** 100% complete (all core files implemented and committed)
 
-**Estimated time to complete:** ~30-45 minutes for careful implementation of remaining 4 files.
+**Commits:**
+- `00cbe9b` - Migration script + test file
+- `b95ee37` - Implementation status document
+- `dfb452a` - All core files (storage, data_sources, scheduler, runner)
 
