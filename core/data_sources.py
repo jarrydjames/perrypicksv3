@@ -923,3 +923,77 @@ class CombinedDataSource:
             'game_state': game_state,
             'odds': odds
         }
+
+    @classmethod
+    def fetch_games_for_league_day(cls, league_day: str) -> List[Dict[str, Any]]:
+        """
+        Fetch games for a specific NBA league day (ET-based).
+        
+        league_day is the canonical NBA slate key that matches the scheduleLeagueV2
+        gameDate format (MM/DD/YYYY in Eastern Time). This is the authoritative
+        source for game scheduling and DAILY_SUMMARY triggers.
+        
+        Args:
+            league_day: Date in YYYY-MM-DD format
+        
+        Returns:
+            List of game dicts with game_id, start_time_utc, home_team, away_team,
+            status, league_day, local_day_cst
+        """
+        try:
+            # Convert YYYY-MM-DD to MM/DD/YYYY (zero-padded, no leading zero strip)
+            year, month, day = league_day.split('-')
+            api_date_str = f"{month}/{day}/{year}"
+            
+            # Fetch scheduleLeagueV2.json
+            response = requests.get(SCHEDULE_URL, headers=NBA_HEADERS, timeout=NBA_API_TIMEOUT)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            # Extract games for specified date
+            schedule_data = data.get('league', {}).get('standard', {}).get('schedule', [])
+            
+            games = []
+            for day_schedule in schedule_data:
+                schedule_date_str = day_schedule.get('gameDate')  # MM/DD/YYYY in ET
+                if schedule_date_str == api_date_str:
+                    game_data = day_schedule.get('games', [])
+                    for g in game_data:
+                        game_id = g.get('gameId')
+                        
+                        # Parse ET time with _parse_nba_schedule_time
+                        start_time_utc = cls._parse_nba_schedule_time(
+                            g.get('gameTimeUTC'), api_date_str, g.get('gameTimeET', "19:00")
+                        )
+                        
+                        # Mild sanity check: start_time_utc should be within 18h-400d
+                        now = pendulum.now('UTC')
+                        time_until_game = (start_time_utc - now).total_seconds()
+                        
+                        if time_until_game < -18*3600:  # More than 18 hours ago
+                            continue
+                        if time_until_game > 400*24*3600:  # More than 400 days ahead
+                            continue
+                        
+                        # Compute local_day_cst from start_time_utc
+                        local_day_cst = cst_game_date_from_start_time_utc(start_time_utc, tz=CST)
+                        
+                        games.append({
+                            'game_id': game_id,
+                            'start_time_utc': start_time_utc,
+                            'home_team': g.get('homeTeam', {}).get('teamTricode', ''),
+                            'away_team': g.get('awayTeam', {}).get('teamTricode', ''),
+                            'status': 'Scheduled',
+                            'league_day': league_day,  # ET-based canonical
+                            'local_day_cst': local_day_cst  # CST-derived for display
+                        })
+                    
+                    break  # Found the date
+            
+            logger.info(f"Fetched {len(games)} games for league_day {league_day}")
+            return games
+            
+        except Exception as e:
+            logger.error(f"Error fetching games for league_day {league_day}: {e}")
+            return []

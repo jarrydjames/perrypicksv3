@@ -59,7 +59,9 @@ def init_database(db_path: Path = DEFAULT_DB_PATH) -> None:
                 game_clock TEXT,
                 score_home INTEGER DEFAULT 0,
                 score_away INTEGER DEFAULT 0,
-                game_date TEXT,  -- YYYY-MM-DD for easy querying
+                game_date TEXT,  -- YYYY-MM-DD for easy querying (legacy, DEPRECATED use local_day_cst)
+                league_day TEXT,  -- YYYY-MM-DD: NBA league day (ET-based, canonical slate key)
+                local_day_cst TEXT,  -- YYYY-MM-DD: CST-derived local day (for display only)
                 UNIQUE(game_id)
             )
         """)
@@ -170,6 +172,22 @@ def init_database(db_path: Path = DEFAULT_DB_PATH) -> None:
             )
         """)
         
+        # Schema migration: add league_day and local_day_cst columns if missing
+        cursor.execute("PRAGMA table_info(games)")
+        columns = {row['name'] for row in cursor.fetchall()}
+        
+        if 'league_day' not in columns:
+            logger.info("Running schema migration: adding league_day column")
+            cursor.execute("ALTER TABLE games ADD COLUMN league_day TEXT")
+        
+        if 'local_day_cst' not in columns:
+            logger.info("Running schema migration: adding local_day_cst column")
+            cursor.execute("ALTER TABLE games ADD COLUMN local_day_cst TEXT")
+        
+        # Create indexes for new columns
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_games_league_day ON games(league_day)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_games_local_day_cst ON games(local_day_cst)")
+        
         logger.info(f"Database schema initialized at {db_path}")
 
 
@@ -188,6 +206,7 @@ class GameStorage:
         score_home: int = 0,
         score_away: int = 0,
         game_date: Optional[str] = None,
+        league_day: Optional[str] = None,
         db_path: Path = DEFAULT_DB_PATH
     ) -> None:
         """Insert or update a game."""
@@ -195,8 +214,10 @@ class GameStorage:
             cursor = conn.cursor()
             now_utc_val = now_utc()
             
-            # AUTHORITATIVE: Always derive game_date from start_time_utc in CST
+            # AUTHORITATIVE: Always derive local_day_cst from start_time_utc in CST
             # This prevents any upstream (API) date bucketing bugs from polluting DB.
+            local_day_cst = None
+            league_day_val = league_day  # Preserve input league_day
             if start_time_utc:
                 try:
                     # Normalize to pendulum DateTime UTC first
@@ -209,6 +230,7 @@ class GameStorage:
                         dt_utc = pendulum.instance(start_time_utc).in_timezone('UTC')
                     
                     derived_game_date = cst_game_date_from_start_time_utc(dt_utc, tz=CST)
+                    local_day_cst = derived_game_date
                     
                     # If caller supplied game_date, keep it only if it matches derived value
                     if game_date and game_date != derived_game_date:
@@ -236,9 +258,10 @@ class GameStorage:
             cursor.execute("""
                 INSERT INTO games (
                     game_id, start_time_utc, home_team, away_team, status,
-                    last_seen_utc, current_period, game_clock, score_home, score_away, game_date
+                    last_seen_utc, current_period, game_clock, score_home, score_away, game_date,
+                    local_day_cst, league_day_val
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(game_id) DO UPDATE SET
                     start_time_utc = excluded.start_time_utc,
                     home_team = excluded.home_team,
@@ -249,10 +272,13 @@ class GameStorage:
                     game_clock = excluded.game_clock,
                     score_home = excluded.score_home,
                     score_away = excluded.score_away,
-                    game_date = excluded.game_date
+                    game_date = excluded.game_date,
+                    local_day_cst = excluded.local_day_cst,
+                    league_day = COALESCE(excluded.league_day, games.league_day)
             """, (
                 game_id, start_time_str, home_team, away_team, status,
-                now_str, current_period, game_clock, score_home, score_away, game_date
+                now_str, current_period, game_clock, score_home, score_away, game_date,
+                local_day_cst, league_day_val
             ))
     
     @staticmethod
@@ -284,6 +310,42 @@ class GameStorage:
                     (date,)
                 )
             return [dict(row) for row in cursor.fetchall()]
+    
+    @staticmethod
+    def get_games_for_league_day(
+        league_day: str,
+        status: Optional[str] = None,
+        db_path: Path = DEFAULT_DB_PATH
+    ) -> List[Dict[str, Any]]:
+        "Get all games for a specific NBA league day (ET-based)."
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            if status:
+                cursor.execute(
+                    "SELECT * FROM games WHERE league_day = ? AND status = ?",
+                    (league_day, status)
+                )
+            else:
+                cursor.execute(
+                    "SELECT * FROM games WHERE league_day = ?",
+                    (league_day,)
+                )
+            return [dict(row) for row in cursor.fetchall()]
+    
+    @staticmethod
+    def has_games_for_league_day(
+        league_day: str,
+        db_path: Path = DEFAULT_DB_PATH
+    ) -> bool:
+        "Check if any games exist for a specific league day."
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "SELECT COUNT(*) as count FROM games WHERE league_day = ?",
+                (league_day,)
+            )
+            row = cursor.fetchone()
+            return row['count'] > 0 if row else False
     
     @staticmethod
     def get_active_games(db_path: Path = DEFAULT_DB_PATH) -> List[Dict[str, Any]]:

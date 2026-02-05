@@ -431,3 +431,61 @@ class AutoScheduler:
             )
         
         return results
+
+    def schedule_games_for_league_day(self, league_day: str) -> int:
+        """
+        Schedule games for a specific NBA league day and create DAILY_SUMMARY trigger.
+        
+        Returns:
+            Number of games scheduled.
+        """
+        from core.storage import GameStorage
+        
+        logger.info(f"Scheduling games for league_day {league_day}")
+        
+        # Fetch games for this league day
+        games = GameStorage.get_games_for_league_day(league_day)
+        
+        if not games:
+            logger.warning(f"No games found for league_day {league_day}")
+            return 0
+        
+        scheduled_count = 0
+        game_ids = []
+        
+        for game in games:
+            game_id = game['game_id']
+            start_time_utc = pendulum.parse(game['start_time_utc'])
+            
+            # Schedule pre-game triggers
+            for trigger_type in ['PRE_3H', 'PRE_1H', 'PRE_10M']:
+                scheduled_time = self._get_trigger_time(trigger_type, start_time_utc)
+                if scheduled_time and self.schedule_trigger(game_id, trigger_type, scheduled_time):
+                    scheduled_count += 1
+            
+            # Schedule halftime trigger (will fire on state change)
+            self.schedule_trigger(game_id, 'HALFTIME', start_time_utc)
+            
+            # Schedule Q3 trigger (will fire on state change)
+            q3_time = start_time_utc.add(hours=3)
+            self.schedule_trigger(game_id, 'Q3', q3_time)
+            
+            game_ids.append(game_id)
+        
+        # Schedule DAILY_SUMMARY trigger
+        # Use last game's Q3 time + 5 minutes
+        last_game_time = max(pendulum.parse(g['start_time_utc']) for g in games)
+        summary_time = last_game_time.add(hours=3, minutes=5)
+        
+        summary_game_id = f"DAILY_{league_day.replace('-', '')}"
+        
+        # Minimal payload: league_day + game_ids only (no embedded game objects)
+        payload = {
+            'league_day': league_day,
+            'game_ids': game_ids
+        }
+        
+        self.schedule_trigger(summary_game_id, 'DAILY_SUMMARY', summary_time, payload)
+        logger.info(f"Scheduled DAILY_SUMMARY for {league_day} at {summary_time} ({len(game_ids)} games)")
+        
+        return scheduled_count

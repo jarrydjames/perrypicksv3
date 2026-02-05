@@ -57,6 +57,8 @@ class UnifiedRunner:
         date: str = 'today'
     ):
         self.db_path = db_path
+        self.current_league_day = None  # ET-based canonical
+        self.current_local_day_cst = None  # CST-derived for display
         self.poll_interval = poll_interval
         self.dry_run = dry_run
         self.running = False
@@ -623,7 +625,35 @@ class UnifiedRunner:
             except Exception as e:
                 logger.error(f"Error creating periodic snapshot for {game_id}: {e}")
     
+
+    def _update_current_day(self):
+        """Update current day tracking using ET for league_day."""
+        now_utc = pendulum.now('UTC')
+        now_et = now_utc.in_timezone('America/New_York')
+        now_cst = now_utc.in_timezone('America/Chicago')
+        
+        self.current_league_day = now_et.format('YYYY-MM-DD')
+        self.current_local_day_cst = now_cst.format('YYYY-MM-DD')
+        
+        logger.info(f"Current league_day (ET): {self.current_league_day}, local_day_cst: {self.current_local_day_cst}")
+
+    def _should_process_trigger(self, trigger: Dict) -> bool:
+        """Check if a trigger should be processed based on date."""
+        import json
+        payload = json.loads(trigger.get('payload_json', '{}'))
+        
+        # For DAILY_SUMMARY triggers, check if payload.league_day matches current_league_day
+        if trigger.get('trigger_type') == 'DAILY_SUMMARY':
+            payload_league_day = payload.get('league_day')
+            if payload_league_day != self.current_league_day:
+                logger.info(f"Skipping DAILY_SUMMARY for {payload_league_day} (current league_day is {self.current_league_day})")
+                return False
+        
+        return True
+
     def run(self):
+        # Update current day tracking
+        self._update_current_day()
         """Main loop."""
         logger.info(f"Starting unified runner (poll_interval={self.poll_interval}s)")
         self.running = True
