@@ -149,6 +149,9 @@ class NBADataSource:
         
         Returns list of game dicts with game_id, start_time, teams, etc.
         """
+        # DEBUG: Log when fetch_games_for_date is called
+        logger.warning(f"[FETCH_GAMES_FOR_DATE] called with date={date}")
+        
         # Check cache first
         cached = cls._get_cached('schedule', date)
         if cached:

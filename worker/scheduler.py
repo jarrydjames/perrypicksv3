@@ -73,12 +73,18 @@ class TriggerScheduler:
             logger.info(f"No games found for date {date} after CST validation")
             return 0
         
+        # Keep test games for normal per-game triggers if you want,
+        # but DAILY_SUMMARY should NEVER include test_* games.
+        real_games = [g for g in games if not str(g.get('game_id', '')).startswith('test_')]
+        
         # Sort games by start time
         games_sorted = sorted(games, key=lambda g: g['start_time_utc'])
         
         # Schedule DAILY_SUMMARY trigger (3h before earliest game)
         if games_sorted:
-            earliest_game = games_sorted[0]
+            # FIX: pick earliest REAL game (exclude test_*). If no real games, fall back to all games.
+            summary_source_games: List[dict] = real_games if real_games else games_sorted
+            earliest_game = sorted(summary_source_games, key=lambda g: g['start_time_utc'])[0]
             # Parse start_time_utc (may be string from DB)
             if isinstance(earliest_game['start_time_utc'], str):
                 earliest_time = parse_iso_utc(earliest_game['start_time_utc'])
@@ -90,9 +96,12 @@ class TriggerScheduler:
             summary_game_id = f"DAILY_{date.replace('-', '')}"
             
             if not TriggerStorage.check_trigger_exists(summary_game_id, self.DAILY_SUMMARY, db_path=self.db_path):
+                # FIX: DAILY_SUMMARY payload excludes test_* games
+                games_for_payload = real_games if real_games else games
+                
                 # Convert datetime objects to ISO strings for JSON serialization
                 games_serializable = []
-                for game in games:
+                for game in games_for_payload:
                     game_copy = game.copy()
                     # Convert datetime to ISO string
                     if 'start_time_utc' in game_copy and isinstance(game_copy['start_time_utc'], pendulum.DateTime):

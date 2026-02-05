@@ -6,6 +6,7 @@ Handles multi-day transitions AND trigger processing in a single process.
 import logging
 import signal
 import sys
+import json
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import argparse
@@ -77,6 +78,52 @@ class UnifiedRunner:
         """Handle shutdown signals."""
         logger.info(f"Received signal {signum}; shutting down gracefully...")
         self.running = False
+    
+    def _safe_payload_date(self, payload_json) -> str | None:
+        """
+        Return payload['date'] if present.
+        payload_json may be a dict already or a JSON string depending on storage layer.
+        """
+        try:
+            if payload_json is None:
+                return None
+            if isinstance(payload_json, dict):
+                return payload_json.get('date')
+            if isinstance(payload_json, str):
+                data = json.loads(payload_json)
+                return data.get('date')
+        except Exception:
+            return None
+        return None
+    
+    def _should_process_trigger(self, trigger) -> bool:
+        """
+        Critical fix:
+        DAILY_SUMMARY triggers must be processed ONLY when payload.date matches
+        runner's current CST date. Otherwise, the runner may fire the wrong day's summary
+        simply because it is 'due' by scheduled_time_utc.
+        """
+        try:
+            if trigger.get('trigger_type', None) != 'DAILY_SUMMARY':
+                return True
+            
+            payload_date = self._safe_payload_date(trigger.get('payload_json', None))
+            if not payload_date:
+                # No payload date; safest is to skip
+                logger.warning(f"Skipping DAILY_SUMMARY trigger with missing payload date: {trigger.get('game_id', 'UNKNOWN')}")
+                return False
+            
+            if payload_date != self.current_date_cst:
+                logger.info(
+                    f"Skipping DAILY_SUMMARY {trigger.get('game_id', 'UNKNOWN')} "
+                    f"for payload.date={payload_date} (current CST date={self.current_date_cst})"
+                )
+                return False
+            
+            return True
+        except Exception as e:
+            logger.warning(f"Error deciding whether to process trigger; skipping. err={e}")
+            return False
     
     def initialize(self) -> bool:
         """Initialize database and schedule today's games."""
@@ -173,6 +220,10 @@ class UnifiedRunner:
         )
         
         for trigger in due_triggers:
+            # Critical fix: Only process DAILY_SUMMARY if payload date matches current CST date
+            if not self._should_process_trigger(trigger):
+                continue
+            
             processed = self._process_scheduled_trigger(trigger)
             if processed:
                 stats['triggers_processed'] += 1
