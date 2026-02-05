@@ -24,6 +24,7 @@ try:
 except ImportError:
     pass
 
+from core.timezone import parse_iso_utc
 from core.storage import (
     init_database, GameStorage, TriggerStorage, PickStorage, 
     TrackingStorage, DiscordPostStorage
@@ -288,7 +289,7 @@ class UnifiedRunner:
             # Update game in database
             GameStorage.upsert_game(
                 game_id=game_id,
-                start_time_utc=datetime.fromisoformat(game['start_time_utc']) if isinstance(game['start_time_utc'], str) else game['start_time_utc'],
+                start_time_utc=parse_iso_utc(game['start_time_utc']) if isinstance(game['start_time_utc'], str) else game['start_time_utc'],
                 home_team=game['home_team'],
                 away_team=game['away_team'],
                 status=game_state['status'],
@@ -316,7 +317,7 @@ class UnifiedRunner:
                 recent_triggers = [
                     t for t in all_triggers
                     if t['created_at_utc'] and 
-                    datetime.fromisoformat(t['created_at_utc']) > recent_cutoff
+                    parse_iso_utc(t['created_at_utc']) > recent_cutoff
                 ]
                 
                 for trigger in recent_triggers:

@@ -15,7 +15,7 @@ sys.path.append(str(Path(__file__).parent.parent))
 import pendulum
 
 from core.storage import OddsCacheStorage
-from core.timezone import parse_iso_utc, to_iso, parse_date_str, now_utc
+from core.timezone import parse_iso_utc, to_iso, parse_date_str, now_utc, cst_game_date_from_start_time_utc, CST
 from core.validation import validate_future_datetime, validate_nba_schedule
 
 logger = logging.getLogger(__name__)
@@ -241,6 +241,9 @@ class NBADataSource:
                     logger.warning(f"Could not parse game time for {game_id}")
                     continue
                 
+                # IMPORTANT: game_date must be derived from start_time_utc converted to CST
+                game_date_cst = cst_game_date_from_start_time_utc(game_time_utc, tz=CST)
+                
                 # Get team names
                 home_team_obj = g.get('homeTeam', {})
                 away_team_obj = g.get('awayTeam', {})
@@ -249,7 +252,7 @@ class NBADataSource:
                 
                 games.append({
                     'game_id': game_id,
-                    'game_date': date,
+                    'game_date': game_date_cst,
                     'start_time_utc': game_time_utc,
                     'home_team': home_team,
                     'away_team': away_team,
@@ -555,11 +558,16 @@ class OddsDataSource:
             home_team = game['home_team']
             away_team = game['away_team']
             
-            # TODO: Implement odds API call
-            # For now, returning simple structure
-            logger.warning("Odds API integration not yet implemented - returning cached odds if available")
+            # Get game details from DB to find teams
+            from core.storage import GameStorage
+            game = GameStorage.get_game(game_id, db_path=db_path)
             
-            # Check if we have cached odds from earlier
+            if not game:
+                logger.error(f"Game {game_id} not found in database")
+                return None
+            
+            # NOTE: Odds API integration coming soon. Using cached odds for now.
+            logger.info("Using cached odds for game")
             cached = OddsCacheStorage.get_cached_odds(game_id, reason, db_path=db_path)
             return cached
             
@@ -579,7 +587,8 @@ class CombinedDataSource:
         self,
         game_id: str,
         reason: str,
-        db_path: Path
+        db_path: Path,
+        force_refresh: bool = False
     ) -> Dict[str, Any]:
         """
         Refresh both NBA game state and odds for a game.
@@ -587,8 +596,35 @@ class CombinedDataSource:
         Returns dict with:
         - game_state: NBA game state
         - odds: Cached or fresh odds
+        
+        Args:
+            force_refresh: If True, always fetch from API. If False, use cached data.
         """
-        game_state = self.nba.fetch_game_state(game_id)
+        # Check database FIRST before fetching from API
+        from core.storage import GameStorage
+        existing_game = GameStorage.get_game(game_id, db_path=db_path)
+        
+        if existing_game and not force_refresh:
+            # Game exists in database - use it instead of fetching from API
+            logger.info(f"Using cached game state for {game_id} from database")
+            
+            # Convert database row to game_state format
+            game_state = {
+                'game_id': existing_game['game_id'],
+                'start_time_utc': existing_game['start_time_utc'],
+                'home_team': existing_game['home_team'],
+                'away_team': existing_game['away_team'],
+                'home_score': existing_game.get('score_home', 0),
+                'away_score': existing_game.get('score_away', 0),
+                'current_period': existing_game.get('current_period', 0),
+                'game_clock': existing_game.get('game_clock', ''),
+                'status': existing_game.get('status', 'Scheduled')
+            }
+        else:
+            # Game doesn't exist or force refresh - fetch from API
+            logger.info(f"Fetching game {game_id} from NBA API")
+            game_state = self.nba.fetch_game_state(game_id)
+        
         odds = self.odds.get_odds(game_id, reason, db_path=db_path)
         
         return {

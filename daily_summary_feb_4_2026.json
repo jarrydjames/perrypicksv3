@@ -1,0 +1,61 @@
+{
+  "date": "2026-02-04",
+  "games": [
+    {
+      "game_id": "0022500733",
+      "away_team": "WAS",
+      "home_team": "DET",
+      "start_time_utc": "2026-02-05T00:00:00Z",
+      "game_date": "2026-02-04"
+    },
+    {
+      "game_id": "0022500734",
+      "away_team": "BKN",
+      "home_team": "ORL",
+      "start_time_utc": "2026-02-05T00:00:00Z",
+      "game_date": "2026-02-04"
+    },
+    {
+      "game_id": "0022500735",
+      "away_team": "UTA",
+      "home_team": "ATL",
+      "start_time_utc": "2026-02-05T00:30:00Z",
+      "game_date": "2026-02-04"
+    },
+    {
+      "game_id": "0022500736",
+      "away_team": "CHI",
+      "home_team": "TOR",
+      "start_time_utc": "2026-02-05T00:30:00Z",
+      "game_date": "2026-02-04"
+    },
+    {
+      "game_id": "0022500737",
+      "away_team": "CHA",
+      "home_team": "HOU",
+      "start_time_utc": "2026-02-05T01:00:00Z",
+      "game_date": "2026-02-04"
+    },
+    {
+      "game_id": "0022500738",
+      "away_team": "SAS",
+      "home_team": "DAL",
+      "start_time_utc": "2026-02-05T01:30:00Z",
+      "game_date": "2026-02-04"
+    },
+    {
+      "game_id": "0022500739",
+      "away_team": "GSW",
+      "home_team": "PHX",
+      "start_time_utc": "2026-02-05T03:00:00Z",
+      "game_date": "2026-02-04"
+    },
+    {
+      "game_id": "0022500740",
+      "away_team": "PHI",
+      "home_team": "LAL",
+      "start_time_utc": "2026-02-05T03:00:00Z",
+      "game_date": "2026-02-04"
+    }
+  ]
+}

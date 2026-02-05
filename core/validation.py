@@ -170,10 +170,12 @@ def validate_schedule_date(
     now = now_utc()
     now_midnight = now.start_of('day').in_timezone('UTC')
     
-    # Check if date is in past
-    if dt < now_midnight:
+    # Check if date is in the distant past (more than 48 hours ago)
+    # Allow recent past dates for daily summaries (up to 48 hours ago)
+    min_allowed_date = now_midnight - pendulum.duration(hours=48)
+    if dt < min_allowed_date:
         error_msg = (
-            f"Date '{date_str}' is in the past! "
+            f"Date '{date_str}' is too far in the past! "
             f"Current date: {now.format('YYYY-MM-DD')}"
         )
         logger.error(error_msg)

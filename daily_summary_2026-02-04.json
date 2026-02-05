@@ -1,0 +1,65 @@
+{
+  "date": "2026-02-04",
+  "games": [
+    {
+      "game_id": "0022500731",
+      "home_team": "SAC",
+      "away_team": "MEM",
+      "start_time_utc": "2026-02-04T03:00:00Z",
+      "score_home": 0,
+      "score_away": 0,
+      "status": "Scheduled",
+      "current_period": 0
+    },
+    {
+      "game_id": "0022500724",
+      "home_team": "GSW",
+      "away_team": "PHI",
+      "start_time_utc": "2026-02-04T03:00:00Z",
+      "score_home": 94,
+      "score_away": 113,
+      "status": "Final",
+      "current_period": 4
+    },
+    {
+      "game_id": "0022500732",
+      "home_team": "LAC",
+      "away_team": "CLE",
+      "start_time_utc": "2026-02-04T03:30:00Z",
+      "score_home": 0,
+      "score_away": 0,
+      "status": "Scheduled",
+      "current_period": 0
+    },
+    {
+      "game_id": "0022500725",
+      "home_team": "POR",
+      "away_team": "PHX",
+      "start_time_utc": "2026-02-04T04:00:00Z",
+      "score_home": 125,
+      "score_away": 130,
+      "status": "Final",
+      "current_period": 4
+    },
+    {
+      "game_id": "test_pendulum_game_001",
+      "home_team": "LAL",
+      "away_team": "BOS",
+      "start_time_utc": "2026-02-04T06:40:12.598612Z",
+      "score_home": 0,
+      "score_away": 0,
+      "status": "Scheduled",
+      "current_period": null
+    },
+    {
+      "game_id": "test_integration_001",
+      "home_team": "LAL",
+      "away_team": "BOS",
+      "start_time_utc": "2026-02-04T06:55:11.719118Z",
+      "score_home": 0,
+      "score_away": 0,
+      "status": "Scheduled",
+      "current_period": null
+    }
+  ]
+}

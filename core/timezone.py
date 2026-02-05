@@ -118,12 +118,12 @@ def format_local(
     return local_dt.format(fmt)
 
 
-def parse_iso_utc(iso_str: str) -> pendulum.DateTime:
+def parse_iso_utc(iso_str) -> pendulum.DateTime:
     '''
-    Parse ISO 8601 string as UTC datetime.
+    Parse ISO 8601 string or pendulum.DateTime as UTC datetime.
     
     Args:
-        iso_str: ISO 8601 string (e.g., '2025-02-03T14:30:00Z')
+        iso_str: ISO 8601 string (e.g., '2025-02-03T14:30:00Z') or pendulum.DateTime
     
     Returns:
         pendulum.DateTime in UTC
@@ -135,7 +135,15 @@ def parse_iso_utc(iso_str: str) -> pendulum.DateTime:
         >>> dt = parse_iso_utc('2025-02-03T14:30:00Z')
         >>> dt.timezone_name
         'UTC'
+        >>> dt2 = pendulum.now('UTC')
+        >>> parse_iso_utc(dt2).timezone_name
+        'UTC'
     '''
+    # If already a DateTime, just ensure it's in UTC
+    if isinstance(iso_str, pendulum.DateTime):
+        return iso_str.in_timezone(UTC)
+    
+    # Otherwise parse from string
     try:
         dt = pendulum.parse(iso_str, strict=True)
         return dt.in_timezone(UTC)
@@ -333,6 +341,47 @@ def is_past(dt: pendulum.DateTime) -> bool:
     '''
     return dt < now_utc()
 
+
+def cst_game_date_from_start_time_utc(
+    start_time_utc,
+    tz: str = CST
+) -> str:
+    '''
+    Canonical game-day rule: game_date = calendar day in America/Chicago of UTC start time.
+    
+    Args:
+        start_time_utc: UTC start time (ISO string or pendulum.DateTime)
+        tz: Target timezone (defaults to CST)
+    
+    Returns:
+        'YYYY-MM-DD'
+    
+    Example:
+        >>> dt = pendulum.parse("2026-02-04T03:00:00Z")
+        >>> cst_game_date_from_start_time_utc(dt, tz=CST)
+        '2026-02-03'
+    '''
+    dt_utc = parse_iso_utc(start_time_utc)
+    dt_local = dt_utc.in_timezone(tz)
+    return dt_local.format('YYYY-MM-DD')
+
+
+def today_cst_date_str(tz: str = CST) -> str:
+    '''
+    Canonical 'today' for user-facing schedules.
+    
+    Args:
+        tz: Target timezone (defaults to CST)
+    
+    Returns:
+        'YYYY-MM-DD'
+    
+    Example:
+        >>> today_cst_date_str()
+        '2025-02-03'
+    '''
+    return now_utc().in_timezone(tz).format('YYYY-MM-DD')
+
 # Convenience imports for backward compatibility
 class DateTime(pendulum.DateTime):
     '''
@@ -400,6 +449,8 @@ __all__ = [
     'seconds_until',
     'is_future',
     'is_past',
+    'cst_game_date_from_start_time_utc',
+    'today_cst_date_str',
     
     # DateTime wrapper
     'DateTime',

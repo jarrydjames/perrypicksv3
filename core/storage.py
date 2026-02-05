@@ -14,7 +14,7 @@ import hashlib
 
 import pendulum
 
-from core.timezone import now_utc, to_iso, parse_iso_utc
+from core.timezone import now_utc, to_iso, parse_iso_utc, cst_game_date_from_start_time_utc, CST
 
 logger = logging.getLogger(__name__)
 
@@ -195,6 +195,31 @@ class GameStorage:
             cursor = conn.cursor()
             now_utc_val = now_utc()
             
+            # AUTHORITATIVE: Always derive game_date from start_time_utc in CST
+            # This prevents any upstream (API) date bucketing bugs from polluting DB.
+            if start_time_utc:
+                try:
+                    # Normalize to pendulum DateTime UTC first
+                    if isinstance(start_time_utc, pendulum.DateTime):
+                        dt_utc = start_time_utc.in_timezone('UTC')
+                    elif isinstance(start_time_utc, str):
+                        dt_utc = parse_iso_utc(start_time_utc)
+                    else:
+                        # Legacy naive datetime -> assume UTC unless you store tz-aware
+                        dt_utc = pendulum.instance(start_time_utc).in_timezone('UTC')
+                    
+                    derived_game_date = cst_game_date_from_start_time_utc(dt_utc, tz=CST)
+                    
+                    # If caller supplied game_date, keep it only if it matches derived value
+                    if game_date and game_date != derived_game_date:
+                        logger.warning(
+                            f"Game {game_id}: overriding mismatched game_date "
+                            f"(incoming={game_date}, derived={derived_game_date})"
+                        )
+                    game_date = derived_game_date
+                except Exception as e:
+                    logger.warning(f"Game {game_id}: failed to derive CST game_date from start_time_utc: {e}")
+            
             # Convert datetime to ISO string for SQLite (using pendulum's to_iso8601_string)
             if isinstance(start_time_utc, pendulum.DateTime):
                 start_time_str = to_iso(start_time_utc)
@@ -374,6 +399,36 @@ class TriggerStorage:
                 (game_id, trigger_type)
             )
             return cursor.fetchone()[0] > 0
+    
+    @staticmethod
+    def delete_trigger(
+        game_id: str,
+        trigger_type: str,
+        db_path: Path = DEFAULT_DB_PATH
+    ) -> int:
+        """
+        Delete a trigger by (game_id, trigger_type).
+        
+        Returns number of rows deleted.
+        
+        Args:
+            game_id: Game identifier (e.g., '0022500731' or 'DAILY_20260204')
+            trigger_type: Type of trigger ('PRE_3H', 'PRE_1H', 'PRE_10M', 'HALFTIME', 'Q3', 'DAILY_SUMMARY')
+            db_path: Path to database
+        
+        Example:
+            >>> deleted = TriggerStorage.delete_trigger('DAILY_20260204', 'DAILY_SUMMARY')
+            >>> print(f"Deleted {deleted} trigger(s)")
+            Deleted 1 trigger(s)
+        """
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                "DELETE FROM triggers WHERE game_id = ? AND trigger_type = ?",
+                (game_id, trigger_type)
+            )
+            conn.commit()
+            return cursor.rowcount
     
     @staticmethod
     def check_trigger_fired(

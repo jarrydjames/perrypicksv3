@@ -13,7 +13,7 @@ import pendulum
 
 from core.storage import GameStorage, TriggerStorage
 from core.data_sources import NBADataSource
-from core.timezone import now_utc, to_iso, parse_date_str
+from core.timezone import now_utc, to_iso, parse_date_str, cst_game_date_from_start_time_utc, CST
 from core.validation import validate_schedule_date
 from core.data_sources import NBADataSource
 
@@ -28,10 +28,7 @@ class TriggerScheduler:
     PRE_GAME = 'PRE_GAME'           # 1h before each game
     HALFTIME = 'HALFTIME'          # At halftime
     
-    # Time offsets for triggers (using pendulum.duration)
-    TRIGGER_OFFSETS = {
-        PRE_GAME: pendulum.duration(hours=-1),
-    }
+
     
     def __init__(self, db_path: Path):
         self.db_path = db_path
@@ -48,10 +45,29 @@ class TriggerScheduler:
             Number of games processed
         """
         # Fetch games from NBA API
-        games = self.nba_source.fetch_games_for_date(date)
+        # Get games from database (not API) to ensure we have real team names
+        games = GameStorage.get_games_for_date(date, db_path=self.db_path)
         
         if not games:
             logger.info(f"No games found for date {date}")
+            return 0
+        
+        # Guard: ensure DB games actually belong to requested CST date
+        # (This catches any legacy records that might still be incorrect.)
+        filtered_games = []
+        for g in games:
+            try:
+                # start_time_utc in DB may be ISO string
+                derived_date = cst_game_date_from_start_time_utc(g['start_time_utc'], tz=CST)
+                if derived_date == date:
+                    filtered_games.append(g)
+            except Exception:
+                # if parsing fails, keep it (better than dropping silently)
+                filtered_games.append(g)
+        games = filtered_games
+        
+        if not games:
+            logger.info(f"No games found for date {date} after CST validation")
             return 0
         
         # Sort games by start time
@@ -73,6 +89,9 @@ class TriggerScheduler:
                     # Convert datetime to ISO string
                     if 'start_time_utc' in game_copy and isinstance(game_copy['start_time_utc'], pendulum.DateTime):
                         game_copy['start_time_utc'] = to_iso(game_copy['start_time_utc'])
+                    # Ensure game_date is present and correct in payload
+                    if not game_copy.get('game_date') and game_copy.get('start_time_utc'):
+                        game_copy['game_date'] = cst_game_date_from_start_time_utc(game_copy['start_time_utc'], tz=CST)
                     games_serializable.append(game_copy)
                 
                 TriggerStorage.schedule_trigger(

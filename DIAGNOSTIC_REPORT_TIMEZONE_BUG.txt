@@ -1,0 +1,968 @@
+# DIAGNOSTIC REPORT: TIMEZONE & DATABASE BUG ANALYSIS
+# Date: 2026-02-04
+# System: PerryPicks v3 Automation System
+# User Timezone: America/Chicago (CST)
+
+================================================================================
+SECTION 1 — DATE & TIME HANDLING
+================================================================================
+
+TIMEZONE CONSTANTS (core/timezone.py)
+------------------------------------
+# Central timezone definitions
+UTC = 'UTC'
+CST = 'America/Chicago'
+EST = 'America/New_York'
+DEFAULT_DISPLAY_TZ = CST  # Use CST for display by default
+
+
+FUNCTIONS USING pendulum.now() / datetime.now()
+-------------------------------------------
+
+core/timezone.py:
+---------------
+def now_utc() -> pendulum.DateTime:
+    """
+    Get current time in UTC.
+    
+    Returns:
+        Current UTC time as pendulum.DateTime
+    
+    Example:
+        >>> now = now_utc()
+        >>> now.timezone_name
+        'UTC'
+    """
+    return pendulum.now(UTC)
+
+
+core/validation.py - Date validation for scheduling:
+-------------------------------------------------
+def validate_schedule_date(
+    date_str: str,
+    days_ahead: int = None
+) -> pendulum.DateTime:
+    """
+    Validate that a date is reasonable and are not too far in future.
+    
+    Args:
+        date_str: Date string in YYYY-MM-DD format
+        days_ahead: Maximum days ahead to allow (default: 7)
+    
+    Returns:
+        Parsed datetime (midnight UTC)
+    
+    Raises:
+        ValueError: If date format is invalid or date is out of range
+    
+    Example:
+        >>> # Tomorrow
+        >>> tomorrow = (now_utc() + days(1)).format('YYYY-MM-DD')
+        >>> dt = validate_schedule_date(tomorrow)
+        
+        >>> # Invalid format
+        >>> validate_schedule_date('02/03/2025')
+        ValueError: Invalid date format '02/03/2025'. Use YYYY-MM-DD.
+        
+        >>> # Past date
+        >>> yesterday = (now_utc() - days(1)).format('YYYY-MM-DD')
+        >>> validate_schedule_date(yesterday)
+        ValueError: Date is in the past!
+    """
+    if days_ahead is None:
+        days_ahead = DEFAULT_MAX_DAYS_AHEAD
+    
+    # Validate format
+    try:
+        dt = pendulum.parse(date_str, strict=True)
+    except Exception as e:
+        error_msg = f"Invalid date format '{date_str}'. Use YYYY-MM-DD."
+        logger.error(error_msg)
+        raise ValueError(error_msg) from e
+    
+    # Ensure it's at midnight UTC
+    dt = dt.start_of('day').in_timezone('UTC')
+    
+    now = now_utc()
+    now_midnight = now.start_of('day').in_timezone('UTC')
+    
+    # Check if date is in distant past (more than 48 hours ago)
+    # Allow recent past dates for daily summaries (up to 48 hours ago)
+    min_allowed_date = now_midnight - pendulum.duration(hours=48)
+    if dt < min_allowed_date:
+        error_msg = (
+            f"Date '{date_str}' is too far in the past! "
+            f"Current date: {now.format('YYYY-MM-DD')}"
+        )
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+    
+    # Check if date is too far in future
+    max_date = now_midnight + pendulum.duration(days=days_ahead)
+    if dt > max_date:
+        error_msg = (
+            f"Date '{date_str}' is too far in the future! "
+            f"(>{days_ahead} days from now). "
+            f"Current date: {now.format('YYYY-MM-DD')}"
+        )
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+    
+    logger.info(f"Validated schedule date: {date_str}")
+    return dt
+
+
+AutoScheduler - Calculate today's date:
+-----------------------------------
+def auto_schedule_upcoming_games(
+    self,
+    days_ahead: int = 3,
+    today_date: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Automatically schedule games for next N days.
+    
+    Checks which dates already have games in database and only
+    schedules games for dates that don't have any.
+    
+    Args:
+        days_ahead: Number of days to look ahead (default: 3)
+        today_date: Optional explicit date for 'today' (YYYY-MM-DD)
+                       If None, calculates today's date
+    
+    Returns:
+        Dict with scheduling results:
+            - dates_checked: List of dates checked
+            - dates_scheduled: List of dates that had games scheduled
+            - games_scheduled: Total number of games scheduled
+            - dates_skipped: List of dates skipped (already have games)
+            - errors: List of errors encountered
+    """
+    # Determine today's date
+    if today_date is None:
+        now_cst = now_utc().in_timezone('America/Chicago')
+        today = now_cst.format('YYYY-MM-DD')
+    else:
+        today = today_date
+    
+    # [rest of function...]
+
+
+================================================================================
+SECTION 2 — GAME STORAGE LOGIC
+================================================================================
+
+DATABASE SCHEMA (core/storage.py: lines 28-56)
+----------------------------------------------
+CREATE TABLE IF NOT EXISTS games (
+    game_id TEXT PRIMARY KEY,
+    start_time_utc TIMESTAMP NOT NULL,
+    home_team TEXT NOT NULL,
+    away_team TEXT NOT NULL,
+    status TEXT NOT NULL,
+    last_seen_utc TIMESTAMP NOT NULL,
+    current_period INTEGER,
+    game_clock TEXT,
+    score_home INTEGER DEFAULT 0,
+    score_away INTEGER DEFAULT 0,
+    game_date TEXT,  -- YYYY-MM-DD for easy querying
+    UNIQUE(game_id)
+)
+
+
+GameStorage.upsert_game() - FULL IMPLEMENTATION (core/storage.py: lines 180-238)
+------------------------------------------------------------------------------------
+@staticmethod
+def upsert_game(
+    game_id: str,
+    start_time_utc: datetime,
+    home_team: str,
+    away_team: str,
+    status: str,
+    current_period: Optional[int] = None,
+    game_clock: Optional[str] = None,
+    score_home: int = 0,
+    score_away: int = 0,
+    game_date: Optional[str] = None,
+    db_path: Path = DEFAULT_DB_PATH
+) -> None:
+    """Insert or update a game."""
+    with get_db_connection(db_path) as conn:
+        cursor = conn.cursor()
+        now_utc_val = now_utc()
+        
+        # Calculate game_date from start_time_utc if not provided (convert to CST)
+        if game_date is None and start_time_utc:
+            # Parse start_time_utc if string
+            if isinstance(start_time_utc, str):
+                dt = parse_iso_utc(start_time_utc)
+            elif isinstance(start_time_utc, pendulum.DateTime):
+                dt = start_time_utc
+            else:
+                dt = pendulum.instance(start_time_utc)
+            
+            # Convert to CST and get date
+            dt_cst = dt.in_tz('America/Chicago')
+            game_date = dt_cst.format('YYYY-MM-DD')
+        
+        # Convert datetime to ISO string for SQLite (using pendulum's to_iso8601_string)
+        if isinstance(start_time_utc, pendulum.DateTime):
+            start_time_str = to_iso(start_time_utc)
+        elif start_time_utc:
+            # Handle legacy datetime objects
+            start_time_str = start_time_utc.isoformat()
+        else:
+            start_time_str = None
+        now_str = to_iso(now_utc_val)
+        
+        cursor.execute("""
+            INSERT INTO games (
+                game_id, start_time_utc, home_team, away_team, status,
+                last_seen_utc, current_period, game_clock, score_home, score_away, game_date
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(game_id) DO UPDATE SET
+                status = excluded.status,
+                last_seen_utc = excluded.last_seen_utc,
+                current_period = excluded.current_period,
+                game_clock = excluded.game_clock,
+                score_home = excluded.score_home,
+                score_away = excluded.score_away
+        """, (
+            game_id, start_time_str, home_team, away_team, status,
+            now_str, current_period, game_clock, score_home, score_away, game_date
+        ))
+
+
+GameStorage.get_games_for_date() - FULL IMPLEMENTATION (core/storage.py: lines 247-261)
+------------------------------------------------------------------------------------------
+@staticmethod
+def get_games_for_date(
+    date: str,  # YYYY-MM-DD
+    status: Optional[str] = None,
+    db_path: Path = DEFAULT_DB_PATH
+) -> List[Dict[str, Any]]:
+    """Get all games for a specific date."""
+    with get_db_connection(db_path) as conn:
+        cursor = conn.cursor()
+        if status:
+            cursor.execute(
+                "SELECT * FROM games WHERE game_date = ? AND status = ?",
+                (date, status)
+            )
+        else:
+            cursor.execute(
+                "SELECT * FROM games WHERE game_date = ?",
+                (date,)
+            )
+        return [dict(row) for row in cursor.fetchall()]
+
+
+GameStorage.has_games_for_date() (core/storage.py: lines 281-293)
+-------------------------------------------------------------------
+@staticmethod
+def has_games_for_date(
+    date: str,  # YYYY-MM-DD
+    db_path: Path = DEFAULT_DB_PATH
+) -> bool:
+    """Check if any games exist for a specific date."""
+    with get_db_connection(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT COUNT(*) as count FROM games WHERE game_date = ?",
+            (date,)
+        )
+        row = cursor.fetchone()
+        return row['count'] > 0 if row else False
+
+
+================================================================================
+SECTION 3 — GAME FETCHING FROM API
+================================================================================
+
+NBADataSource.fetch_games_for_date() - FULL IMPLEMENTATION (core/data_sources.py: lines 135-228)
+---------------------------------------------------------------------------------------------
+@classmethod
+def fetch_games_for_date(cls, date: str) -> List[Dict[str, Any]]:
+    """
+    Fetch all games for a specific date (YYYY-MM-DD).
+    Uses scheduleLeagueV2.json which has all scheduled games
+    (including future games that haven't started yet).
+    
+    Returns list of game dicts with game_id, start_time, teams, etc.
+    """
+    # Check cache first
+    cached = cls._get_cached('schedule', date)
+    if cached:
+        logger.debug(f"Using cached schedule for date {date}")
+        return cached
+    
+    try:
+        # Fetch schedule
+        response = requests.get(SCHEDULE_URL, headers=NBA_HEADERS, timeout=NBA_API_TIMEOUT)
+        response.raise_for_status()
+        data = response.json()
+        
+        league = data.get('leagueSchedule', {})
+        game_dates = league.get('gameDates', [])
+        
+        # Validate NBA schedule response
+        validation_result = validate_nba_schedule(data, date)
+        if not validation_result['valid']:
+            logger.error(f"NBA schedule validation failed for {date}: {validation_result['issues']}")
+            return []
+        
+        # Log warnings
+        for warning in validation_result.get('warnings', []):
+            logger.warning(warning)
+        
+        # Find games for specified date
+        # scheduleLeagueV2 uses "MM/DD/YYYY" format for gameDate
+        # date parameter is YYYY-MM-DD, so we need to match
+        # IMPORTANT: Do NOT strip leading zeros - API uses zero-padded format (MM/DD)
+        # This was bug: lstrip('0') was causing "02/02/2026" to become "2/2/2026"
+        # which doesn't match API format "02/02/2026 00:00:00"
+        target_month = date[5:7]  # Keep zero-padding (e.g., "02" not "2")
+        target_day = date[8:10]    # Keep zero-padding (e.g., "02" not "2")
+        target_year = date[:4]
+        
+        games_list = None
+        for gd in game_dates:
+            gd_str = gd.get('gameDate', '')
+            if not gd_str:
+                continue
+                
+            # Check if this matches our target date
+            # Format: "02/02/2026 T00:00:00"
+            if f'{target_month}/{target_day}/{target_year}' in gd_str:
+                games_list = gd.get('games', [])
+                break
+        
+        if not games_list:
+            logger.info(f'No games found for date {date}')
+            return []
+        
+        games = []
+        for g in games_list:
+            game_id = g.get('gameId')
+            if not game_id:
+                continue
+            
+            # Get start time
+            # API BEHAVIOR: scheduleLeagueV2's gameTimeUTC uses 1900-01-01 as placeholder date
+            # BUT THE TIME (hour:minute) IS CORRECT!
+            # Example: gameTimeUTC='1900-01-01T00:30:00Z' means 00:30 UTC on the game date
+            time_str_utc = g.get('gameTimeUTC', '')
+            
+            if time_str_utc and '1900-01-01' in time_str_utc:
+                # API returned placeholder date, extract time component and combine with real date
+                # Parse time from placeholder datetime using pendulum
+                placeholder_dt = pendulum.parse(time_str_utc)
+                hour = placeholder_dt.hour
+                minute = placeholder_dt.minute
+                
+                # Combine with actual game date (from date parameter, YYYY-MM-DD)
+                # Use pendulum to parse date and set time
+                game_time_utc = pendulum.parse(date)
+                game_time_utc = game_time_utc.set(hour=hour, minute=minute, second=0, microsecond=0)
+                game_time_utc = game_time_utc.in_timezone('UTC')
+                
+                logger.debug(f"Game {game_id}: Extracted time {hour:02d}:{minute:02d} from placeholder, combined with date {date}")
+            elif time_str_utc:
+                # Use gameTimeUTC directly if it's valid
+                game_time_utc = cls._parse_nba_datetime(time_str_utc)
+                logger.debug(f"Game {game_id}: Using valid gameTimeUTC '{time_str_utc}'")
+            else:
+                # No time at all - default to 8:00 PM EST (typical start time)
+                logger.warning(f"Game {game_id}: No gameTimeUTC found, defaulting to {date}T20:00:00")
+                game_time_utc = pendulum.parse(date)
+                game_time_utc = game_time_utc.set(hour=20, minute=0, second=0, microsecond=0)
+                game_time_utc = game_time_utc.in_timezone('UTC')
+            
+            if not game_time_utc:
+                logger.warning(f"Could not parse game time for {game_id}")
+                continue
+            
+            # Get team names
+            home_team_obj = g.get('homeTeam', {})
+            away_team_obj = g.get('awayTeam', {})
+            home_team = home_team_obj.get('teamTricode', 'UNK')
+            away_team = away_team_obj.get('teamTricode', 'UNK')
+            
+            games.append({
+                'game_id': game_id,
+                'game_date': date,  # <-- BUG: Uses input 'date' directly, NOT calculated from CST!
+                'start_time_utc': game_time_utc,
+                'home_team': home_team,
+                'away_team': away_team,
+                'status': 'Scheduled',
+                'current_period': None,
+                'game_clock': None,
+                'score_home': 0,
+                'score_away': 0
+            })
+        
+        # Validate game times are in future
+        valid_games = []
+        for game in games:
+            try:
+                validate_future_datetime(game['start_time_utc'], hours_ahead=48)
+                valid_games.append(game)
+            except ValueError as e:
+                logger.warning(f"Skipping game {game['game_id']}: {e}")
+        
+        # Cache result
+        cls._set_cached('schedule', date, valid_games)
+        
+        logger.info(f"Fetched {len(games)} games for date {date}, {len(valid_games)} valid after time validation")
+        return valid_games
+        
+    except Exception as e:
+        logger.error(f"Error fetching games for date {date}: {e}")
+        return []
+
+
+================================================================================
+SECTION 4 — AUTOMATION INITIALIZATION
+================================================================================
+
+TriggerScheduler.schedule_games_for_date() - FULL IMPLEMENTATION (worker/scheduler.py: lines 41-106)
+---------------------------------------------------------------------------------------------
+def schedule_games_for_date(self, date: str) -> int:
+    """
+    Fetch games for a date and schedule all time-based triggers.
+    
+    Args:
+        date: Date in YYYY-MM-DD format
+    
+    Returns:
+        Number of games processed
+    """
+    # Fetch games from NBA API
+    # Get games from database (not API) to ensure we have real team names
+    games = GameStorage.get_games_for_date(date, db_path=self.db_path)
+    
+    if not games:
+        logger.info(f"No games found for date {date}")
+        return 0
+    
+    # Sort games by start time
+    games_sorted = sorted(games, key=lambda g: g['start_time_utc'])
+    
+    # Schedule DAILY_SUMMARY trigger (3h before earliest game)
+    if games_sorted:
+        earliest_game = games_sorted[0]
+        summary_time = earliest_game['start_time_utc'] + timedelta(hours=-3)
+        
+        # Store as a special game_id for daily summary
+        summary_game_id = f"DAILY_{date.replace('-', '')}"
+        
+        if not TriggerStorage.check_trigger_exists(summary_game_id, self.DAILY_SUMMARY, db_path=self.db_path):
+            # Convert datetime objects to ISO strings for JSON serialization
+            games_serializable = []
+            for game in games:
+                game_copy = game.copy()
+                # Convert datetime to ISO string
+                if 'start_time_utc' in game_copy and isinstance(game_copy['start_time_utc'], pendulum.DateTime):
+                    game_copy['start_time_utc'] = to_iso(game_copy['start_time_utc'])
+                games_serializable.append(game_copy)
+            
+            TriggerStorage.schedule_trigger(
+                game_id=summary_game_id,
+                trigger_type=self.DAILY_SUMMARY,
+                scheduled_time_utc=summary_time,
+                payload={
+                    'date': date,
+                    'games': games_serializable
+                },
+                db_path=self.db_path
+            )
+            logger.info(f"Scheduled DAILY_SUMMARY for {date} at {summary_time} UTC")
+    
+    scheduled_count = 0
+    for game in games:
+        # Upsert game into database
+        GameStorage.upsert_game(
+            game_id=game['game_id'],
+            start_time_utc=game['start_time_utc'],
+            home_team=game['home_team'],
+            away_team=game['away_team'],
+            status=game['status'],
+            game_date=game['game_date'],
+            db_path=self.db_path
+        )
+        
+        # Schedule triggers for this game
+        scheduled = self._schedule_game_triggers(game)
+        if scheduled:
+            scheduled_count += 1
+    
+    logger.info(f"Scheduled triggers for {scheduled_count} games on {date}")
+    return scheduled_count
+
+
+AutomationRunner.__init__() and initialize() (worker/runner.py: lines 68-125)
+-------------------------------------------------------------------------------------------
+class AutomationRunner:
+    """Main automation runner - processes triggers and posts to Discord."""
+    
+    def __init__(
+        self,
+        db_path: Path,
+        odds_api_key: str,
+        discord_webhook_url: str,
+        date: str,  # MUST be explicit YYYY-MM-DD format
+        poll_interval: int = 60,
+        dry_run: bool = False,
+        auto_schedule: bool = True,  # Enable automatic game scheduling
+        auto_schedule_days: int = 3,  # Schedule N days ahead
+    ):
+        self.db_path = db_path
+        self.poll_interval = poll_interval
+        self.dry_run = dry_run
+        self.running = False
+        
+        # Auto-scheduling settings
+        self.auto_schedule = auto_schedule
+        self.auto_schedule_days = auto_schedule_days
+        
+        # Validate date format (no more 'today' support!)
+        if date == 'today':
+            raise ValueError(
+                "Relative dates not supported. Use explicit YYYY-MM-DD format. "
+                "Example: --date 2025-02-03"
+            )
+        
+        # Validate date is reasonable (not in past, not too far in future)
+        try:
+            validate_schedule_date(date)
+        except ValueError as e:
+            raise ValueError(f"Invalid date '{date}': {e}") from e
+        
+        self.date = date
+        
+        # Initialize components
+        self.data_source = CombinedDataSource(odds_api_key)
+        self.discord_client = DiscordWebhookClient(discord_webhook_url)
+        self.analysis_engine = AnalysisEngine()
+        self.scheduler = TriggerScheduler(db_path)
+        self.auto_scheduler = AutoScheduler(db_path)  # Auto-schedule games
+        self.trigger_firer = TriggerFirer(db_path, dry_run)
+        
+        # Setup signal handlers for graceful shutdown
+        signal.signal(signal.SIGINT, self._handle_shutdown)
+        signal.signal(signal.SIGTERM, self._handle_shutdown)
+
+
+AutomationRunner.initialize() (worker/runner.py: lines 127-142)
+-------------------------------------------------------------------------
+def initialize(self) -> bool:
+    """Initialize database and schedule triggers for games."""
+    try:
+        # Initialize database
+        init_database(self.db_path)
+        logger.info("Database initialized")
+        
+        # Validate system clock
+        clock_result = validate_system_clock()
+        if not clock_result['valid']:
+            logger.warning(f"System clock issue detected: {clock_result['warning']}")
+        else:
+            logger.info(f"System clock validated: {clock_result['drift_seconds']:.1f}s drift")
+        
+        # Schedule games for specified date
+        # (Date was already validated in __init__)
+        games_scheduled = self.scheduler.schedule_games_for_date(self.date)
+        
+        logger.info(f"Initialized {games_scheduled} games for {self.date}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to initialize: {e}")
+        return False
+
+
+================================================================================
+SECTION 5 — DAILY SUMMARY GENERATION
+================================================================================
+
+AutomationRunner._process_daily_summary() - FULL IMPLEMENTATION (worker/runner.py: lines 476-532)
+-----------------------------------------------------------------------------------------------------------
+def _process_daily_summary(self, trigger: dict) -> bool:
+    """
+    Process DAILY_SUMMARY trigger - post predictions for all games today.
+    
+    Args:
+        trigger: DAILY_SUMMARY trigger with game list in payload
+    
+    Returns:
+        True if processing succeeded, False otherwise
+    """
+    try:
+        # Parse payload_json (it's stored as JSON string in DB)
+        import json
+        payload_json = trigger.get('payload_json', '{}')
+        payload = json.loads(payload_json) if payload_json else {}
+        games = payload.get('games', [])
+        date = payload.get('date', '')
+        
+        if not games:
+            logger.warning("No games in DAILY_SUMMARY payload")
+            return False
+        
+        logger.info(f"Processing DAILY_SUMMARY for {date} ({len(games)} games)")
+        
+        # Generate predictions for all games
+        predictions = []
+        for game in games:
+            game_id = game['game_id']
+            
+            try:
+                # Add delay between requests to avoid NBA API rate limiting
+                if predictions:  # Don't delay on first game
+                    import time
+                    time.sleep(5)  # 5 second delay between games to avoid 403 errors
+                
+                # Get pregame prediction
+                from src.predict_api import predict_game
+                result = predict_game(
+                    game_input=game_id,
+                    mode='pregame',
+                    fetch_odds=False  # Don't need odds for summary
+                )
+                
+                if result.get('status') == 'success':
+                    # Calculate individual scores from total and margin
+                    total = result.get('total', 0)
+                    margin = result.get('margin', 0)
+                    pred_home = (total - margin) / 2
+                    pred_away = (total + margin) / 2
+                    
+                    # Determine winner
+                    if margin < 0:
+                        pred_winner = result.get('home_name', 'Home')
+                    else:
+                        pred_winner = result.get('away_name', 'Away')
+                    
+                    predictions.append({
+                        'game_id': game_id,
+                        'away_name': result.get('away_name', 'Away'),
+                        'home_name': result.get('home_name', 'Home'),
+                        'predicted_away_score': pred_away,
+                        'predicted_home_score': pred_home,
+                        'predicted_total': total,
+                        'predicted_margin': margin,
+                        'predicted_winner': pred_winner
+                    })
+                    
+            except Exception as e:
+                logger.error(f"Error generating prediction for {game_id}: {e}")
+                # Add placeholder prediction even if failed
+                predictions.append({
+                    'game_id': game_id,
+                    'away_name': game.get('away_team', 'Away'),
+                    'home_name': game.get('home_team', 'Home'),
+                    'predicted_away_score': 0,
+                    'predicted_home_score': 0,
+                    'predicted_total': 0,
+                    'predicted_margin': 0,
+                    'predicted_winner': 'Unknown'
+                })
+        
+        # [rest of function continues...]
+
+
+================================================================================
+SECTION 6 — RECENT FIXES OR WORKAROUNDS
+================================================================================
+
+FIX 1: Updated refresh_game_data() to Check Database First (core/data_sources.py)
+--------------------------------------------------------------------------------
+def refresh_game_data(
+    self,
+    game_id: str,
+    reason: str,
+    db_path: Path,
+    force_refresh: bool = False
+) -> Dict[str, Any]:
+    """
+    Refresh both NBA game state and odds for a game.
+    
+    Returns dict with:
+    - game_state: NBA game state
+    - odds: Cached or fresh odds
+    
+    Args:
+        force_refresh: If True, always fetch from API. If False, use cached data.
+    """
+    # Check database FIRST before fetching from API
+    from core.storage import GameStorage
+    existing_game = GameStorage.get_game(game_id, db_path=db_path)
+    
+    if existing_game and not force_refresh:
+        # Game exists in database - use it instead of fetching from API
+        logger.info(f"Using cached game state for {game_id} from database")
+        
+        # Convert database row to game_state format
+        game_state = {
+            'game_id': existing_game['game_id'],
+            'start_time_utc': existing_game['start_time_utc'],
+            'home_team': existing_game['home_team'],
+            'away_team': existing_game['away_team'],
+            'home_score': existing_game.get('score_home', 0),
+            'away_score': existing_game.get('score_away', 0),
+            'current_period': existing_game.get('current_period', 0),
+            'game_clock': existing_game.get('game_clock', ''),
+            'status': existing_game.get('status', 'Scheduled')
+        }
+    else:
+        # Game doesn't exist or force refresh - fetch from API
+        logger.info(f"Fetching game {game_id} from NBA API")
+        game_state = self.nba.fetch_game_state(game_id)
+    
+    odds = self.odds.get_odds(game_id, reason, db_path=db_path)
+    
+    return {
+        'game_state': game_state,
+        'odds': odds
+    }
+
+
+FIX 2: Updated GameStorage.upsert_game() to Calculate game_date from start_time_utc
+--------------------------------------------------------------------------------
+# In upsert_game() function (core/storage.py):
+
+# Calculate game_date from start_time_utc if not provided (convert to CST)
+if game_date is None and start_time_utc:
+    # Parse start_time_utc if string
+    if isinstance(start_time_utc, str):
+        dt = parse_iso_utc(start_time_utc)
+    elif isinstance(start_time_utc, pendulum.DateTime):
+        dt = start_time_utc
+    else:
+        dt = pendulum.instance(start_time_utc)
+    
+    # Convert to CST and get date
+    dt_cst = dt.in_tz('America/Chicago')
+    game_date = dt_cst.format('YYYY-MM-DD')
+
+
+FIX 3: Updated validate_schedule_date() to Allow Recent Past Dates (48 hours)
+--------------------------------------------------------------------------------
+# In validate_schedule_date() function (core/validation.py):
+
+# Check if date is in distant past (more than 48 hours ago)
+# Allow recent past dates for daily summaries (up to 48 hours ago)
+min_allowed_date = now_midnight - pendulum.duration(hours=48)
+if dt < min_allowed_date:
+    error_msg = (
+        f"Date '{date_str}' is too far in the past! "
+        f"Current date: {now.format('YYYY-MM-DD')}"
+    )
+    logger.error(error_msg)
+    raise ValueError(error_msg)
+
+
+FIX 4: Scheduler Changed from API to Database-First (worker/scheduler.py)
+--------------------------------------------------------------------------------
+# OLD CODE (commented out):
+# games = self.nba_source.fetch_games_for_date(date)
+
+# NEW CODE (database-first):
+# Get games from database (not API) to ensure we have real team names
+games = GameStorage.get_games_for_date(date, db_path=self.db_path)
+
+
+FIX 5: Database Migration Script to Correct All game_date Values
+--------------------------------------------------------------------------------
+import sqlite3
+from pathlib import Path
+import pendulum
+
+db_path = Path("data/automation.db")
+conn = sqlite3.connect(db_path)
+cursor = conn.cursor()
+
+# Get all games
+cursor.execute("SELECT game_id, start_time_utc, game_date FROM games")
+games = cursor.fetchall()
+
+print("Fixing game_date for all games...")
+
+fixed_count = 0
+for game_id, start_time_utc, current_date in games:
+    # Parse start_time_utc
+    try:
+        dt = pendulum.parse(start_time_utc)
+        # Convert to CST and get date
+        dt_cst = dt.in_tz('America/Chicago')
+        correct_date = dt_cst.format('YYYY-MM-DD')
+        
+        if correct_date != current_date:
+            print(f"Fixing {game_id}: {current_date} -> {correct_date}")
+            cursor.execute(
+                "UPDATE games SET game_date = ? WHERE game_id = ?",
+                (correct_date, game_id)
+            )
+            fixed_count += 1
+    except Exception as e:
+        print(f"Error processing {game_id}: {e}")
+
+conn.commit()
+print(f"\nFixed {fixed_count} games with incorrect game_date")
+conn.close()
+
+
+================================================================================
+SECTION 7 — SAMPLE DATA
+================================================================================
+
+SAMPLE DATA FROM games TABLE (12 games across Feb 3rd, 4th, and 5th)
+================================================================================
+game_id         away_team home_team start_time_utc                 game_date   
+====================================================================================================
+0022500731      MEM      SAC      2026-02-04T03:00:00Z           2026-02-03  
+0022500724      PHI      GSW      2026-02-04T03:00:00Z           2026-02-03  
+0022500732      CLE      LAC      2026-02-04T03:30:00Z           2026-02-03  
+0022500725      PHX      POR      2026-02-04T04:00:00Z           2026-02-03  
+0022500733      WAS      DET      2026-02-05T00:00:00Z           2026-02-04  
+0022500734      BKN      ORL      2026-02-05T00:00:00Z           2026-02-04  
+0022500735      UTA      ATL      2026-02-05T00:30:00Z           2026-02-04  
+0022500736      CHI      TOR      2026-02-05T00:30:00Z           2026-02-04  
+0022500737      CHA      HOU      2026-02-05T01:00:00Z           2026-02-04  
+0022500738      SAS      DAL      2026-02-05T01:30:00Z           2026-02-04  
+0022500739      GSW      PHX      2026-02-05T03:00:00Z           2026-02-04  
+0022500740      PHI      LAL      2026-02-05T03:00:00Z           2026-02-04  
+
+
+DAILY SUMMARY TRIGGER FOR 2026-02-04
+================================================================================
+game_id: DAILY_20260204
+trigger_type: DAILY_SUMMARY
+scheduled_time_utc: 2026-02-04T00:00:00+00:00
+status: fired
+created_at_utc: 2026-02-04 02:36:00
+
+payload_json (raw):
+{"date": "2026-02-04", "games": [{"game_id": "0022500731", "home_team": "SAC", "away_team": "MEM", "start_time_utc": "2026-02-04T03:00:00Z", "score_home": 0, "score_away": 0, "status": "Scheduled", "current_period": 0}, {"game_id": "0022500724", "home_team"... [truncated]
+
+
+GAMES IN DAILY SUMMARY PAYLOAD (4 games shown, 4 total)
+================================================================================
+game_id: 0022500731
+away_team: MEM
+home_team: SAC
+start_time_utc: 2026-02-04T03:00:00Z
+game_date: None  <-- MISSING!
+--------------------------------------------------
+game_id: 0022500724
+away_team: PHI
+home_team: GSW
+start_time_utc: 2026-02-04T03:00:00Z
+game_date: None  <-- MISSING!
+--------------------------------------------------
+game_id: 0022500732
+away_team: CLE
+home_team: LAC
+start_time_utc: 2026-02-04T03:30:00Z
+game_date: None  <-- MISSING!
+--------------------------------------------------
+game_id: 0022500725
+away_team: PHX
+home_team: POR
+start_time_utc: 2026-02-04T04:00:00Z
+game_date: None  <-- MISSING!
+--------------------------------------------------
+[Note: Only 4 games shown, but all have game_date: None]
+
+
+================================================================================
+ROOT CAUSE ANALYSIS
+================================================================================
+
+THE BUG:
+---------
+1. Scheduler uses database-first approach (CORRECT):
+   - GameStorage.get_games_for_date(date) queries game_date column
+   - Query: SELECT * FROM games WHERE game_date = '2026-02-04'
+
+2. But trigger payload was created BEFORE game_date was fixed:
+   - Trigger was created on 2026-02-04 02:36:00
+   - At that time, game_date values were WRONG (stored as UTC dates instead of CST dates)
+   - The trigger payload captured games with game_date: None or incorrect dates
+
+3. When games were first loaded (from NBA API), game_date field was incorrectly set:
+   - NBA API returns game_time_utc (in UTC)
+   - fetch_games_for_date() sets 'game_date': date (the input parameter, NOT calculated from CST!)
+   - This means: game_date='2026-02-04' regardless of whether game actually starts on Feb 3rd or 4th in CST
+
+4. The migration script fixed database BUT trigger payload was already created with wrong games!
+
+
+================================================================================
+PRECISE FIX NEEDED
+================================================================================
+
+PROBLEM LOCATION: core/data_sources.py, line ~210 in fetch_games_for_date()
+
+WRONG CODE (current):
+-------------------
+games.append({
+    'game_id': game_id,
+    'game_date': date,  # <-- Uses input date directly!
+    'start_time_utc': game_time_utc,
+    'home_team': home_team,
+    'away_team': away_team,
+    'status': 'Scheduled',
+    'current_period': None,
+    'game_clock': None,
+    'score_home': 0,
+    'score_away': 0
+})
+
+
+CORRECT CODE (needed):
+------------------
+# Calculate game_date from start_time_utc converted to CST
+dt_cst = game_time_utc.in_timezone('America/Chicago')
+games.append({
+    'game_id': game_id,
+    'game_date': dt_cst.format('YYYY-MM-DD'),  # <-- Calculate from CST!
+    'start_time_utc': game_time_utc,
+    'home_team': home_team,
+    'away_team': away_team,
+    'status': 'Scheduled',
+    'current_period': None,
+    'game_clock': None,
+    'score_home': 0,
+    'score_away': 0
+})
+
+
+WHY THIS IS THE ROOT CAUSE:
+---------------------------
+When fetch_games_for_date() is called with date='2026-02-04':
+1. It queries NBA API scheduleLeagueV2 endpoint for that date
+2. It parses gameTimeUTC which is in UTC (e.g., 2026-02-04T03:00:00Z)
+3. It currently sets game_date=date (input parameter '2026-02-04')
+4. BUT 2026-02-04T03:00:00Z in CST is 2026-02-03 (9:00 PM CST)
+5. So game_date should be '2026-02-03', NOT '2026-02-04'!
+
+This causes:
+- Games starting late on Feb 3rd CST (after 6 PM) get game_date='2026-02-04'
+- Query for Feb 4th returns these games (they have wrong game_date!)
+- Daily summary includes Feb 3rd games instead of Feb 4th games
+
+THE FIX:
+---------
+Change line ~210 in core/data_sources.py from:
+    'game_date': date,
+To:
+    'game_date': game_time_utc.in_timezone('America/Chicago').format('YYYY-MM-DD'),
+
+This ensures game_date reflects the actual CST game day, not the input date parameter!
+
+
+================================================================================
+END OF REPORT
+================================================================================
