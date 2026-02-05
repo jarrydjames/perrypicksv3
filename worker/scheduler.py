@@ -12,7 +12,7 @@ from pathlib import Path
 import pendulum
 
 from core.storage import GameStorage, TriggerStorage
-from core.data_sources import NBADataSource
+from core.data_sources import NBADataSource, CombinedDataSource
 from core.timezone import (
     now_utc, to_iso, parse_date_str, parse_iso_utc,
     cst_game_date_from_start_time_utc, CST
@@ -36,27 +36,56 @@ class TriggerScheduler:
     def __init__(self, db_path: Path):
         self.db_path = db_path
         self.nba_source = NBADataSource()
+        # Use CombinedDataSource for CST-window fetching (robust bucketing)
+        # odds key not needed for scheduling only
+        self.combined_source = CombinedDataSource(odds_api_key="")
     
     def schedule_games_for_date(self, date: str) -> int:
         """
         Fetch games for a date and schedule all time-based triggers.
-        
+
         Args:
             date: Date in YYYY-MM-DD format
-        
+
         Returns:
             Number of games processed
         """
-        # Fetch games from NBA API
-        # Get games from database (not API) to ensure we have real team names
+        # 1) Always begin DB-first
         games = GameStorage.get_games_for_date(date, db_path=self.db_path)
-        
+
+        # 2) If DB empty OR clearly stale (e.g., only test games), hydrate from schedule sources
+        # IMPORTANT: Use CST-window fetching so we don't inherit any API date semantics bugs.
+        real_games_db = [g for g in games if not str(g.get('game_id', '')).startswith('test_')]
+        if not real_games_db:
+            logger.info(f"No real games in DB for {date}; hydrating from schedule sources (CST window).")
+            try:
+                fetched = self.combined_source.fetch_games_for_cst_date(date)
+            except Exception as e:
+                logger.error(f"Failed fetching schedule for CST date {date}: {e}")
+                fetched = []
+
+            # Upsert fetched games into DB immediately (so subsequent code is DB-driven)
+            for g in fetched:
+                try:
+                    GameStorage.upsert_game(
+                        game_id=g['game_id'],
+                        start_time_utc=g['start_time_utc'],
+                        home_team=g['home_team'],
+                        away_team=g['away_team'],
+                        status=g.get('status', 'Scheduled'),
+                        game_date=g.get('game_date', date),
+                        db_path=self.db_path
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed upserting fetched game {g.get('game_id')}: {e}")
+
+            games = GameStorage.get_games_for_date(date, db_path=self.db_path)
+
         if not games:
             logger.info(f"No games found for date {date}")
             return 0
-        
+
         # Guard: ensure DB games actually belong to requested CST date
-        # (This catches any legacy records that might still be incorrect.)
         filtered_games = []
         for g in games:
             try:
@@ -68,37 +97,45 @@ class TriggerScheduler:
                 # if parsing fails, keep it (better than dropping silently)
                 filtered_games.append(g)
         games = filtered_games
-        
+
         if not games:
             logger.info(f"No games found for date {date} after CST validation")
             return 0
-        
+
         # Keep test games for normal per-game triggers if you want,
         # but DAILY_SUMMARY should NEVER include test_* games.
         real_games = [g for g in games if not str(g.get('game_id', '')).startswith('test_')]
-        
-        # Sort games by start time
-        games_sorted = sorted(games, key=lambda g: g['start_time_utc'])
-        
+
+        # Sort games by start time (normalize string -> dt for sorting safety)
+        def _st(g):
+            st = g.get('start_time_utc')
+            try:
+                return parse_iso_utc(st) if isinstance(st, str) else st
+            except Exception:
+                return pendulum.now('UTC').add(days=365)
+        games_sorted = sorted(games, key=_st)
+
         # Schedule DAILY_SUMMARY trigger (3h before earliest game)
         if games_sorted:
             # FIX: pick earliest REAL game (exclude test_*). If no real games, fall back to all games.
             summary_source_games: List[dict] = real_games if real_games else games_sorted
-            earliest_game = sorted(summary_source_games, key=lambda g: g['start_time_utc'])[0]
+            earliest_game = sorted(summary_source_games, key=_st)[0]
             # Parse start_time_utc (may be string from DB)
             if isinstance(earliest_game['start_time_utc'], str):
                 earliest_time = parse_iso_utc(earliest_game['start_time_utc'])
             else:
                 earliest_time = earliest_game['start_time_utc']
             summary_time = earliest_time + timedelta(hours=-3)
-            
+
             # Store as a special game_id for daily summary
             summary_game_id = f"DAILY_{date.replace('-', '')}"
-            
+
             if not TriggerStorage.check_trigger_exists(summary_game_id, self.DAILY_SUMMARY, db_path=self.db_path):
-                # FIX: DAILY_SUMMARY payload excludes test_* games
-                games_for_payload = real_games if real_games else games
-                
+                # CRITICAL: Build payload fresh from DB rows *after* any hydration,
+                # so DAILY_SUMMARY cannot hold stale/wrong-day games.
+                games_for_payload = GameStorage.get_games_for_date(date, db_path=self.db_path)
+                games_for_payload = [g for g in games_for_payload if not str(g.get('game_id', '')).startswith('test_')]
+
                 # Convert datetime objects to ISO strings for JSON serialization
                 games_serializable = []
                 for game in games_for_payload:
@@ -110,7 +147,7 @@ class TriggerScheduler:
                     if not game_copy.get('game_date') and game_copy.get('start_time_utc'):
                         game_copy['game_date'] = cst_game_date_from_start_time_utc(game_copy['start_time_utc'], tz=CST)
                     games_serializable.append(game_copy)
-                
+
                 TriggerStorage.schedule_trigger(
                     game_id=summary_game_id,
                     trigger_type=self.DAILY_SUMMARY,

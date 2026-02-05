@@ -240,12 +240,16 @@ class GameStorage:
                 )
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 ON CONFLICT(game_id) DO UPDATE SET
+                    start_time_utc = excluded.start_time_utc,
+                    home_team = excluded.home_team,
+                    away_team = excluded.away_team,
                     status = excluded.status,
                     last_seen_utc = excluded.last_seen_utc,
                     current_period = excluded.current_period,
                     game_clock = excluded.game_clock,
                     score_home = excluded.score_home,
-                    score_away = excluded.score_away
+                    score_away = excluded.score_away,
+                    game_date = excluded.game_date
             """, (
                 game_id, start_time_str, home_team, away_team, status,
                 now_str, current_period, game_clock, score_home, score_away, game_date

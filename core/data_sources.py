@@ -29,6 +29,11 @@ ODDS_API_TIMEOUT = 30
 SCHEDULE_URL = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json"
 BOXSCORE_URL = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_{gid}.json"
 
+# Long-term-stable schedule source with canonical per-game datetimes
+# (Used widely for full season schedules; contains consistent game date/time fields)
+# https://data.nba.com/data/10s/v2015/json/mobile_teams/nba/{YEAR}/league/00_full_schedule.json
+FULL_SCHEDULE_URL_TMPL = "https://data.nba.com/data/10s/v2015/json/mobile_teams/nba/{year}/league/00_full_schedule.json"
+
 # Headers that work with CDN
 NBA_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -52,7 +57,12 @@ class NBADataSource:
     # Simple in-memory cache (class-level, shared across instances)
     # Format: {key: (value, timestamp)}
     _cache: Dict[str, Tuple[Any, float]] = {}
-    
+
+    # Full schedule index cache:
+    # { "season_key": ( {"00225...": pendulum.DateTime(UTC), ...}, timestamp ) }
+    _full_schedule_index: Dict[str, Tuple[Dict[str, pendulum.DateTime], float]] = {}
+    FULL_SCHEDULE_TTL_SECONDS = 6 * 3600  # 6h (schedule changes rarely)
+
     # Cache TTL values (in seconds)
     CACHE_TTL = {
         'schedule': 3600,      # 1 hour - schedule doesn't change often
@@ -202,6 +212,149 @@ class NBADataSource:
             return None
 
     @classmethod
+    def _season_start_year_for_season(cls, season: str) -> int:
+        """
+        SEASON is like '2025-26' -> return 2025 for data.nba.com URL path.
+        """
+        try:
+            return int(season.split('-')[0])
+        except Exception:
+            # fallback: current year
+            return int(pendulum.now('UTC').format('YYYY'))
+
+    @classmethod
+    def _get_full_schedule_index(cls) -> Dict[str, pendulum.DateTime]:
+        """
+        Build (or reuse) an index: game_id -> start_time_utc from data.nba.com full schedule.
+        This is our long-term-stable source of truth for game start times.
+        """
+        season_key = f"full_schedule:{SEASON}"
+        now_ts = time.time()
+        cached = cls._full_schedule_index.get(season_key)
+        if cached:
+            idx, ts = cached
+            if now_ts - ts < cls.FULL_SCHEDULE_TTL_SECONDS and idx:
+                return idx
+
+        year = cls._season_start_year_for_season(SEASON)
+        url = FULL_SCHEDULE_URL_TMPL.format(year=year)
+        try:
+            resp = requests.get(url, headers=NBA_HEADERS, timeout=NBA_API_TIMEOUT)
+            resp.raise_for_status()
+            data = resp.json()
+        except Exception as e:
+            logger.error(f"Failed to fetch full schedule from data.nba.com (url={url}): {e}")
+            # Keep old cache if present
+            if cached:
+                return cached[0]
+            return {}
+
+        # The full schedule file structure varies slightly by era; handle common patterns.
+        # Common: data['lscd'][...]['mscd']['g'] list of games
+        idx: Dict[str, pendulum.DateTime] = {}
+        try:
+            lscd = data.get('lscd', []) or []
+            for month in lscd:
+                mscd = month.get('mscd', {}) if isinstance(month, dict) else {}
+                games = mscd.get('g', []) or []
+                for g in games:
+                    gid = g.get('gid') or g.get('gameId') or g.get('game_id')
+                    if not gid:
+                        continue
+
+                    # Prefer a UTC-ish canonical datetime if present:
+                    # Known fields in the wild include:
+                    # - 'utctm' + 'utcdate' (or 'gdtutc'/'utcdt')
+                    # - 'gdte' + 'tm' with ET date/time (less ideal)
+                    #
+                    # We attempt multiple strategies.
+
+                    # Strategy A: If an ISO UTC field exists, use it
+                    iso_candidates = [
+                        g.get('gameDateTimeUTC'),
+                        g.get('gdtutc'),
+                        g.get('utcDateTime'),
+                        g.get('utcdt'),
+                        g.get('startTimeUTC'),
+                    ]
+                    iso_candidates = [c for c in iso_candidates if isinstance(c, str) and c.strip()]
+                    dt_utc: Optional[pendulum.DateTime] = None
+                    for s in iso_candidates:
+                        try:
+                            dt_utc = parse_iso_utc(s)
+                            break
+                        except Exception:
+                            continue
+
+                    # Strategy B: Separate UTC date + UTC time fields
+                    if dt_utc is None:
+                        utc_date = g.get('utcdate') or g.get('gdtutc') or g.get('utcd') or g.get('dateUTC')
+                        utc_time = g.get('utctm') or g.get('timeUTC')
+                        if isinstance(utc_date, str) and isinstance(utc_time, str) and utc_date and utc_time:
+                            # Many files use 'YYYYMMDD' and 'HHMM' or 'HH:MM'
+                            try:
+                                if '-' in utc_date:
+                                    # YYYY-MM-DD
+                                    d = pendulum.parse(utc_date).in_timezone('UTC').start_of('day')
+                                else:
+                                    # YYYYMMDD
+                                    d = pendulum.from_format(utc_date, 'YYYYMMDD', tz='UTC').start_of('day')
+                                # normalize time
+                                if ':' in utc_time:
+                                    hh, mm = utc_time.split(':')[:2]
+                                else:
+                                    hh, mm = utc_time[:2], utc_time[2:4]
+                                dt_utc = d.set(hour=int(hh), minute=int(mm), second=0, microsecond=0)
+                            except Exception:
+                                dt_utc = None
+
+                    # Strategy C: ET date/time fallback (convert to UTC)
+                    if dt_utc is None:
+                        # Common: 'gdte' is YYYY-MM-DD (ET), 'tm' is '7:30 pm' etc
+                        gdte = g.get('gdte') or g.get('gameDate') or g.get('date')
+                        tm = g.get('tm') or g.get('time') or g.get('gameTime')
+                        if isinstance(gdte, str) and gdte and isinstance(tm, str) and tm:
+                            try:
+                                # Parse ET date and 12h time
+                                d_et = pendulum.parse(gdte).in_timezone('America/New_York').start_of('day')
+                                # normalize '7:30 pm' -> hour/min
+                                t = tm.strip().lower().replace('p.m.', 'pm').replace('a.m.', 'am')
+                                # pendulum can parse times but be defensive:
+                                parsed_t = pendulum.parse(t)
+                                dt_et = d_et.set(hour=parsed_t.hour, minute=parsed_t.minute, second=0, microsecond=0)
+                                dt_utc = dt_et.in_timezone('UTC')
+                            except Exception:
+                                dt_utc = None
+
+                    if dt_utc is not None:
+                        idx[str(gid)] = dt_utc
+        except Exception as e:
+            logger.error(f"Failed parsing full schedule structure: {e}")
+
+        cls._full_schedule_index[season_key] = (idx, now_ts)
+        logger.info(f"Built full schedule index: {len(idx)} games")
+        return idx
+
+    @classmethod
+    def _is_placeholder_schedule_time(cls, game_time_utc_placeholder: str) -> bool:
+        """
+        Detect known-bad placeholder times from scheduleLeagueV2.
+        If it's missing, '1900-01-01', or the time is 00:00:00Z for many games, treat as unreliable.
+        """
+        if not isinstance(game_time_utc_placeholder, str):
+            return True
+        s = game_time_utc_placeholder.strip()
+        if not s:
+            return True
+        if s.startswith("1900-01-01T00:00:00"):
+            return True
+        # Many bad slates show 00:00:00Z, 05:00:00Z, etc. which can be midnight-ish placeholders
+        # We treat the '1900-01-01' carrier as unreliable regardless.
+        if s.startswith("1900-01-01"):
+            return True
+        return False
+
+    @classmethod
     def fetch_games_for_date(cls, date: str) -> List[Dict[str, Any]]:
         """
         Fetch all games for a specific date (YYYY-MM-DD).
@@ -269,42 +422,43 @@ class NBADataSource:
             if not games_list:
                 logger.info(f'No games found for date {date}')
                 return []
-            
+
+            # Build/refresh full schedule index (authoritative start times)
+            full_idx = cls._get_full_schedule_index()
+
             games = []
             for g in games_list:
                 game_id = g.get('gameId')
                 if not game_id:
                     continue
-                
+
                 # Get start time using corrected parsing logic
                 time_str_utc = g.get('gameTimeUTC', '')
 
-                if time_str_utc:
-                    # Use corrected parsing logic that handles ET date/time properly
-                    game_time_utc = cls._parse_nba_schedule_time(api_date_str, time_str_utc)
+                # 1) Prefer authoritative per-game start_time_utc from full schedule, if available
+                game_time_utc = full_idx.get(str(game_id))
 
-                    if game_time_utc:
-                        et_time = game_time_utc.in_timezone('America/New_York')
-                        logger.debug(f"Game {game_id}: ET time {et_time.format('YYYY-MM-DD HH:mm Z')} → UTC {game_time_utc.to_iso8601_string()}")
+                # 2) If not available, fall back to scheduleLeagueV2 parsing, but only if not placeholder
+                if game_time_utc is None:
+                    if time_str_utc and not cls._is_placeholder_schedule_time(time_str_utc):
+                        game_time_utc = cls._parse_nba_schedule_time(api_date_str, time_str_utc)
                     else:
-                        logger.warning(f"Game {game_id}: Failed to parse time '{time_str_utc}'")
+                        # Placeholder / missing -> we DO NOT guess wildly; skip this game for now.
+                        # This prevents "Feb 5 games showing as Feb 4" due to midnight placeholders.
+                        logger.warning(
+                            f"Game {game_id}: scheduleLeagueV2 time missing/placeholder ({time_str_utc}); "
+                            f"no authoritative full-schedule time found; skipping until real time is available."
+                        )
                         continue
-                else:
-                    # No time at all - default to 8:00 PM EST (typical start time)
-                    logger.warning(f"Game {game_id}: No gameTimeUTC found, defaulting to 8:00 PM EST")
-                    # Create ET time at 8:00 PM on API date
-                    # Parse API date as ET (not UTC!)
-                    import datetime as dt_module
-                    dt_naive = dt_module.datetime.strptime(api_date_str, '%m/%d/%Y')
-                    game_date_et = pendulum.datetime(dt_naive.year, dt_naive.month, dt_naive.day,
-                                                   tz='America/New_York').start_of('day')
-                    game_time_et = game_date_et.set(hour=20, minute=0, second=0, microsecond=0)
-                    game_time_utc = game_time_et.in_timezone('UTC')
-                
+
+                if game_time_utc:
+                    et_time = game_time_utc.in_timezone('America/New_York')
+                    logger.debug(f"Game {game_id}: ET {et_time.format('YYYY-MM-DD HH:mm Z')} → UTC {game_time_utc.to_iso8601_string()}")
+
                 if not game_time_utc:
                     logger.warning(f"Could not parse game time for {game_id}")
                     continue
-                
+
                 # IMPORTANT: game_date must be derived from start_time_utc converted to CST
                 game_date_cst = cst_game_date_from_start_time_utc(game_time_utc, tz=CST)
                 
@@ -653,6 +807,11 @@ class CombinedDataSource:
         then bucket locally by CST day and filter to requested CST date.
         This avoids API "date semantics" bugs (ET/UTC/league-day).
         """
+        # NOTE: This method assumes NBADataSource.fetch_games_for_date now:
+        # - resolves start_time_utc from data.nba.com full schedule whenever possible
+        # - otherwise skips games whose times are placeholders
+        # That is intentional: correctness > guessing.
+
         # CST window: [cst_date 00:00, next day 00:00)
         cst_start = pendulum.parse(cst_date).in_timezone(CST).start_of("day")
         cst_end = cst_start.add(days=1)
