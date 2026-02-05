@@ -141,12 +141,77 @@ class NBADataSource:
             return None
     
     @classmethod
+    def _parse_nba_schedule_time(
+        cls,
+        api_date_str: str,
+        game_time_utc_placeholder: str
+    ) -> Optional[pendulum.DateTime]:
+        """
+        Parse NBA schedule API time to timezone-aware UTC datetime.
+
+        CRITICAL: The NBA schedule API uses a non-intuitive format:
+        - api_date_str (e.g., "02/05/2026") is Eastern Time date of game
+        - game_time_utc_placeholder (e.g., "1900-01-01T19:00:00Z") uses 1900-01-01 as
+          a placeholder date, but TIME portion is the Eastern Time start time!
+
+        So for a game at 7:00 PM ET on Feb 5, 2026:
+        - api_date_str = "02/05/2026"
+        - game_time_utc_placeholder = "1900-01-01T19:00:00Z"
+        - Correct parsing:
+          1. Parse ET date from api_date_str: Feb 5, 2026 at midnight ET
+          2. Extract ET time from placeholder: 19:00
+          3. Combine: Feb 5, 2026 19:00 ET
+          4. Convert to UTC: Feb 6, 2026 00:00:00Z
+
+        Args:
+            api_date_str: Date string from API (MM/DD/YYYY format)
+            game_time_utc_placeholder: Time string with placeholder date (1900-01-01THH:MM:SSZ)
+
+        Returns:
+            pendulum.DateTime in UTC, or None if parsing fails
+        """
+        import datetime as dt_module
+
+        try:
+            # Step 1: Parse API date as Eastern Time date
+            # Format: "02/05/2026" → Feb 5, 2026 at midnight ET
+            # Use strptime since pendulum doesn't parse MM/DD/YYYY format
+            dt_naive = dt_module.datetime.strptime(api_date_str, '%m/%d/%Y')
+            # IMPORTANT: Must create pendulum.DateTime with explicit ET timezone
+            # pendulum.instance(dt_naive) defaults to UTC, which is wrong!
+            game_date_et = pendulum.datetime(dt_naive.year, dt_naive.month, dt_naive.day,
+                                           tz='America/New_York').start_of('day')
+
+            # Step 2: Extract time portion from placeholder
+            # Placeholder format: "1900-01-01T19:00:00Z"
+            placeholder_dt = pendulum.parse(game_time_utc_placeholder)
+            hour = placeholder_dt.hour
+            minute = placeholder_dt.minute
+            second = placeholder_dt.second
+
+            # Step 3: Combine ET date with ET time
+            game_time_et = game_date_et.set(hour=hour, minute=minute, second=second, microsecond=0)
+
+            # Step 4: Convert ET to UTC
+            game_time_utc = game_time_et.in_timezone('UTC')
+
+            return game_time_utc
+
+        except Exception as e:
+            logger.error(f"Failed to parse NBA schedule time (api_date={api_date_str}, time={game_time_utc_placeholder}): {e}")
+            return None
+
+    @classmethod
     def fetch_games_for_date(cls, date: str) -> List[Dict[str, Any]]:
         """
         Fetch all games for a specific date (YYYY-MM-DD).
         Uses scheduleLeagueV2.json which has all scheduled games
         (including future games that haven't started yet).
-        
+
+        IMPORTANT: This fetches games based on API's date semantics,
+        which are based on Eastern Time. The returned games will have
+        correct start_time_utc values derived from ET date/time.
+
         Returns list of game dicts with game_id, start_time, teams, etc.
         """
         # DEBUG: Log when fetch_games_for_date is called
@@ -188,15 +253,17 @@ class NBADataSource:
             target_year = date[:4]
             
             games_list = None
+            api_date_str = None
             for gd in game_dates:
                 gd_str = gd.get('gameDate', '')
                 if not gd_str:
                     continue
-                    
+
                 # Check if this matches our target date
                 # Format: "02/02/2026 T00:00:00"
                 if f'{target_month}/{target_day}/{target_year}' in gd_str:
                     games_list = gd.get('games', [])
+                    api_date_str = gd_str.split()[0]  # Extract just the date part (MM/DD/YYYY)
                     break
             
             if not games_list:
@@ -209,36 +276,30 @@ class NBADataSource:
                 if not game_id:
                     continue
                 
-                # Get start time
-                # API BEHAVIOR: scheduleLeagueV2's gameTimeUTC uses 1900-01-01 as placeholder date
-                # BUT the TIME (hour:minute) is correct!
-                # Example: gameTimeUTC='1900-01-01T00:30:00Z' means 00:30 UTC on the game date
+                # Get start time using corrected parsing logic
                 time_str_utc = g.get('gameTimeUTC', '')
-                
-                if time_str_utc and '1900-01-01' in time_str_utc:
-                    # API returned placeholder date, extract time component and combine with real date
-                    # Parse time from placeholder datetime using pendulum
-                    placeholder_dt = pendulum.parse(time_str_utc)
-                    hour = placeholder_dt.hour
-                    minute = placeholder_dt.minute
-                    
-                    # Combine with actual game date (from date parameter, YYYY-MM-DD)
-                    # Use pendulum to parse date and set time
-                    game_time_utc = pendulum.parse(date)
-                    game_time_utc = game_time_utc.set(hour=hour, minute=minute, second=0, microsecond=0)
-                    game_time_utc = game_time_utc.in_timezone('UTC')
-                    
-                    logger.debug(f"Game {game_id}: Extracted time {hour:02d}:{minute:02d} from placeholder, combined with date {date}")
-                elif time_str_utc:
-                    # Use gameTimeUTC directly if it's valid
-                    game_time_utc = cls._parse_nba_datetime(time_str_utc)
-                    logger.debug(f"Game {game_id}: Using valid gameTimeUTC '{time_str_utc}'")
+
+                if time_str_utc:
+                    # Use corrected parsing logic that handles ET date/time properly
+                    game_time_utc = cls._parse_nba_schedule_time(api_date_str, time_str_utc)
+
+                    if game_time_utc:
+                        et_time = game_time_utc.in_timezone('America/New_York')
+                        logger.debug(f"Game {game_id}: ET time {et_time.format('YYYY-MM-DD HH:mm Z')} → UTC {game_time_utc.to_iso8601_string()}")
+                    else:
+                        logger.warning(f"Game {game_id}: Failed to parse time '{time_str_utc}'")
+                        continue
                 else:
                     # No time at all - default to 8:00 PM EST (typical start time)
-                    logger.warning(f"Game {game_id}: No gameTimeUTC found, defaulting to {date}T20:00:00")
-                    game_time_utc = pendulum.parse(date)
-                    game_time_utc = game_time_utc.set(hour=20, minute=0, second=0, microsecond=0)
-                    game_time_utc = game_time_utc.in_timezone('UTC')
+                    logger.warning(f"Game {game_id}: No gameTimeUTC found, defaulting to 8:00 PM EST")
+                    # Create ET time at 8:00 PM on API date
+                    # Parse API date as ET (not UTC!)
+                    import datetime as dt_module
+                    dt_naive = dt_module.datetime.strptime(api_date_str, '%m/%d/%Y')
+                    game_date_et = pendulum.datetime(dt_naive.year, dt_naive.month, dt_naive.day,
+                                                   tz='America/New_York').start_of('day')
+                    game_time_et = game_date_et.set(hour=20, minute=0, second=0, microsecond=0)
+                    game_time_utc = game_time_et.in_timezone('UTC')
                 
                 if not game_time_utc:
                     logger.warning(f"Could not parse game time for {game_id}")
