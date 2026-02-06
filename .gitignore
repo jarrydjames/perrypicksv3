@@ -33,3 +33,4 @@ SECURITY_NOTE.md
 # Ignore large model files
 models_v3/halftime/random_forest_twohead.joblib
 models_v3/production/random_forest_twohead.joblib
+models_v3/halftime/random_forest_twohead.joblib
