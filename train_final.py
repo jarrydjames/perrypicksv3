@@ -48,7 +48,7 @@ models = {
 
 for target_name, y_train, y_val, y_test in [('Total', y_train_total, y_val_total, y_test_total),
                                             ('Margin', y_train_margin, y_val_margin, y_test_margin)]:
-    print(f'{'='*60}')
+    print('=' * 60)
     print(f'TARGET: {target_name}')
     print('='*60)
     

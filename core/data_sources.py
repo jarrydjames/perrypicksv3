@@ -8,7 +8,7 @@ import requests
 import time
 from typing import Optional, Dict, Any, List, Tuple
 from pathlib import Path
-from datetime import timedelta
+from datetime import datetime, timedelta
 import sys
 sys.path.append(str(Path(__file__).parent.parent))
 
