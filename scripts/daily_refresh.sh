@@ -97,9 +97,9 @@ PRODUCTION_DIR="$PROJECT_DIR/models_v3/production"
 
 # Today's date (or specified date)
 if [ -n "$DATE" ]; then
-    TODAY_DATE=$(date +"%Y-%m-%d")
-else
     TODAY_DATE="$DATE"
+else
+    TODAY_DATE=$(date +"%Y-%m-%d")
 fi
 
 echo -e "${BLUE}========================================================================${NC}"
@@ -200,8 +200,7 @@ fi
 if [ "$SKIP_TRAIN" = false ]; then
     echo -e "\n${YELLOW}[4/5]${NC} ${GREEN}Retraining halftime model...${NC}"
     
-    # Note: train_halftime_model.py needs to be updated to use temporal features
-    # For now, we'll run the existing training
+    # Train halftime model using the merged temporal feature dataset
     TRAIN_CMD="python3 \"$PROJECT_DIR/src/train_halftime_model.py\" \
         --dataset \"$PROCESSED_DIR/halftime_with_temporal_features.parquet\""
     
@@ -265,4 +264,3 @@ echo -e "\n${BLUE}==============================================================
 
 # Exit
 exit 0
-
