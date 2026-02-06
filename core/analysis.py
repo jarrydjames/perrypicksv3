@@ -104,7 +104,9 @@ class AnalysisEngine:
         """
         try:
             # Determine which model to use based on trigger type
-            pregame_modes = ['PRE_3H', 'PRE_1H', 'PRE_10M']
+            # Keep backward compatibility with legacy trigger names while
+            # supporting the current scheduler trigger (`PRE_GAME`).
+            pregame_modes = ['PRE_3H', 'PRE_1H', 'PRE_10M', 'PRE_GAME']
             
             if mode in pregame_modes:
                 # Use pregame model - NO LIVE DATA NEEDED
@@ -132,8 +134,9 @@ class AnalysisEngine:
                 
                 prediction = predict_halftime(game_id)
                 
-                # Halftime model returns different structure - normalize it
-                if prediction and isinstance(prediction.get('status'), dict):
+                # Halftime model returns a nested payload under `pred`.
+                # Normalize to the automation contract shape expected below.
+                if prediction and isinstance(prediction.get('pred'), dict):
                     pred = prediction.get('pred', {})
                     prediction = {
                         'game_id': prediction.get('game_id'),
