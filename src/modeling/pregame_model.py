@@ -1,4 +1,4 @@
-"""Pregame model - Uses FINAL models with 72 features including temporal and form data"""
+"""Pregame model - Uses champion models with rate-based features."""
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -28,13 +28,12 @@ class PregamePrediction:
 
 class PregameModel:
     """
-    Pregame model - Uses FINAL models with 72 features
-    Includes: team ratings, temporal features, form data, H2H stats, schedule strength
+    Pregame model - Uses champion models from the comprehensive evaluation.
+    Includes rate-based efficiency features only (leakage-safe).
     """
     
-    # Use FINAL models trained on complete feature set
-    MODELS_DIR = Path("data/models")
-    FEATURE_LIST_PATH = Path("data/processed/final_features_feature_list.txt")
+    # Use champion models from comprehensive 7-model evaluation
+    MODELS_DIR = Path("models_v3/pregame")
     TARGET_TOTAL = "total"
     TARGET_MARGIN = "margin"
     
@@ -47,39 +46,32 @@ class PregameModel:
         if self._loaded:
             return True
         
-        # Use FINAL models with 72 features
-        total_path = self.models_dir / "ridge_total_final.pkl"
-        margin_path = self.models_dir / "rf_margin_final.pkl"
+        # Champion models from comprehensive evaluation
+        total_path = self.models_dir / "neural_network_total.joblib"
+        margin_path = self.models_dir / "neural_network_margin.joblib"
         
         if not total_path.exists() or not margin_path.exists():
             return False
         
-        # FINAL MODELS are sklearn objects
         total_raw = joblib.load(total_path)
         margin_raw = joblib.load(margin_path)
         
         # Wrap in expected format for compatibility
         self.total_model = {
-            'model': total_raw,
-            'residual_sigma': 15.6,  # From FINAL_REPORT - Test MAE for total
-            'q10_model': None,  # No quantile models
+            'model': total_raw.get('model'),
+            'residual_sigma': total_raw.get('metrics', {}).get('mae_test', 9.58),
+            'q10_model': None,
             'q90_model': None,
         }
         self.margin_model = {
-            'model': margin_raw,
-            'residual_sigma': 11.2,  # From FINAL_REPORT - Test MAE for margin
+            'model': margin_raw.get('model'),
+            'residual_sigma': margin_raw.get('metrics', {}).get('mae_test', 2.95),
             'q10_model': None,
             'q90_model': None,
         }
         
-        # Load features from FINAL feature list
-        with open(self.FEATURE_LIST_PATH) as f:
-            feature_lines = f.readlines()
-            # Exclude metadata columns (game_id, game_date, etc.)
-            exclude_cols = {'game_id', 'game_date', 'home_team_id', 'away_team_id', 'home_score', 'away_score', 'total', 'margin'}
-            self.features = [line.strip() for line in feature_lines if line.strip() and line.strip() not in exclude_cols]
-        
-        self.feature_version = "v3_final_72feat"
+        self.features = total_raw.get('features', [])
+        self.feature_version = "v3_pregame_rates"
         self._loaded = True
         return True
     
@@ -143,7 +135,7 @@ class PregameModel:
             margin_q90=margin_q90,
             total_q10=total_q10,
             total_q90=total_q90,
-            model_name="pregame_ridge_rf_final",
+            model_name="pregame_neural_network_champion",
             feature_version=self.feature_version,
         )
 
