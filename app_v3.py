@@ -58,7 +58,7 @@ st.markdown("""
 # -----------------------------
 if 'initialized' not in st.session_state:
     st.session_state.initialized = True
-    st.session_state.page = 'home'
+    st.session_state.page = '🏠 Home'
     st.session_state.dataset_path = None
     st.session_state.validation_report = None
     st.session_state.leakage_report = None
