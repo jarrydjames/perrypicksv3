@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Optional
 import joblib
+import math
 import numpy as np
 
 from src.modeling.base import BaseTwoHeadModel, TrainedHead
@@ -46,32 +47,31 @@ class PregameModel:
         if self._loaded:
             return True
         
-        # Champion models from comprehensive evaluation
-        total_path = self.models_dir / "neural_network_total.joblib"
-        margin_path = self.models_dir / "neural_network_margin.joblib"
+        # Use twohead champion model (RandomForest - lowest sigma)
+        twohead_path = self.models_dir / "randomforest_twohead.joblib"
         
-        if not total_path.exists() or not margin_path.exists():
-            return False
+        if not twohead_path.exists():
+            # Fallback to GBT
+            twohead_path = self.models_dir / "gbt_twohead.joblib"
+            if not twohead_path.exists():
+                return False
         
-        total_raw = joblib.load(total_path)
-        margin_raw = joblib.load(margin_path)
+        twohead_raw = joblib.load(twohead_path)
         
-        # Wrap in expected format for compatibility
-        self.total_model = {
-            'model': total_raw.get('model'),
-            'residual_sigma': total_raw.get('metrics', {}).get('mae_test', 9.58),
-            'q10_model': None,
-            'q90_model': None,
-        }
-        self.margin_model = {
-            'model': margin_raw.get('model'),
-            'residual_sigma': margin_raw.get('metrics', {}).get('mae_test', 2.95),
-            'q10_model': None,
-            'q90_model': None,
-        }
+        # Extract total and margin models from twohead
+        self.total_model = twohead_raw.get('total', {})
+        self.margin_model = twohead_raw.get('margin', {})
         
-        self.features = total_raw.get('features', [])
-        self.feature_version = "v3_pregame_rates"
+        # Get sigma values from twohead
+        total_sigma = self.total_model.get('residual_sigma', 9.58)
+        margin_sigma = self.margin_model.get('residual_sigma', 2.95)
+        
+        # Update sigma in model dicts
+        self.total_model['residual_sigma'] = total_sigma
+        self.margin_model['residual_sigma'] = margin_sigma
+        
+        self.features = twohead_raw.get('features', [])
+        self.feature_version = "v3_twohead_champion"
         self._loaded = True
         return True
     
@@ -123,7 +123,7 @@ class PregameModel:
         margin_sd = self.margin_model.get("residual_sigma", 11.2)
         # P(home wins) = P(home-away margin > 0) under Normal(mean=margin_mean, sd=margin_sd)
         z = float(margin_mean) / max(1e-6, float(margin_sd))
-        home_win_prob = 0.5 * (1.0 + np.math.erf(z / np.sqrt(2.0)))
+        home_win_prob = 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
         home_win_prob = np.clip(home_win_prob, 0.01, 0.99)
         
         return PregamePrediction(
@@ -137,7 +137,7 @@ class PregameModel:
             margin_q90=margin_q90,
             total_q10=total_q10,
             total_q90=total_q90,
-            model_name="pregame_neural_network_champion",
+            model_name="pregame_twohead_rf_champion",
             feature_version=self.feature_version,
         )
 

@@ -8,8 +8,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Optional
-
 import joblib
+import math
+import numpy as np
 import numpy as np
 
 # Reuse same model infrastructure as halftime
@@ -168,7 +169,7 @@ class Q3Model:
         # Compute home win prob from margin
         margin_sd = margin_head.residual_sigma
         z = float(margin_mean) / max(1e-6, float(margin_sd))
-        home_win_prob = 0.5 * (1.0 + np.math.erf(z / np.sqrt(2.0)))
+        home_win_prob = 0.5 * (1.0 + math.erf(z / math.sqrt(2.0)))
         home_win_prob = np.clip(home_win_prob, 0.01, 0.99)
         
         return Q3Prediction(
