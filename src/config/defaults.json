@@ -18,9 +18,8 @@
         "data/processed/pregame_backtest_results_with_accuracy.parquet"
       ],
       "models": [
-        "models_v3/pregame/ridge_twohead.joblib",
-        "models_v3/pregame/randomforest_twohead.joblib",
-        "models_v3/pregame/gbt_twohead.joblib",
+        "models_v3/pregame/neural_network_total.joblib",
+        "models_v3/pregame/neural_network_margin.joblib",
         "models_v3/pregame/pregame_intervals.joblib"
       ],
       "reports": [
@@ -39,9 +38,8 @@
         "data/processed/halftime_team_v2.parquet"
       ],
       "models": [
-        "models_v3/halftime/ridge_twohead.joblib",
-        "models_v3/halftime/randomforest_twohead.joblib",
-        "models_v3/halftime/gbt_twohead.joblib",
+        "models_v3/halftime/xgboost_h2_total.joblib",
+        "models_v3/halftime/xgboost_h2_margin.joblib",
         "models_v3/halftime/halftime_intervals.joblib"
       ],
       "reports": []
@@ -58,9 +56,8 @@
         "data/processed/q3_team_v2.parquet"
       ],
       "models": [
-        "models_v3/q3/ridge_twohead.joblib",
-        "models_v3/q3/randomforest_twohead.joblib",
-        "models_v3/q3/gbt_twohead.joblib",
+        "models_v3/q3/neural_network_q3_total.joblib",
+        "models_v3/q3/neural_network_q3_margin.joblib",
         "models_v3/q3/q3_intervals.joblib"
       ],
       "reports": []

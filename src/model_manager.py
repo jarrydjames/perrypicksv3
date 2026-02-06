@@ -31,32 +31,32 @@ TargetType = Literal['total', 'margin']
 # Model paths
 MODEL_PATHS = {
     'halftime': {
-        'total': 'models/team_2h_total.joblib',
-        'margin': 'models/team_2h_margin.joblib',
+        'total': 'models_v3/halftime/xgboost_h2_total.joblib',
+        'margin': 'models_v3/halftime/xgboost_h2_margin.joblib',
     },
     'pregame': {
-        'total': 'models_v3/pregame/ridge_total.joblib',
-        'margin': 'models_v3/pregame/ridge_margin.joblib',
+        'total': 'models_v3/pregame/neural_network_total.joblib',
+        'margin': 'models_v3/pregame/neural_network_margin.joblib',
     },
     'q3': {
-        'total': 'models_v3/q3/ridge_total.joblib',
-        'margin': 'models_v3/q3/ridge_margin.joblib',
+        'total': 'models_v3/q3/neural_network_q3_total.joblib',
+        'margin': 'models_v3/q3/neural_network_q3_margin.joblib',
     }
 }
 
 # Model status (from backtest results)
 MODEL_STATUS = {
     'halftime': {
-        'total': {'status': 'READY', 'mae': 1.18, 'rmse': 3.27, 'roi': None, 'accuracy': None},
-        'margin': {'status': 'READY', 'mae': 0.64, 'rmse': 1.22, 'roi': 12.24, 'accuracy': None},
+        'total': {'status': 'READY', 'mae': 7.92, 'rmse': 10.27, 'roi': None, 'accuracy': None},
+        'margin': {'status': 'READY', 'mae': 6.03, 'rmse': 7.76, 'roi': None, 'accuracy': None},
     },
     'pregame': {
-        'total': {'status': 'READY', 'mae': 3.64, 'rmse': 4.56, 'roi': None, 'accuracy': {'3pt': 49.3, '5pt': 73.5, '10pt': 96.9}},
-        'margin': {'status': 'READY', 'mae': 3.42, 'rmse': 4.29, 'roi': 84.53, 'accuracy': None},
+        'total': {'status': 'READY', 'mae': 9.58, 'rmse': 13.15, 'roi': None, 'accuracy': None},
+        'margin': {'status': 'READY', 'mae': 2.95, 'rmse': 3.75, 'roi': None, 'accuracy': None},
     },
     'q3': {
-        'total': {'status': 'READY', 'mae': 5.56, 'rmse': 7.10, 'roi': None, 'accuracy': None},
-        'margin': {'status': 'CAUTION', 'mae': 5.97, 'rmse': 7.48, 'roi': 7.26, 'accuracy': None},
+        'total': {'status': 'READY', 'mae': 8.34, 'rmse': 10.43, 'roi': None, 'accuracy': None},
+        'margin': {'status': 'READY', 'mae': 6.58, 'rmse': 8.21, 'roi': None, 'accuracy': None},
     }
 }
 

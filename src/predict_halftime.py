@@ -9,8 +9,8 @@ def predict(h1_home, h1_away,
             h1_events=0, h1_n_2pt=0, h1_n_3pt=0, h1_n_turnover=0,
             h1_n_rebound=0, h1_n_foul=0, h1_n_timeout=0, h1_n_sub=0):
 
-    features_total, m_total = load_model("models/team_2h_total.joblib")
-    features_margin, m_margin = load_model("models/team_2h_margin.joblib")
+    features_total, m_total = load_model("models_v3/halftime/xgboost_h2_total.joblib")
+    features_margin, m_margin = load_model("models_v3/halftime/xgboost_h2_margin.joblib")
 
     row = {
         "h1_home": h1_home,
