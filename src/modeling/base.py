@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Tuple
 
 import numpy as np
 
-from src.modeling.types import TrainedHead
+from src.modeling.types_model import TrainedHead
 
 
 @dataclass

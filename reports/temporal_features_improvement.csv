@@ -1,0 +1,2 @@
+baseline_total_mae,baseline_margin_mae,baseline_total_rmse,baseline_margin_rmse,temporal_total_mae,temporal_margin_mae,temporal_total_rmse,temporal_margin_rmse,avg_improvement_percent
+7.070181282822935,6.921493741911534,8.900998388924629,8.785184254431194,7.072702833706684,6.899395285439728,8.921685255959545,8.800249988024735,0.31927293870098694

@@ -1,16 +1,23 @@
 [project]
-name = "perry-picks"
+name = "perrypicks-v3"
 version = "1.0.0"
-requires-python = ">=3.8"
+description = "Statistically Valid NBA Forecasting System"
+requires-python = ">=3.10"
 dependencies = [
-    "pandas",
-    "numpy",
-    "scikit-learn",
+    "pandas>=2.0.0",
+    "numpy>=1.24.0",
+    "scikit-learn>=1.3.0",
+    "scipy>=1.10.0",
     "joblib",
     "pyarrow",
     "nba_api",
     "requests",
-    "xgboost",
-    "lightgbm",
+    "xgboost>=1.7.0",
+    "lightgbm>=3.3.0",
     "scikit-optimize",
+    "streamlit>=1.28.0",
 ]
+
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
