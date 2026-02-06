@@ -130,8 +130,8 @@ def build_model_features_from_totals(teamA: dict, teamB: dict):
     }
 
 def predict_from_features(feats: dict):
-    features_total, m_total = load_model("models/team_2h_total.joblib")
-    features_margin, m_margin = load_model("models/team_2h_margin.joblib")
+    features_total, m_total = load_model("models_v3/halftime/xgboost_h2_total.joblib")
+    features_margin, m_margin = load_model("models_v3/halftime/xgboost_h2_margin.joblib")
 
     row = {
         "h1_home": feats["h1_home"],
