@@ -258,24 +258,42 @@ def predict_game(
             raw_result = predict_halftime(game_input)
             
             # Normalize return structure to match expected format
-            if raw_result and isinstance(raw_result.get('status'), dict):
-                # Halftime predictor returns nested structure - normalize it
+            # `predict_from_gameid_v2_ci` returns rich payload with nested `pred` and interval bands.
+            if raw_result and isinstance(raw_result, dict) and isinstance(raw_result.get('pred'), dict):
                 pred = raw_result.get('pred', {})
+                normal = raw_result.get('normal', {}) or {}
+
+                margin_q10, margin_q90 = (normal.get('final_margin') or [None, None])[:2]
+                total_q10, total_q90 = (normal.get('final_total') or [None, None])[:2]
+
+                def _sd_from_q10_q90(q10, q90):
+                    try:
+                        q10 = float(q10)
+                        q90 = float(q90)
+                        if q90 <= q10:
+                            return None
+                        return (q90 - q10) / (2.0 * 1.2815515655)
+                    except Exception:
+                        return None
+
+                margin_sd = _sd_from_q10_q90(margin_q10, margin_q90)
+                total_sd = _sd_from_q10_q90(total_q10, total_q90)
+
                 result = {
                     'game_id': raw_result.get('game_id'),
                     'home_name': raw_result.get('home_name'),
                     'away_name': raw_result.get('away_name'),
-                    'margin': pred.get('pred_final_margin'),  # Map from pred_final_margin
-                    'total': pred.get('pred_final_total'),    # Map from pred_final_total
+                    'margin': pred.get('pred_final_margin'),
+                    'total': pred.get('pred_final_total'),
                     'home_score': raw_result.get('h1_home'),
                     'away_score': raw_result.get('h1_away'),
-                    'margin_q10': pred.get('pred_final_margin', 0) - 10,  # Approximate
-                    'margin_q90': pred.get('pred_final_margin', 0) + 10,  # Approximate
-                    'total_q10': pred.get('pred_final_total', 0) - 15,   # Approximate
-                    'total_q90': pred.get('pred_final_total', 0) + 15,   # Approximate
-                    'home_win_prob': None,  # Not provided by halftime predictor
-                    'margin_sd': None,  # Not provided by halftime predictor
-                    'total_sd': None,   # Not provided by halftime predictor
+                    'margin_q10': margin_q10,
+                    'margin_q90': margin_q90,
+                    'total_q10': total_q10,
+                    'total_q90': total_q90,
+                    'home_win_prob': None,
+                    'margin_sd': margin_sd,
+                    'total_sd': total_sd,
                     'model_used': 'HALFTIME_V2_CI',
                     'model_name': None,
                     'feature_version': None,
@@ -298,8 +316,6 @@ def predict_game(
             # Q3 predictor doesn't set 'status' field - check for required keys
             if result and 'margin' in result and 'total' in result:
                 result['status'] = 'success'  # Set status explicitly
-                result['game_state'] = game_state if mode == 'auto' else 'q3_forced'
-                result['mode_requested'] = mode
                 result['game_state'] = game_state if mode == 'auto' else 'q3_forced'
                 result['mode_requested'] = mode
         

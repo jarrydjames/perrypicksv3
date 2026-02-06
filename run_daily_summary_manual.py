@@ -85,11 +85,11 @@ for i, game in enumerate(games):
             # Calculate individual scores from total and margin
             total = result.get('total', 0)
             margin = result.get('margin', 0)
-            pred_home = (total - margin) / 2
-            pred_away = (total + margin) / 2
+            pred_home = (total + margin) / 2
+            pred_away = (total - margin) / 2
             
             # Determine winner
-            if margin < 0:
+            if margin > 0:
                 pred_winner = result.get('home_name', 'Home')
             else:
                 pred_winner = result.get('away_name', 'Away')

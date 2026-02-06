@@ -158,16 +158,17 @@ class Q3Model:
         if margin_q10_model is not None:
             margin_q10 = margin_q10_model.predict(X)[0]
         else:
-            margin_q10 = 0.0  # Fallback
+            margin_q10 = margin_mean - (1.2815515655 * margin_head.residual_sigma)  # Fallback
         
         if margin_q90_model is not None:
             margin_q90 = margin_q90_model.predict(X)[0]
         else:
-            margin_q90 = 0.0  # Fallback
+            margin_q90 = margin_mean + (1.2815515655 * margin_head.residual_sigma)  # Fallback
         
         # Compute home win prob from margin
         margin_sd = margin_head.residual_sigma
-        home_win_prob = 1.0 - (0.5 * (1.0 + margin_mean / (np.sqrt(2) * margin_sd)))
+        z = float(margin_mean) / max(1e-6, float(margin_sd))
+        home_win_prob = 0.5 * (1.0 + np.math.erf(z / np.sqrt(2.0)))
         home_win_prob = np.clip(home_win_prob, 0.01, 0.99)
         
         return Q3Prediction(
