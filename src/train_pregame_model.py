@@ -25,7 +25,14 @@ from sklearn.pipeline import Pipeline
 
 from src.data.training_loader import TrainingDataSpec, load_training_df
 from src.modeling.feature_columns import feature_columns
-from src.modeling.sklearn_models import GBTTwoHeadModel, RandomForestTwoHeadModel, RidgeTwoHeadModel
+from src.modeling.sklearn_models import (
+    ElasticNetTwoHeadModel,
+    GBTTwoHeadModel,
+    MLPTwoHeadModel,
+    RandomForestTwoHeadModel,
+    RidgeTwoHeadModel,
+)
+from src.modeling.lgbm_models import LightGBMTwoHeadModel
 
 # Pregame targets (same as halftime/Q3 - final outcomes)
 TARGET_TOTAL = "total"
@@ -36,7 +43,7 @@ def train_pregame_models(
     parquet_path: Path,
     out_dir: Path,
     *,
-    include_xgb: bool = False,
+    include_xgb: bool = True,
     include_cat: bool = False,
 ) -> None:
     """
@@ -65,8 +72,11 @@ def train_pregame_models(
     # Same model types as halftime/Q3
     models = [
         RidgeTwoHeadModel(alpha=2.0, feature_version=feature_ver),
+        ElasticNetTwoHeadModel(feature_version=feature_ver),
         RandomForestTwoHeadModel(feature_version=feature_ver),
         GBTTwoHeadModel(feature_version=feature_ver),
+        LightGBMTwoHeadModel(feature_version=feature_ver),
+        MLPTwoHeadModel(feature_version=feature_ver),
     ]
     
     # Backtest-only optional models
@@ -154,15 +164,17 @@ def main():
         help="Output directory for models",
     )
     parser.add_argument(
-        "--include-xgb",
-        action="store_true",
-        help="Include XGBoost models (backtest-only)",
+        "--no-xgb",
+        action="store_false",
+        dest="include_xgb",
+        help="Disable XGBoost models",
     )
     parser.add_argument(
         "--include-cat",
         action="store_true",
         help="Include CatBoost models (backtest-only)",
     )
+    parser.set_defaults(include_xgb=True)
     args = parser.parse_args()
     
     train_pregame_models(

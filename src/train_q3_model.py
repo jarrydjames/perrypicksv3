@@ -24,7 +24,14 @@ from sklearn.pipeline import Pipeline
 
 from src.data.training_loader import TrainingDataSpec, load_training_df
 from src.modeling.feature_columns import feature_columns
-from src.modeling.sklearn_models import GBTTwoHeadModel, RandomForestTwoHeadModel, RidgeTwoHeadModel
+from src.modeling.sklearn_models import (
+    ElasticNetTwoHeadModel,
+    GBTTwoHeadModel,
+    MLPTwoHeadModel,
+    RandomForestTwoHeadModel,
+    RidgeTwoHeadModel,
+)
+from src.modeling.lgbm_models import LightGBMTwoHeadModel
 
 # Q3-specific targets
 TARGET_TOTAL = "q3_total"
@@ -35,7 +42,7 @@ def train_q3_models(
     parquet_path: Path,
     out_dir: Path,
     *,
-    include_xgb: bool = False,
+    include_xgb: bool = True,
     include_cat: bool = False,
 ) -> None:
     """
@@ -64,8 +71,11 @@ def train_q3_models(
     # Same model types as halftime
     models = [
         RidgeTwoHeadModel(alpha=2.0, feature_version=feature_ver),
+        ElasticNetTwoHeadModel(feature_version=feature_ver),
         RandomForestTwoHeadModel(feature_version=feature_ver),
         GBTTwoHeadModel(feature_version=feature_ver),
+        LightGBMTwoHeadModel(feature_version=feature_ver),
+        MLPTwoHeadModel(feature_version=feature_ver),
     ]
     
     # Backtest-only optional models
@@ -185,15 +195,17 @@ def main() -> None:
         help="Output directory for Q3 models",
     )
     ap.add_argument(
-        "--include-xgb",
-        action="store_true",
-        help="Backtest-only: train XGBoost two-head",
+        "--no-xgb",
+        action="store_false",
+        dest="include_xgb",
+        help="Disable XGBoost two-head",
     )
     ap.add_argument(
         "--include-cat",
         action="store_true",
         help="Backtest-only: train CatBoost two-head",
     )
+    ap.set_defaults(include_xgb=True)
     args = ap.parse_args()
     
     train_q3_models(

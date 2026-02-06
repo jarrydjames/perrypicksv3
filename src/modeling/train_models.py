@@ -16,7 +16,14 @@ from sklearn.pipeline import Pipeline
 from src.data.training_loader import DEFAULT_TRAINING_PARQUET, TrainingDataSpec, load_training_df
 
 from src.modeling.feature_columns import feature_columns
-from src.modeling.sklearn_models import GBTTwoHeadModel, RandomForestTwoHeadModel, RidgeTwoHeadModel
+from src.modeling.sklearn_models import (
+    ElasticNetTwoHeadModel,
+    GBTTwoHeadModel,
+    MLPTwoHeadModel,
+    RandomForestTwoHeadModel,
+    RidgeTwoHeadModel,
+)
+from src.modeling.lgbm_models import LightGBMTwoHeadModel
 
 
 TARGET_TOTAL = "h2_total"
@@ -27,7 +34,7 @@ def train_from_parquet(
     parquet_path: Path,
     out_dir: Path,
     *,
-    include_xgb: bool = False,
+    include_xgb: bool = True,
     include_cat: bool = False,
 ) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -44,8 +51,11 @@ def train_from_parquet(
 
     models = [
         RidgeTwoHeadModel(alpha=2.0, feature_version=feature_ver),
+        ElasticNetTwoHeadModel(feature_version=feature_ver),
         RandomForestTwoHeadModel(feature_version=feature_ver),
         GBTTwoHeadModel(feature_version=feature_ver),
+        LightGBMTwoHeadModel(feature_version=feature_ver),
+        MLPTwoHeadModel(feature_version=feature_ver),
     ]
 
     # Backtest-only optional models (do NOT add to Streamlit runtime deps)
@@ -143,8 +153,9 @@ def main() -> None:
         help=f"Path to training parquet (default: {DEFAULT_TRAINING_PARQUET})",
     )
     ap.add_argument("--out-dir", type=Path, default=Path("models_v2"))
-    ap.add_argument("--include-xgb", action="store_true", help="Backtest-only: train XGBoost two-head")
+    ap.add_argument("--no-xgb", action="store_false", dest="include_xgb", help="Disable XGBoost two-head")
     ap.add_argument("--include-cat", action="store_true", help="Backtest-only: train CatBoost two-head")
+    ap.set_defaults(include_xgb=True)
     args = ap.parse_args()
 
     train_from_parquet(args.data, args.out_dir, include_xgb=args.include_xgb, include_cat=args.include_cat)
