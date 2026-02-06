@@ -62,7 +62,19 @@ def fetch_team_stats(team_id: int, season: str = '2025-26') -> Optional[pd.Serie
         if len(df) == 0:
             logger.warning(f"No stats found for team_id {team_id}")
             return None
-        
+
+        # Some API responses can return the full league table even when
+        # `team_id_nullable` is passed. Always select by TEAM_ID when present
+        # so each team gets its own feature row.
+        if 'TEAM_ID' in df.columns:
+            team_rows = df[df['TEAM_ID'] == team_id]
+            if len(team_rows) > 0:
+                return team_rows.iloc[0]
+
+        logger.warning(
+            "TEAM_ID %s not found in fetched stats payload; falling back to first row",
+            team_id,
+        )
         return df.iloc[0]
     except Exception as e:
         logger.error(f"Error fetching stats for team_id {team_id}: {e}")
