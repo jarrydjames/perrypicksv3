@@ -1,0 +1,240 @@
+================================================================================
+COMPLETE PIPELINE: TRAIN → CALIBRATE → BACKTEST
+================================================================================
+
+Start Time: 2026-02-05 21:24:08
+
+================================================================================
+STEP 1: TRAIN ALL 7 MODELS
+================================================================================
+
+Running: train_all_models.py
+
+================================================================================
+COMPREHENSIVE MODEL TRAINING - 7 MODELS
+================================================================================
+
+Loaded dataset: 11184 rows, 44 columns
+Features: 12 (h1_*)
+Target: h2_total
+
+Train set: 8947 samples (80.0%)
+Test set: 2237 samples (20.0%)
+
+Model registry initialized: model_registry_comprehensive/
+
+Training RIDGE...
+  MAE (train): 11.5076
+  MAE (test): 11.3742
+  RMSE (test): 14.7846
+  R² (test): 0.0701
+  Model ID: 076d1ae2...
+
+Training RANDOM_FOREST...
+  MAE (train): 9.5764
+  MAE (test): 9.9098
+  RMSE (test): 12.5018
+  R² (test): 0.3351
+  Model ID: 7ef35bd4...
+
+Training XGBOOST...
+  MAE (train): 7.2416
+  MAE (test): 7.9196
+  RMSE (test): 10.2685
+  R² (test): 0.5515
+  Model ID: 4701daa1...
+
+Training MLP...
+  MAE (train): 11.5175
+  MAE (test): 11.4592
+  RMSE (test): 14.7136
+  R² (test): 0.0791
+  Model ID: 526829b9...
+
+Training ELASTICNET...
+  MAE (train): 11.4864
+  MAE (test): 11.3968
+  RMSE (test): 14.7867
+  R² (test): 0.0699
+  Model ID: 7aa50e6f...
+
+Training GRADIENT_BOOSTING...
+  MAE (train): 8.4332
+  MAE (test): 8.9576
+  RMSE (test): 11.4470
+  R² (test): 0.4426
+  Model ID: 632ad9b6...
+
+Training LIGHTGBM...
+  MAE (train): 8.2792
+  MAE (test): 8.9434
+  RMSE (test): 11.4195
+  R² (test): 0.4453
+  Model ID: f3c52ebe...
+
+================================================================================
+MODEL COMPARISON - RANKED BY MAE (TEST)
+================================================================================
+ Rank             Model  MAE (train)  MAE (test)  RMSE (test)  R² (test)
+    1           XGBoost     7.241572    7.919600    10.268467   0.551455
+    2          LightGBM     8.279162    8.943382    11.419468   0.445263
+    3 Gradient Boosting     8.433236    8.957551    11.446977   0.442587
+    4     Random Forest     9.576387    9.909823    12.501821   0.335122
+    5  Ridge Regression    11.507634   11.374242    14.784634   0.070143
+    6        ElasticNet    11.486378   11.396781    14.786725   0.069880
+    7    Neural Network    11.517522   11.459197    14.713563   0.079061
+
+Best Model: XGBoost
+  MAE (test): 7.9196
+  RMSE (test): 10.2685
+  R² (test): 0.5515
+
+Deployed best model: 4701daa1...
+
+Saved model comparison to: data/processed/model_comparison.csv
+
+Saved predictions to: data/processed/model_predictions.csv
+
+================================================================================
+TRAINING COMPLETE
+================================================================================
+
+Total models trained: 7
+Models registered: 7
+Best model: XGBoost
+Best MAE: 7.9196
+
+Output files:
+  - data/processed/model_comparison.csv
+  - data/processed/model_predictions.csv
+  - model_registry_comprehensive/
+
+
+
+================================================================================
+✅ STEP 1 COMPLETE: ALL MODELS TRAINED
+================================================================================
+
+
+Model Rankings (by MAE test):
+ Rank             Model  MAE (train)  MAE (test)  RMSE (test)  R² (test)
+    1           XGBoost     7.241572    7.919600    10.268467   0.551455
+    2          LightGBM     8.279162    8.943382    11.419468   0.445263
+    3 Gradient Boosting     8.433236    8.957551    11.446977   0.442587
+    4     Random Forest     9.576387    9.909823    12.501821   0.335122
+    5  Ridge Regression    11.507634   11.374242    14.784634   0.070143
+    6        ElasticNet    11.486378   11.396781    14.786725   0.069880
+    7    Neural Network    11.517522   11.459197    14.713563   0.079061
+
+
+Best Model: XGBoost
+  MAE: 7.9196
+  R²: 0.5515
+
+================================================================================
+STEP 2: CALIBRATE XGBOOST WITH CONFORMAL UNCERTAINTY
+================================================================================
+
+Running: generate_xgboost_uncertainty.py
+
+================================================================================
+XGBoost Conformal Uncertainty
+================================================================================
+
+Loaded dataset: 11184 rows
+Train set: 8947 samples
+Test set: 2237 samples
+
+Loaded XGBoost model: e4cf4571...
+XGBoost Performance (Test Set):
+  MAE: 7.9196
+  RMSE: 10.2685
+  R²: 0.5515
+
+Conformal Uncertainty Results:
+  Target coverage: 90%
+  Empirical coverage: 87.44%
+  Coverage error: 2.56%
+
+Saved predictions to: data/processed/xgboost_predictions_with_intervals.csv
+Interval Statistics:
+  Mean interval width: 30.52
+  Median interval width: 30.52
+  Std interval width: 0.01
+
+================================================================================
+COMPLETE
+================================================================================
+
+Test set size: 2237
+Coverage: 87.44%
+Target: 90%
+
+
+
+================================================================================
+✅ STEP 2 COMPLETE: XGBOOST CALIBRATED WITH 90% PREDICTION INTERVALS
+================================================================================
+
+
+XGBoost Calibration Results:
+  Empirical Coverage: 87.44% (target: 90%)
+  Mean Interval Width: 30.52 points
+  Test Set Size: 2237 samples
+
+================================================================================
+STEP 3: BACKTEST ALL MODELS
+================================================================================
+
+Loading model predictions...
+Loaded 2237 predictions
+
+Calculating backtest metrics...
+
+================================================================================
+BACKTEST RESULTS - ALL MODELS
+================================================================================
+
+            Model       MAE      RMSE  Within 5 pts  Within 10 pts  Within 15 pts  Rank
+          XGBoost  7.919600 10.268467      0.413947       0.692892       0.870362     1
+         LightGBM  8.943382 11.419468      0.360751       0.629414       0.823424     2
+Gradient Boosting  8.957551 11.446977      0.359410       0.631650       0.818060     3
+    Random Forest  9.909823 12.501821      0.312025       0.585159       0.769334     4
+ Ridge Regression 11.374242 14.784634      0.295485       0.530621       0.696916     5
+       ElasticNet 11.396781 14.786725      0.276710       0.532409       0.703621     6
+   Neural Network 11.459197 14.713563      0.287439       0.527045       0.697363     7
+
+Backtest results saved to: data/processed/backtest_results.csv
+
+================================================================================
+GENERATING COMPREHENSIVE REPORT
+================================================================================
+
+Comprehensive report saved to: COMPLETE_PIPELINE_REPORT.md
+
+================================================================================
+PIPELINE COMPLETE: TRAIN → CALIBRATE → BACKTEST
+================================================================================
+
+End Time: 2026-02-05 21:24:25
+
+Summary:
+  ✅ Step 1: TRAIN - 7 models trained
+  ✅ Step 2: CALIBRATE - XGBoost calibrated with 90% CI
+  ✅ Step 3: BACKTEST - All models backtested
+
+Best Model: XGBoost
+  MAE: 7.9196 points
+  Improvement: 30.4% over Ridge baseline
+  Conformal Coverage: 87.44% (target: 90%)
+
+Output Files:
+  - model_registry_comprehensive/
+  - data/processed/model_comparison.csv
+  - data/processed/xgboost_predictions_with_intervals.csv
+  - data/processed/backtest_results.csv
+  - COMPLETE_PIPELINE_REPORT.md
+
+================================================================================
+✅ PIPELINE COMPLETE
+================================================================================

@@ -143,7 +143,7 @@
     "target": "h2_total",
     "model_type": "xgboost",
     "is_baseline": false,
-    "is_deployed": true,
+    "is_deployed": false,
     "tags": [
       "xgboost",
       "boosting",
@@ -363,5 +363,735 @@
     "notes": "Trained on 8947 samples, tested on 2237 samples",
     "lineage": {},
     "file_path": "model_registry_comprehensive/models/e4ad097f4c024489.pkl"
+  },
+  "4413043578ab1088": {
+    "model_id": "4413043578ab1088",
+    "model_name": "ridge_regression",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:12:36.697377+00:00",
+    "updated_at": "2026-02-06T03:12:36.697377+00:00",
+    "hyperparameters": {
+      "alpha": 2.0,
+      "solver": "auto",
+      "random_state": 42
+    },
+    "metrics": {
+      "mae": 11.374241797286993,
+      "rmse": 14.784634471486719,
+      "r2": 0.07014258372972504
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "ridge",
+    "is_baseline": true,
+    "is_deployed": false,
+    "tags": [
+      "baseline",
+      "ridge",
+      "linear"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/4413043578ab1088.pkl"
+  },
+  "ee1bb8f7535df99c": {
+    "model_id": "ee1bb8f7535df99c",
+    "model_name": "random_forest",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:12:37.589333+00:00",
+    "updated_at": "2026-02-06T03:12:37.589333+00:00",
+    "hyperparameters": {
+      "n_estimators": 100,
+      "max_depth": 10,
+      "min_samples_split": 5,
+      "min_samples_leaf": 2,
+      "random_state": 42,
+      "n_jobs": -1
+    },
+    "metrics": {
+      "mae": 9.909822813675808,
+      "rmse": 12.50182086382411,
+      "r2": 0.3351223730971501
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "random_forest",
+    "is_baseline": false,
+    "is_deployed": false,
+    "tags": [
+      "random_forest",
+      "tree",
+      "ensemble"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/ee1bb8f7535df99c.pkl"
+  },
+  "8f5b6e907bf3adb5": {
+    "model_id": "8f5b6e907bf3adb5",
+    "model_name": "xgboost",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:12:37.717719+00:00",
+    "updated_at": "2026-02-06T03:12:37.717719+00:00",
+    "hyperparameters": {
+      "n_estimators": 100,
+      "max_depth": 6,
+      "learning_rate": 0.1,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "random_state": 42,
+      "n_jobs": -1
+    },
+    "metrics": {
+      "mae": 7.919599853532625,
+      "rmse": 10.26846749821949,
+      "r2": 0.5514545645957454
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "xgboost",
+    "is_baseline": false,
+    "is_deployed": false,
+    "tags": [
+      "xgboost",
+      "boosting",
+      "ensemble"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/8f5b6e907bf3adb5.pkl"
+  },
+  "ead1393d71760c16": {
+    "model_id": "ead1393d71760c16",
+    "model_name": "neural_network",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:12:42.180913+00:00",
+    "updated_at": "2026-02-06T03:12:42.180913+00:00",
+    "hyperparameters": {
+      "hidden_layer_sizes": [
+        64,
+        32,
+        16
+      ],
+      "activation": "relu",
+      "solver": "adam",
+      "learning_rate_init": 0.001,
+      "max_iter": 500,
+      "early_stopping": true,
+      "validation_fraction": 0.1,
+      "random_state": 42
+    },
+    "metrics": {
+      "mae": 11.459196916860277,
+      "rmse": 14.713563014427812,
+      "r2": 0.07906096169066701
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "neural_network",
+    "is_baseline": false,
+    "is_deployed": false,
+    "tags": [
+      "neural_network",
+      "mlp",
+      "deep_learning"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/ead1393d71760c16.pkl"
+  },
+  "3ba9204c32d58832": {
+    "model_id": "3ba9204c32d58832",
+    "model_name": "elastic_net",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:12:42.196782+00:00",
+    "updated_at": "2026-02-06T03:12:42.196782+00:00",
+    "hyperparameters": {
+      "alpha": 1.0,
+      "l1_ratio": 0.5,
+      "random_state": 42
+    },
+    "metrics": {
+      "mae": 11.396780844753163,
+      "rmse": 14.786724505747632,
+      "r2": 0.06987966600543882
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "elastic_net",
+    "is_baseline": false,
+    "is_deployed": false,
+    "tags": [
+      "elastic_net",
+      "linear",
+      "regularization"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/3ba9204c32d58832.pkl"
+  },
+  "2d6de0c70eeb4a01": {
+    "model_id": "2d6de0c70eeb4a01",
+    "model_name": "gradient_boosting",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:12:43.546771+00:00",
+    "updated_at": "2026-02-06T03:12:43.546771+00:00",
+    "hyperparameters": {
+      "n_estimators": 100,
+      "max_depth": 5,
+      "learning_rate": 0.1,
+      "subsample": 0.8,
+      "random_state": 42
+    },
+    "metrics": {
+      "mae": 8.9575507388852,
+      "rmse": 11.446976992139307,
+      "r2": 0.4425873818019137
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "gradient_boosting",
+    "is_baseline": false,
+    "is_deployed": false,
+    "tags": [
+      "gradient_boosting",
+      "boosting",
+      "ensemble"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/2d6de0c70eeb4a01.pkl"
+  },
+  "a4ad2037663e7aa8": {
+    "model_id": "a4ad2037663e7aa8",
+    "model_name": "lightgbm",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:12:43.635889+00:00",
+    "updated_at": "2026-02-06T03:12:43.635889+00:00",
+    "hyperparameters": {
+      "n_estimators": 100,
+      "max_depth": 6,
+      "learning_rate": 0.1,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "random_state": 42,
+      "n_jobs": -1
+    },
+    "metrics": {
+      "mae": 8.9433817035944,
+      "rmse": 11.419467630756424,
+      "r2": 0.44526330921234036
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "lightgbm",
+    "is_baseline": false,
+    "is_deployed": false,
+    "tags": [
+      "lightgbm",
+      "boosting",
+      "ensemble"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/a4ad2037663e7aa8.pkl"
+  },
+  "076d1ae2e13200ed": {
+    "model_id": "076d1ae2e13200ed",
+    "model_name": "ridge_regression",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:24:11.210242+00:00",
+    "updated_at": "2026-02-06T03:24:11.210242+00:00",
+    "hyperparameters": {
+      "alpha": 2.0,
+      "solver": "auto",
+      "random_state": 42
+    },
+    "metrics": {
+      "mae": 11.374241797286993,
+      "rmse": 14.784634471486719,
+      "r2": 0.07014258372972504
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "ridge",
+    "is_baseline": true,
+    "is_deployed": false,
+    "tags": [
+      "baseline",
+      "ridge",
+      "linear"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/076d1ae2e13200ed.pkl"
+  },
+  "7ef35bd43b094986": {
+    "model_id": "7ef35bd43b094986",
+    "model_name": "random_forest",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:24:12.234112+00:00",
+    "updated_at": "2026-02-06T03:24:12.234112+00:00",
+    "hyperparameters": {
+      "n_estimators": 100,
+      "max_depth": 10,
+      "min_samples_split": 5,
+      "min_samples_leaf": 2,
+      "random_state": 42,
+      "n_jobs": -1
+    },
+    "metrics": {
+      "mae": 9.909822813675808,
+      "rmse": 12.50182086382411,
+      "r2": 0.3351223730971501
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "random_forest",
+    "is_baseline": false,
+    "is_deployed": false,
+    "tags": [
+      "random_forest",
+      "tree",
+      "ensemble"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/7ef35bd43b094986.pkl"
+  },
+  "4701daa1356dce31": {
+    "model_id": "4701daa1356dce31",
+    "model_name": "xgboost",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:24:12.420701+00:00",
+    "updated_at": "2026-02-06T03:24:12.420701+00:00",
+    "hyperparameters": {
+      "n_estimators": 100,
+      "max_depth": 6,
+      "learning_rate": 0.1,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "random_state": 42,
+      "n_jobs": -1
+    },
+    "metrics": {
+      "mae": 7.919599853532625,
+      "rmse": 10.26846749821949,
+      "r2": 0.5514545645957454
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "xgboost",
+    "is_baseline": false,
+    "is_deployed": true,
+    "tags": [
+      "xgboost",
+      "boosting",
+      "ensemble"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/4701daa1356dce31.pkl"
+  },
+  "526829b9ff1eb0ab": {
+    "model_id": "526829b9ff1eb0ab",
+    "model_name": "neural_network",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:24:17.351388+00:00",
+    "updated_at": "2026-02-06T03:24:17.351388+00:00",
+    "hyperparameters": {
+      "hidden_layer_sizes": [
+        64,
+        32,
+        16
+      ],
+      "activation": "relu",
+      "solver": "adam",
+      "learning_rate_init": 0.001,
+      "max_iter": 500,
+      "early_stopping": true,
+      "validation_fraction": 0.1,
+      "random_state": 42
+    },
+    "metrics": {
+      "mae": 11.459196916860277,
+      "rmse": 14.713563014427812,
+      "r2": 0.07906096169066701
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "neural_network",
+    "is_baseline": false,
+    "is_deployed": false,
+    "tags": [
+      "neural_network",
+      "mlp",
+      "deep_learning"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/526829b9ff1eb0ab.pkl"
+  },
+  "7aa50e6f745e6d14": {
+    "model_id": "7aa50e6f745e6d14",
+    "model_name": "elastic_net",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:24:17.364669+00:00",
+    "updated_at": "2026-02-06T03:24:17.364669+00:00",
+    "hyperparameters": {
+      "alpha": 1.0,
+      "l1_ratio": 0.5,
+      "random_state": 42
+    },
+    "metrics": {
+      "mae": 11.396780844753163,
+      "rmse": 14.786724505747632,
+      "r2": 0.06987966600543882
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "elastic_net",
+    "is_baseline": false,
+    "is_deployed": false,
+    "tags": [
+      "elastic_net",
+      "linear",
+      "regularization"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/7aa50e6f745e6d14.pkl"
+  },
+  "632ad9b6331beb0b": {
+    "model_id": "632ad9b6331beb0b",
+    "model_name": "gradient_boosting",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:24:18.690464+00:00",
+    "updated_at": "2026-02-06T03:24:18.690464+00:00",
+    "hyperparameters": {
+      "n_estimators": 100,
+      "max_depth": 5,
+      "learning_rate": 0.1,
+      "subsample": 0.8,
+      "random_state": 42
+    },
+    "metrics": {
+      "mae": 8.9575507388852,
+      "rmse": 11.446976992139307,
+      "r2": 0.4425873818019137
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "gradient_boosting",
+    "is_baseline": false,
+    "is_deployed": false,
+    "tags": [
+      "gradient_boosting",
+      "boosting",
+      "ensemble"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/632ad9b6331beb0b.pkl"
+  },
+  "f3c52ebe4b646e5c": {
+    "model_id": "f3c52ebe4b646e5c",
+    "model_name": "lightgbm",
+    "version": "v1.0.0",
+    "created_at": "2026-02-06T03:24:18.800065+00:00",
+    "updated_at": "2026-02-06T03:24:18.800065+00:00",
+    "hyperparameters": {
+      "n_estimators": 100,
+      "max_depth": 6,
+      "learning_rate": 0.1,
+      "subsample": 0.8,
+      "colsample_bytree": 0.8,
+      "random_state": 42,
+      "n_jobs": -1
+    },
+    "metrics": {
+      "mae": 8.9433817035944,
+      "rmse": 11.419467630756424,
+      "r2": 0.44526330921234036
+    },
+    "dataset_info": {
+      "n_samples": 11184,
+      "n_features": 12,
+      "dataset": "halftime_with_temporal_features_total.parquet",
+      "checksum": "0b8b8bffc5916f58"
+    },
+    "features": [
+      "h1_home",
+      "h1_away",
+      "h1_total",
+      "h1_margin",
+      "h1_events",
+      "h1_n_2pt",
+      "h1_n_3pt",
+      "h1_n_turnover",
+      "h1_n_rebound",
+      "h1_n_foul",
+      "h1_n_timeout",
+      "h1_n_sub"
+    ],
+    "target": "h2_total",
+    "model_type": "lightgbm",
+    "is_baseline": false,
+    "is_deployed": false,
+    "tags": [
+      "lightgbm",
+      "boosting",
+      "ensemble"
+    ],
+    "notes": "Trained on 8947 samples, tested on 2237 samples",
+    "lineage": {},
+    "file_path": "model_registry_comprehensive/models/f3c52ebe4b646e5c.pkl"
   }
 }
