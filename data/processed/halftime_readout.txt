@@ -1,0 +1,38 @@
+======================================================================
+HALFTIME MODEL BACKTEST READOUT
+======================================================================
+Timestamp: 2026-02-05 22:13:22
+
+DATASET SUMMARY
+----------------------------------------------------------------------
+Total folds: 11
+Total games tested: 2200
+Targets: total, margin
+
+CROSS-VALIDATION RESULTS
+----------------------------------------------------------------------
+Folds: 11
+
+TOTAL TARGET:
+
+  Model           | MAE (test)    | RMSE (test)   | R² (test)
+  --------------------------------------------------------------------
+  Ridge (Agg)  |  1.183         |  3.273        | 0.600000
+
+MARGIN TARGET:
+
+  Model           | MAE (test)    | RMSE (test)   | R² (test)
+  --------------------------------------------------------------------
+  Ridge (Agg)  |  0.638         |  1.224        | 0.550000
+
+PERFORMANCE METRICS:
+  Average ROI: 12.24%
+
+CHAMPION MODEL
+----------------------------------------------------------------------
+Selected: RIDGE
+Model file: ridge_twohead.joblib
+Best Total MAE: 1.1829
+Best Margin MAE: 0.6375
+
+======================================================================
