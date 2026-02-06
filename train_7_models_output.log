@@ -1,0 +1,208 @@
+================================================================================
+COMPREHENSIVE 7-MODEL TRAINING - ALL STATES, ALL TARGETS
+================================================================================
+Start Time: 2026-02-05 23:02:57
+
+================================================================================
+TRAINING: PREGAME
+================================================================================
+
+Loaded dataset: 3520 rows, 45 columns
+Features: 40
+Targets: ['total', 'margin']
+
+
+--- TARGET: total ---
+Samples after removing NaN: 3520
+Train: 2816, Test: 704
+  Training Ridge Regression... ✅ MAE=0.0007
+  Training Random Forest... ✅ MAE=0.6941
+  Training XGBoost... ✅ MAE=0.6941
+  Training Neural Network... ✅ MAE=0.4335
+  Training ElasticNet... ✅ MAE=0.0645
+  Training Gradient Boosting... ✅ MAE=0.5770
+  Training LightGBM... ✅ MAE=1.1537
+
+--- TARGET: margin ---
+Samples after removing NaN: 3520
+Train: 2816, Test: 704
+  Training Ridge Regression... ✅ MAE=0.0002
+  Training Random Forest... ✅ MAE=0.6554
+  Training XGBoost... ✅ MAE=0.7283
+  Training Neural Network... ✅ MAE=0.2972
+  Training ElasticNet... ✅ MAE=0.1025
+  Training Gradient Boosting... ✅ MAE=0.5717
+  Training LightGBM... ✅ MAE=0.8654
+
+Saving models for pregame...
+  Saved: ridge_regression_total.joblib
+  Saved: random_forest_total.joblib
+  Saved: xgboost_total.joblib
+  Saved: neural_network_total.joblib
+  Saved: elasticnet_total.joblib
+  Saved: gradient_boosting_total.joblib
+  Saved: lightgbm_total.joblib
+  Saved: ridge_regression_margin.joblib
+  Saved: random_forest_margin.joblib
+  Saved: xgboost_margin.joblib
+  Saved: neural_network_margin.joblib
+  Saved: elasticnet_margin.joblib
+  Saved: gradient_boosting_margin.joblib
+  Saved: lightgbm_margin.joblib
+
+  State Target             Model  MAE (Train)  MAE (Test)  RMSE (Test)  R² (Test)  Rank
+pregame margin  Ridge Regression     0.000162    0.000154     0.000192   1.000000     1
+pregame margin        ElasticNet     0.100254    0.102490     0.129696   0.999934     2
+pregame margin    Neural Network     0.305252    0.297240     0.377553   0.999444     3
+pregame margin Gradient Boosting     0.314616    0.571694     0.986995   0.996202     4
+pregame margin     Random Forest     0.331903    0.655351     1.332107   0.993082     5
+pregame margin           XGBoost     0.292608    0.728330     1.224073   0.994159     6
+pregame margin          LightGBM     0.593143    0.865393     1.252395   0.993885     7
+pregame  total  Ridge Regression     0.000703    0.000660     0.001068   1.000000     1
+pregame  total        ElasticNet     0.067294    0.064492     0.083406   0.999984     2
+pregame  total    Neural Network     0.425602    0.433502     0.566634   0.999242     3
+pregame  total Gradient Boosting     0.334791    0.576972     0.963307   0.997809     4
+pregame  total     Random Forest     0.399085    0.694119     1.351504   0.995687     5
+pregame  total           XGBoost     0.386511    0.694124     1.131097   0.996979     6
+pregame  total          LightGBM     0.939892    1.153674     1.874356   0.991704     7
+
+================================================================================
+TRAINING: HALFTIME
+================================================================================
+
+Loaded dataset: 11184 rows, 44 columns
+Features: 12
+Targets: ['h2_total', 'h2_margin']
+
+
+--- TARGET: h2_total ---
+Samples after removing NaN: 11184
+Train: 8947, Test: 2237
+  Training Ridge Regression... ✅ MAE=11.3742
+  Training Random Forest... ✅ MAE=9.9098
+  Training XGBoost... ✅ MAE=7.9196
+  Training Neural Network... ✅ MAE=11.4592
+  Training ElasticNet... ✅ MAE=11.3968
+  Training Gradient Boosting... ✅ MAE=8.9576
+  Training LightGBM... ✅ MAE=8.9434
+
+--- TARGET: h2_margin ---
+Samples after removing NaN: 11184
+Train: 8947, Test: 2237
+  Training Ridge Regression... ✅ MAE=8.9315
+  Training Random Forest... ✅ MAE=7.2576
+  Training XGBoost... ✅ MAE=6.0291
+  Training Neural Network... ✅ MAE=8.8907
+  Training ElasticNet... ✅ MAE=8.9281
+  Training Gradient Boosting... ✅ MAE=6.8882
+  Training LightGBM... ✅ MAE=6.7881
+
+Saving models for halftime...
+  Saved: ridge_regression_h2_total.joblib
+  Saved: random_forest_h2_total.joblib
+  Saved: xgboost_h2_total.joblib
+  Saved: neural_network_h2_total.joblib
+  Saved: elasticnet_h2_total.joblib
+  Saved: gradient_boosting_h2_total.joblib
+  Saved: lightgbm_h2_total.joblib
+  Saved: ridge_regression_h2_margin.joblib
+  Saved: random_forest_h2_margin.joblib
+  Saved: xgboost_h2_margin.joblib
+  Saved: neural_network_h2_margin.joblib
+  Saved: elasticnet_h2_margin.joblib
+  Saved: gradient_boosting_h2_margin.joblib
+  Saved: lightgbm_h2_margin.joblib
+
+   State    Target             Model  MAE (Train)  MAE (Test)  RMSE (Test)  R² (Test)  Rank
+halftime h2_margin           XGBoost     5.520906    6.029096     7.757228   0.535559     1
+halftime h2_margin          LightGBM     6.300333    6.788095     8.707365   0.414818     2
+halftime h2_margin Gradient Boosting     6.516283    6.888179     8.783841   0.404494     3
+halftime h2_margin     Random Forest     7.009973    7.257556     9.194759   0.347474     4
+halftime h2_margin    Neural Network     9.105448    8.890735    11.295257   0.015288     5
+halftime h2_margin        ElasticNet     9.219396    8.928076    11.335197   0.008312     6
+halftime h2_margin  Ridge Regression     9.210540    8.931515    11.345753   0.006464     7
+halftime  h2_total           XGBoost     7.241572    7.919600    10.268467   0.551455     1
+halftime  h2_total          LightGBM     8.279162    8.943382    11.419468   0.445263     2
+halftime  h2_total Gradient Boosting     8.433236    8.957551    11.446977   0.442587     3
+halftime  h2_total     Random Forest     9.576387    9.909823    12.501821   0.335122     4
+halftime  h2_total  Ridge Regression    11.507634   11.374242    14.784634   0.070143     5
+halftime  h2_total        ElasticNet    11.486378   11.396781    14.786725   0.069880     6
+halftime  h2_total    Neural Network    11.517522   11.459197    14.713563   0.079061     7
+
+================================================================================
+TRAINING: Q3
+================================================================================
+
+Loaded dataset: 2000 rows, 57 columns
+Features: 50
+Targets: ['q3_total', 'q3_margin']
+
+
+--- TARGET: q3_total ---
+Samples after removing NaN: 2000
+Train: 1600, Test: 400
+  Training Ridge Regression... ✅ MAE=2.4469
+  Training Random Forest... ✅ MAE=6.1072
+  Training XGBoost... ✅ MAE=5.6000
+  Training Neural Network... ✅ MAE=4.8261
+  Training ElasticNet... ✅ MAE=3.0068
+  Training Gradient Boosting... ✅ MAE=5.7450
+  Training LightGBM... ✅ MAE=5.5014
+
+--- TARGET: q3_margin ---
+Samples after removing NaN: 2000
+Train: 1600, Test: 400
+  Training Ridge Regression... ✅ MAE=6.0984
+  Training Random Forest... ✅ MAE=6.3498
+  Training XGBoost... ✅ MAE=6.6539
+  Training Neural Network... ✅ MAE=6.2250
+  Training ElasticNet... ✅ MAE=6.1186
+  Training Gradient Boosting... ✅ MAE=6.5659
+  Training LightGBM... ✅ MAE=6.5137
+
+Saving models for q3...
+  Saved: ridge_regression_q3_total.joblib
+  Saved: random_forest_q3_total.joblib
+  Saved: xgboost_q3_total.joblib
+  Saved: neural_network_q3_total.joblib
+  Saved: elasticnet_q3_total.joblib
+  Saved: gradient_boosting_q3_total.joblib
+  Saved: lightgbm_q3_total.joblib
+  Saved: ridge_regression_q3_margin.joblib
+  Saved: random_forest_q3_margin.joblib
+  Saved: xgboost_q3_margin.joblib
+  Saved: neural_network_q3_margin.joblib
+  Saved: elasticnet_q3_margin.joblib
+  Saved: gradient_boosting_q3_margin.joblib
+  Saved: lightgbm_q3_margin.joblib
+
+State    Target             Model  MAE (Train)  MAE (Test)  RMSE (Test)  R² (Test)  Rank
+   q3 q3_margin  Ridge Regression     5.748244    6.098397     7.513101   0.735954     1
+   q3 q3_margin        ElasticNet     5.802146    6.118627     7.509831   0.736184     2
+   q3 q3_margin    Neural Network     6.081286    6.225030     7.782327   0.716692     3
+   q3 q3_margin     Random Forest     3.322567    6.349816     7.920476   0.706544     4
+   q3 q3_margin          LightGBM     2.983509    6.513718     8.057417   0.696309     5
+   q3 q3_margin Gradient Boosting     2.745813    6.565915     8.217734   0.684104     6
+   q3 q3_margin           XGBoost     1.748804    6.653935     8.233977   0.682854     7
+   q3  q3_total  Ridge Regression     2.494412    2.446876     3.054606   0.960316     1
+   q3  q3_total        ElasticNet     3.083661    3.006770     3.778713   0.939271     2
+   q3  q3_total    Neural Network     5.076376    4.826072     6.041152   0.844779     3
+   q3  q3_total          LightGBM     2.223194    5.501442     6.890364   0.798073     4
+   q3  q3_total           XGBoost     1.222227    5.599987     7.026241   0.790031     5
+   q3  q3_total Gradient Boosting     2.008555    5.745031     7.381021   0.768291     6
+   q3  q3_total     Random Forest     3.392223    6.107153     7.701652   0.747723     7
+
+
+Saved combined comparison to: data/processed/all_7_models_comparison.csv
+Saved results to: data/processed/all_7_models_results.json
+
+================================================================================
+TRAINING COMPLETE
+================================================================================
+End Time: 2026-02-05 23:03:24
+
+Total models trained: 42
+States: 3 (pregame, halftime, q3)
+Models per state: 7
+Targets per state: 2
+
