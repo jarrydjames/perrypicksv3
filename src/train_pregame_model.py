@@ -52,7 +52,7 @@ def train_pregame_models(
     out_dir.mkdir(parents=True, exist_ok=True)
     
     # Load pregame dataset
-    df = load_training_df(TrainingDataSpec(path=parquet_path))
+    df = load_training_df(TrainingDataSpec(path=parquet_path, min_rows=500))
     feats = feature_columns(df, ignore={"game_id", "home_tri", "away_tri"})
     
     X = df[feats].to_numpy(dtype=float)

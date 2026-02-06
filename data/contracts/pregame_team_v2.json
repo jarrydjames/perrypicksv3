@@ -1,0 +1,10 @@
+{
+  "name": "pregame_team_v2",
+  "required_columns": [
+    "game_id",
+    "home_tri",
+    "away_tri",
+    "total",
+    "margin"
+  ]
+}
