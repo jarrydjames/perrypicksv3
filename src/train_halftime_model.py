@@ -9,10 +9,13 @@ Usage:
     python3 src/train_halftime_model.py --include-xgb
     python3 src/train_halftime_model.py --include-cat
 """
-import sys
-sys.path.insert(0, '/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3')
-
 from pathlib import Path
+import sys
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
 import argparse
 
 from src.modeling.train_models import train_from_parquet

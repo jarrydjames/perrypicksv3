@@ -1,0 +1,69 @@
+{
+  "project_root": ".",
+  "data_dir": "data",
+  "models_dir": "data/models",
+  "processed_dir": "data/processed",
+  "registry_dir": "data/registry",
+  "pipeline_version": "v1",
+  "pregame_pipeline": {
+    "steps": [
+      "python src/build_dataset_pregame.py",
+      "python src/train_pregame_model.py",
+      "python src/calibrate_intervals_pregame.py",
+      "python src/backtest_pregame_with_accuracy.py"
+    ],
+    "artifacts": {
+      "datasets": [
+        "data/processed/pregame_team_v2.parquet",
+        "data/processed/pregame_backtest_results_with_accuracy.parquet"
+      ],
+      "models": [
+        "models_v3/pregame/ridge_twohead.joblib",
+        "models_v3/pregame/randomforest_twohead.joblib",
+        "models_v3/pregame/gbt_twohead.joblib",
+        "models_v3/pregame/pregame_intervals.joblib"
+      ],
+      "reports": [
+        "data/processed/pregame_readout.txt"
+      ]
+    }
+  },
+  "halftime_pipeline": {
+    "steps": [
+      "python src/build_dataset_v2.py",
+      "python src/train_halftime_model.py",
+      "python src/calibrate_intervals_halftime.py"
+    ],
+    "artifacts": {
+      "datasets": [
+        "data/processed/halftime_team_v2.parquet"
+      ],
+      "models": [
+        "models_v3/halftime/ridge_twohead.joblib",
+        "models_v3/halftime/randomforest_twohead.joblib",
+        "models_v3/halftime/gbt_twohead.joblib",
+        "models_v3/halftime/halftime_intervals.joblib"
+      ],
+      "reports": []
+    }
+  },
+  "q3_pipeline": {
+    "steps": [
+      "python src/build_dataset_q3.py",
+      "python src/train_q3_model.py",
+      "python src/calibrate_intervals_q3.py"
+    ],
+    "artifacts": {
+      "datasets": [
+        "data/processed/q3_team_v2.parquet"
+      ],
+      "models": [
+        "models_v3/q3/ridge_twohead.joblib",
+        "models_v3/q3/randomforest_twohead.joblib",
+        "models_v3/q3/gbt_twohead.joblib",
+        "models_v3/q3/q3_intervals.joblib"
+      ],
+      "reports": []
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "name": "halftime_team_v2",
+  "required_columns": [
+    "game_id",
+    "h1_home",
+    "h1_away",
+    "h2_total",
+    "h2_margin"
+  ]
+}
