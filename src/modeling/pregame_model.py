@@ -121,7 +121,9 @@ class PregameModel:
         margin_q90 = margin_mean + 1.28 * sigma_margin
         
         margin_sd = self.margin_model.get("residual_sigma", 11.2)
-        home_win_prob = 1.0 - (0.5 * (1.0 + margin_mean / (np.sqrt(2) * margin_sd)))
+        # P(home wins) = P(home-away margin > 0) under Normal(mean=margin_mean, sd=margin_sd)
+        z = float(margin_mean) / max(1e-6, float(margin_sd))
+        home_win_prob = 0.5 * (1.0 + np.math.erf(z / np.sqrt(2.0)))
         home_win_prob = np.clip(home_win_prob, 0.01, 0.99)
         
         return PregamePrediction(

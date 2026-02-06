@@ -37,6 +37,26 @@ from src.features.pbp_possessions import game_possessions_first_half
 from src.odds.odds_api import OddsAPIMarketSnapshot, OddsAPIError, fetch_nba_odds_snapshot
 from src.odds.persistent_cache import PersistentOddsCache
 
+
+def _parse_period_clock(game: Dict[str, Any]) -> tuple[int, str]:
+    """Extract current period and ISO-like clock string from game payload."""
+    period = game.get("period")
+    clock = game.get("gameClock")
+
+    status_block = game.get("status") or {}
+    if period is None and isinstance(status_block, dict):
+        period = status_block.get("period")
+    if not clock and isinstance(status_block, dict):
+        clock = status_block.get("gameClock")
+
+    try:
+        period_int = int(float(period))
+    except Exception:
+        period_int = 0
+
+    clock_str = str(clock) if clock else "PT12M00.00S"
+    return period_int, clock_str
+
 # Q3 helper functions
 def sum_first3(periods):
     """Sum scores from periods 1-3."""
@@ -144,20 +164,14 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
                     "model_used": "ERROR",
                 }
         
-        # Check if we have Q3 data (periods 1-3)
-        home_periods = (game.get("homeTeam", {}) or {}).get("periods", [])
-        away_periods = (game.get("awayTeam", {}) or {}).get("periods", [])
-        
-        has_q3_data = any(
-            isinstance(p, dict) and 1 <= int(float(p.get("period", 0))) <= 3
-            for p in (home_periods or []) + (away_periods or [])
-        )
-        
-        if not has_q3_data:
-            # Fall back to halftime model
+        # Determine current game state from live payload.
+        current_period, current_clock = _parse_period_clock(game)
+
+        # Q3 model should be used only once Q3 has begun (period >= 3).
+        if current_period < 3:
             try:
                 result = predict_halftime(gid)
-                result["model_used"] = "HALFTIME_NO_Q3_DATA"
+                result["model_used"] = "HALFTIME_BEFORE_Q3"
                 return result
             except (ValueError, requests.HTTPError) as e:
                 logging.error(f"Halftime model failed for {gid}: {e}")
@@ -235,12 +249,10 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
         # Get Q3 model and predict
         q3_model = get_q3_model()
         
-        # For now, assume end-of-Q3 (period=4, clock=12:00)
-        # TODO: Dynamically fetch current period/clock from live data
         pred = q3_model.predict(
-            features=features,  # Only features that models need!
-            period=4,
-            clock="PT12M00.00S",
+            features=features,
+            period=current_period if current_period > 0 else 4,
+            clock=current_clock,
             game_id=gid,
         )
         
@@ -264,8 +276,8 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             "game_id": gid,
             "home_name": home_name,
             "away_name": away_name,
-            "period": 4,
-            "clock": "PT12M00.00S",
+            "period": current_period if current_period > 0 else 4,
+            "clock": current_clock,
             "home_score": q3_home,
             "away_score": q3_away,
             "margin": pred.margin_mean,
