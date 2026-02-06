@@ -34,6 +34,7 @@ from src.ui.tracking import SnapshotThrottle, get_store, maybe_record_snapshot, 
 from src.odds.streamlit_cache import get_cached_nba_odds
 from src.odds.odds_api import OddsAPIError
 from src.ui.log_monitor import render_log_monitor
+from src.ui.creative_portal import render_creative_portal
 from src.data.scoreboard import fetch_scoreboard, format_game_label
 
 # Import timezone utilities
@@ -277,6 +278,9 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.markdown("</div>", unsafe_allow_html=True)
+
+with st.expander("Creative Management Portal (Beta)", expanded=False):
+    render_creative_portal(st.session_state.get("last_pred"))
 
 # -----------------------------
 # Inputs (top, no sidebar)
