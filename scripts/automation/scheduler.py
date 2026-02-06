@@ -21,6 +21,7 @@ def main() -> None:
     parser.add_argument("--sleep", type=int, default=60, help="Seconds between scans")
     parser.add_argument("--mode", default="auto", choices=["auto", "pregame", "halftime", "q3"])
     parser.add_argument("--once", action="store_true", help="Run a single scan and exit")
+    parser.add_argument("--include-pregame", action="store_true", help="Include scheduled games")
     args = parser.parse_args()
 
     if not os.getenv("DISCORD_WEBHOOK_URL"):
@@ -30,6 +31,8 @@ def main() -> None:
     while True:
         payload = scan_games(date.today())
         game_ids = payload.get("halftime", []) + payload.get("end_q3", [])
+        if args.include_pregame:
+            game_ids = payload.get("pregame", []) + game_ids
         new_games = [gid for gid in game_ids if gid not in seen]
         if new_games:
             seen.update(new_games)

@@ -42,6 +42,7 @@ SKIP_BUILD=false
 SKIP_MERGE=false
 SKIP_TRAIN=false
 SKIP_DEPLOY=false
+POST_DISCORD=false
 
 # Parse arguments
 while [[ $# -gt 0 ]]; do
@@ -78,6 +79,10 @@ while [[ $# -gt 0 ]]; do
             SKIP_DEPLOY=true
             shift
             ;;
+        --post-discord)
+            POST_DISCORD=true
+            shift
+            ;;
         *)
             echo -e "${RED}Unknown argument: $1${NC}"
             exit 1
@@ -94,6 +99,7 @@ CACHE_DIR="$PROJECT_DIR/data/raw"
 PROCESSED_DIR="$PROJECT_DIR/data/processed"
 MODELS_DIR="$PROJECT_DIR/models_v3/halftime"
 PRODUCTION_DIR="$PROJECT_DIR/models_v3/production"
+DISCORD_POSTER="$PROJECT_DIR/scripts/automation/discord_poster.py"
 
 # Today's date (or specified date)
 if [ -n "$DATE" ]; then
@@ -260,7 +266,39 @@ echo -e "${GREEN}  3. Merge with halftime stats${NC}"
 echo -e "${GREEN}  4. Retrain model${NC}"
 echo -e "${GREEN}  5. Deploy to production${NC}"
 echo -e "\n${GREEN}Production models: $PRODUCTION_DIR${NC}"
+if [ "$POST_DISCORD" = true ]; then
+    echo -e "${GREEN}Discord posting: enabled${NC}"
+fi
 echo -e "\n${BLUE}========================================================================${NC}"
+
+###############################################################################
+# OPTIONAL: POST PREGAME PREDICTIONS TO DISCORD
+###############################################################################
+
+if [ "$POST_DISCORD" = true ]; then
+    if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+        echo -e "${RED}DISCORD_WEBHOOK_URL is required for --post-discord${NC}"
+        exit 1
+    fi
+    if [ -f "$CACHE_DIR/todays_games.json" ]; then
+        GAME_IDS=$(python3 - << 'EOF'
+import json
+from pathlib import Path
+
+data = json.loads(Path("data/raw/todays_games.json").read_text())
+game_ids = [g.get("gameId") for g in data.get("games", []) if g.get("gameId")]
+print(" ".join(game_ids))
+EOF
+)
+        if [ -n "$GAME_IDS" ]; then
+            python3 "$DISCORD_POSTER" $GAME_IDS --mode pregame
+        else
+            echo -e "${YELLOW}No game IDs found in todays_games.json${NC}"
+        fi
+    else
+        echo -e "${YELLOW}Missing data/raw/todays_games.json; skipping Discord post${NC}"
+    fi
+fi
 
 # Exit
 exit 0
