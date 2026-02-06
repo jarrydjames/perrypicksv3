@@ -106,8 +106,8 @@ def compute_1h_behavior_from_pbp(pbp: pd.DataFrame):
     return feats
 
 def predict_from_halftime(h1_home: int, h1_away: int, beh: dict):
-    features_total, m_total = load_model("models/team_2h_total.joblib")
-    features_margin, m_margin = load_model("models/team_2h_margin.joblib")
+    features_total, m_total = load_model("models_v3/halftime/xgboost_h2_total.joblib")
+    features_margin, m_margin = load_model("models_v3/halftime/xgboost_h2_margin.joblib")
 
     row = {
         "h1_home": h1_home,
