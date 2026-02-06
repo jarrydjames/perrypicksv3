@@ -6,7 +6,8 @@ from typing import List, Tuple
 import numpy as np
 from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegressor
 from sklearn.impute import SimpleImputer
-from sklearn.linear_model import Ridge
+from sklearn.linear_model import Ridge, ElasticNet
+from sklearn.neural_network import MLPRegressor
 from sklearn.pipeline import Pipeline
 
 from src.modeling.base import BaseTwoHeadModel, TwoHeadFitResult
@@ -165,6 +166,108 @@ class GBTTwoHeadModel(BaseTwoHeadModel):
             max_iter=self.max_iter,
             min_samples_leaf=self.min_samples_leaf,
             random_state=0,
+        )
+
+        mt.fit(X, y_total)
+        mm.fit(X, y_margin)
+
+        res_t = y_total - mt.predict(X)
+        res_m = y_margin - mm.predict(X)
+
+        self._fit = TwoHeadFitResult(
+            total=TrainedHead(features=list(feature_names), model=mt, residual_sigma=sigma_from_residuals(res_t)),
+            margin=TrainedHead(features=list(feature_names), model=mm, residual_sigma=sigma_from_residuals(res_m)),
+        )
+        return self
+
+    def predict_heads(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        if not self._fit:
+            raise RuntimeError("Model not fit")
+        mt = self._fit.total.model
+        mm = self._fit.margin.model
+        return (mt.predict(X), mm.predict(X))
+
+    def trained_heads(self) -> TwoHeadFitResult:
+        if not self._fit:
+            raise RuntimeError("Model not fit")
+        return self._fit
+
+
+class ElasticNetTwoHeadModel(BaseTwoHeadModel):
+    name = "elastic_net"
+    version = "1"
+
+    def __init__(
+        self,
+        *,
+        alpha: float = 1.0,
+        l1_ratio: float = 0.5,
+        feature_version: str = "v1",
+    ):
+        super().__init__(feature_version=feature_version)
+        self.alpha = float(alpha)
+        self.l1_ratio = float(l1_ratio)
+        self._fit: TwoHeadFitResult | None = None
+
+    def fit(self, X: np.ndarray, feature_names: List[str], y_total: np.ndarray, y_margin: np.ndarray) -> "ElasticNetTwoHeadModel":
+        mt = _with_imputer(ElasticNet(alpha=self.alpha, l1_ratio=self.l1_ratio, random_state=0))
+        mm = _with_imputer(ElasticNet(alpha=self.alpha, l1_ratio=self.l1_ratio, random_state=0))
+
+        mt.fit(X, y_total)
+        mm.fit(X, y_margin)
+
+        res_t = y_total - mt.predict(X)
+        res_m = y_margin - mm.predict(X)
+
+        self._fit = TwoHeadFitResult(
+            total=TrainedHead(features=list(feature_names), model=mt, residual_sigma=sigma_from_residuals(res_t)),
+            margin=TrainedHead(features=list(feature_names), model=mm, residual_sigma=sigma_from_residuals(res_m)),
+        )
+        return self
+
+    def predict_heads(self, X: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+        if not self._fit:
+            raise RuntimeError("Model not fit")
+        mt = self._fit.total.model
+        mm = self._fit.margin.model
+        return (mt.predict(X), mm.predict(X))
+
+    def trained_heads(self) -> TwoHeadFitResult:
+        if not self._fit:
+            raise RuntimeError("Model not fit")
+        return self._fit
+
+
+class MLPTwoHeadModel(BaseTwoHeadModel):
+    name = "mlp"
+    version = "1"
+
+    def __init__(
+        self,
+        *,
+        hidden_layer_sizes: tuple[int, ...] = (64, 32),
+        max_iter: int = 500,
+        feature_version: str = "v1",
+    ):
+        super().__init__(feature_version=feature_version)
+        self.hidden_layer_sizes = hidden_layer_sizes
+        self.max_iter = int(max_iter)
+        self._fit: TwoHeadFitResult | None = None
+
+    def fit(self, X: np.ndarray, feature_names: List[str], y_total: np.ndarray, y_margin: np.ndarray) -> "MLPTwoHeadModel":
+        mt = _with_imputer(
+            MLPRegressor(
+                hidden_layer_sizes=self.hidden_layer_sizes,
+                max_iter=self.max_iter,
+                random_state=0,
+            )
+        )
+        mm = _with_imputer(
+            MLPRegressor(
+                hidden_layer_sizes=self.hidden_layer_sizes,
+                max_iter=self.max_iter,
+                random_state=0,
+            )
         )
 
         mt.fit(X, y_total)

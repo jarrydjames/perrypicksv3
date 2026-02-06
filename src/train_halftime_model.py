@@ -28,11 +28,12 @@ def main():
     parser.add_argument('--output-dir', type=str, 
                        default='models_v3/halftime',
                        help='Output directory for trained models')
-    parser.add_argument('--include-xgb', action='store_true',
-                       help='Include XGBoost models')
+    parser.add_argument('--no-xgb', action='store_false', dest='include_xgb',
+                       help='Disable XGBoost models')
     parser.add_argument('--include-cat', action='store_true',
                        help='Include CatBoost models')
     
+    parser.set_defaults(include_xgb=True)
     args = parser.parse_args()
     
     print('=' * 70)
