@@ -34,10 +34,13 @@ def _is_end_q3(status_text: str, period: int | None, clock: str | None) -> bool:
 
 def scan_games(scan_date: date) -> dict:
     games = fetch_scoreboard(scan_date, include_live=True)
+    pregame: List[str] = []
     halftime: List[str] = []
     end_q3: List[str] = []
 
     for game in games:
+        if game.period in {0, None}:
+            pregame.append(game.game_id)
         if _is_halftime(game.status_text, game.period, game.clock):
             halftime.append(game.game_id)
         if _is_end_q3(game.status_text, game.period, game.clock):
@@ -45,6 +48,7 @@ def scan_games(scan_date: date) -> dict:
 
     return {
         "date": scan_date.isoformat(),
+        "pregame": pregame,
         "halftime": halftime,
         "end_q3": end_q3,
     }
