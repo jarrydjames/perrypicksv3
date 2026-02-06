@@ -1,0 +1,80 @@
+================================================================================
+COMPREHENSIVE RESULTS COMPILATION
+================================================================================
+Timestamp: 2026-02-05 22:55:37
+
+STEP 1: Loading readout files...
+
+  ✅ pregame      readout loaded
+  ✅ halftime     readout loaded
+  ✅ q3           readout loaded
+
+STEP 2: Parsing model performance...
+
+  PREGAME      models parsed: 3
+    - ridge               : MAE = 3.5080
+    - random_forest       : MAE = 5.4770
+    - gbt                 : MAE = 4.3230
+  HALFTIME     models parsed: 2
+    - ridge               : MAE = 1.1830
+    - ridge_ridge         : MAE = 1.1830
+  Q3           models parsed: 3
+    - ridge               : MAE = 6.5490
+    - random_forest       : MAE = 7.5220
+    - gbt                 : MAE = 6.8950
+
+STEP 3: Loading 7-model sweep results...
+
+  ✅ model_comparison.csv loaded (7 models)
+
+  Halftime 7-model sweep results:
+ Rank             Model  MAE (train)  MAE (test)  RMSE (test)  R² (test)
+    1           XGBoost     7.241572    7.919600    10.268467   0.551455
+    2          LightGBM     8.279162    8.943382    11.419468   0.445263
+    3 Gradient Boosting     8.433236    8.957551    11.446977   0.442587
+    4     Random Forest     9.576387    9.909823    12.501821   0.335122
+    5  Ridge Regression    11.507634   11.374242    14.784634   0.070143
+    6        ElasticNet    11.486378   11.396781    14.786725   0.069880
+    7    Neural Network    11.517522   11.459197    14.713563   0.079061
+
+  Best model: XGBoost
+  MAE: 7.9196, RMSE: 10.2685, R²: 0.5515
+
+STEP 4: Selecting champion models...
+
+  PREGAME      → ridge_twohead.joblib           (MAE: 3.5080)
+  HALFTIME     → ridge_twohead.joblib           (MAE: 1.1830)
+  Q3           → ridge_twohead.joblib           (MAE: 6.5490)
+
+STEP 5: Generating champion_models.json...
+
+  ✅ Champion models saved to: data/processed/champion_models.json
+
+STEP 6: Generating comprehensive report...
+
+  ✅ Comprehensive report saved to: COMPREHENSIVE_VIBE_PIPELINE_REPORT.md
+
+================================================================================
+COMPREHENSIVE PIPELINE COMPLETE
+================================================================================
+
+End Time: 2026-02-05 22:55:37
+
+Summary:
+  ✅ States processed: 3 (pregame, halftime, q3)
+  ✅ Champion models selected
+  ✅ champion_models.json generated
+  ✅ Comprehensive report generated
+
+Champion Models:
+  PREGAME      -> ridge_twohead.joblib           (MAE: 3.5080)
+  HALFTIME     -> ridge_twohead.joblib           (MAE: 1.1830)
+  Q3           -> ridge_twohead.joblib           (MAE: 6.5490)
+
+Output Files:
+  - data/processed/champion_models.json
+  - COMPREHENSIVE_VIBE_PIPELINE_REPORT.md
+
+================================================================================
+✅ COMPREHENSIVE PIPELINE COMPLETE
+================================================================================

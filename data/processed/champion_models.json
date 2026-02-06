@@ -11,7 +11,7 @@
     "margin": "ridge_twohead.joblib",
     "winner": "ridge_twohead.joblib",
     "team_total": "ridge_twohead.joblib",
-    "best_mae": 0.638
+    "best_mae": 1.183
   },
   "q3": {
     "total": "ridge_twohead.joblib",
@@ -20,5 +20,5 @@
     "team_total": "ridge_twohead.joblib",
     "best_mae": 6.549
   },
-  "generated_at": "2026-02-05T22:14:20.006783"
+  "generated_at": "2026-02-05T22:55:37.678473"
 }

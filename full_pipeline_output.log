@@ -1,0 +1,198 @@
+================================================================================
+COMPREHENSIVE PIPELINE: TRAIN → CALIBRATE → BACKTEST (ALL STATES)
+================================================================================
+Start Time: 2026-02-05 22:53:00
+
+================================================================================
+CHECKING PREREQUISITES
+================================================================================
+
+✅ pregame      dataset: pregame_team_v2.parquet                            267.2K
+✅ halftime     dataset: halftime_with_temporal_features_total.parquet      444.1K
+✅ q3           dataset: q3_team_v2.parquet                                 204.3K
+
+
+################################################################################
+# PREGAME PIPELINE
+################################################################################
+
+================================================================================
+TRAINING MODELS: PREGAME
+================================================================================
+
+Script: src/train_pregame_model.py
+  Running: /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/bin/python3 src/train_pregame_model.py --no-xgb
+  ❌ FAILED (exit code 1)
+  Error: Traceback (most recent call last):
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/train_pregame_model.py", line 26, in <module>
+    from src.data.training_loader import TrainingDataSpec, load_training_df
+ModuleNotFoundError: No module named 'src'
+
+
+  Models generated: 5
+    - gbt_twohead.joblib
+    - randomforest_twohead.joblib
+    - ridge_margin.joblib
+    - ridge_total.joblib
+    - ridge_twohead.joblib
+
+================================================================================
+CALIBRATING INTERVALS: PREGAME
+================================================================================
+
+Script: src/calibrate_intervals_pregame.py
+  Running: /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/bin/python3 src/calibrate_intervals_pregame.py
+  ✅ SUCCESS
+
+================================================================================
+BACKTESTING MODELS: PREGAME
+================================================================================
+
+Script: src/backtest_pregame_with_accuracy.py
+  Running: /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/bin/python3 src/backtest_pregame_with_accuracy.py
+  ✅ SUCCESS
+
+  Backtest results: ✅
+  Readout file: ✅
+
+
+################################################################################
+# HALFTIME PIPELINE
+################################################################################
+
+================================================================================
+TRAINING MODELS: HALFTIME
+================================================================================
+
+Script: src/train_halftime_model.py
+  Running: /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/bin/python3 src/train_halftime_model.py --no-xgb
+  ❌ FAILED (exit code 1)
+  Error: Traceback (most recent call last):
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/train_halftime_model.py", line 21, in <module>
+    from src.modeling.train_models import train_from_parquet
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/modeling/train_models.py", line 26, in <module>
+    from src.modeling.lgbm_models import LightGBMTwoHeadModel
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/modeling/lgbm_models.py", line 12, in <module>
+    from
+
+  Models generated: 2
+    - gbt_twohead.joblib
+    - ridge_twohead.joblib
+
+================================================================================
+CALIBRATING INTERVALS: HALFTIME
+================================================================================
+
+Script: src/calibrate_intervals_halftime.py
+  Running: /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/bin/python3 src/calibrate_intervals_halftime.py
+  ❌ FAILED (exit code 1)
+  Error: Traceback (most recent call last):
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/calibrate_intervals_halftime.py", line 48, in <module>
+    main()
+    ~~~~^^
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/calibrate_intervals_halftime.py", line 15, in main
+    df = pd.read_parquet("data/processed/halftime_team_v2.parquet").dropna(subset=["h2_total", "h2_margin"])
+         ~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarrydhawley/Desk
+
+================================================================================
+BACKTESTING MODELS: HALFTIME
+================================================================================
+
+Script: src/backtest_models_full.py
+  Running: /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/bin/python3 src/backtest_models_full.py
+  ✅ SUCCESS
+
+  Backtest results: ✅
+  Readout file: ✅
+
+
+################################################################################
+# Q3 PIPELINE
+################################################################################
+
+================================================================================
+TRAINING MODELS: Q3
+================================================================================
+
+Script: src/train_q3_model.py
+  Running: /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/bin/python3 src/train_q3_model.py --no-xgb
+  ❌ FAILED (exit code 1)
+  Error: Traceback (most recent call last):
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/train_q3_model.py", line 25, in <module>
+    from src.data.training_loader import TrainingDataSpec, load_training_df
+ModuleNotFoundError: No module named 'src'
+
+
+  Models generated: 5
+    - gbt_twohead.joblib
+    - random_forest_twohead.joblib
+    - ridge_margin.joblib
+    - ridge_total.joblib
+    - ridge_twohead.joblib
+
+================================================================================
+CALIBRATING INTERVALS: Q3
+================================================================================
+
+Script: src/calibrate_intervals_q3.py
+  Running: /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/bin/python3 src/calibrate_intervals_q3.py
+  ❌ FAILED (exit code 1)
+  Error: Traceback (most recent call last):
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/calibrate_intervals_q3.py", line 57, in <module>
+    main()
+    ~~~~^^
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/calibrate_intervals_q3.py", line 23, in main
+    Xt = df[features]
+         ~~^^^^^^^^^^
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/lib/python3.14/site-packages/pandas/core/frame.py", line 4119, in __getitem__
+    indexer = self.columns._get_i
+
+================================================================================
+BACKTESTING MODELS: Q3
+================================================================================
+
+Script: src/backtest_v2.py
+  Running: /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/bin/python3 src/backtest_v2.py
+  ❌ FAILED (exit code 1)
+  Error: Traceback (most recent call last):
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/backtest_v2.py", line 156, in <module>
+    main()
+    ~~~~^^
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/backtest_v2.py", line 46, in main
+    df = pd.read_parquet(data_path)
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/lib/python3.14/site-packages/pandas/io/parquet.py", line 669, in read_parquet
+    return impl.read(
+           ~~~~~~~~~^
+        path,
+    
+
+  Backtest results: ✅
+  Readout file: ✅
+
+================================================================================
+PIPELINE SUMMARY
+================================================================================
+End Time: 2026-02-05 22:53:39
+
+PREGAME:
+  Train:     ❌
+  Calibrate: ✅
+  Backtest:  ✅
+  Models:    5 generated
+
+HALFTIME:
+  Train:     ❌
+  Calibrate: ❌
+  Backtest:  ✅
+  Models:    2 generated
+
+Q3:
+  Train:     ❌
+  Calibrate: ❌
+  Backtest:  ❌
+  Models:    5 generated
+
+================================================================================
+⚠️  PIPELINE COMPLETE WITH SOME FAILURES
+================================================================================
