@@ -130,10 +130,10 @@ TEAM_ABBR_NORMALIZATION = {
     '76ERS': 'PHI',
     
     # Phoenix Suns
-    'PHX': 'PHO',
-    'PHO': 'PHO',
-    'PHOENIX': 'PHO',
-    'SUNS': 'PHO',
+    'PHX': 'PHX',
+    'PHO': 'PHX',
+    'PHOENIX': 'PHX',
+    'SUNS': 'PHX',
     
     # Portland Trail Blazers
     'POR': 'POR',

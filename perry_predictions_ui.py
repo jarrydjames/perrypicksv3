@@ -242,7 +242,7 @@ if run_predictions:
                 if isinstance(margin, (int, float)) and isinstance(total, (int, float)):
                     home_score = (total + margin) / 2
                     away_score = (total - margin) / 2
-                    winner = result.get('home_team', 'Home') if margin > 0 else result.get('away_team', 'Away')
+                    winner = home_team if margin > 0 else away_team
                     win_pct = home_win_prob if margin > 0 else (1 - home_win_prob)
                 else:
                     home_score = 'N/A'
