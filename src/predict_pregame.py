@@ -286,8 +286,8 @@ def extract_core_features(
         features['home_def_rating'] = home_mapped.get('def_rating', 110.0)
         features['home_pace'] = home_mapped.get('pace', 100.0)
         features['home_efg'] = home_mapped.get('efg', 0.50)
-        features['home_tov_rate'] = home_mapped.get('tov_rate', 0.15)
-        features['home_orb_rate'] = home_mapped.get('orb_rate', 0.25)
+        features['home_tor'] = home_mapped.get('tov_rate', 0.15)
+        features['home_orbp'] = home_mapped.get('orb_rate', 0.25)
         gp = home_stats.get('GP', 1.0)
         wins = home_stats.get('W', 0)
         features['home_win_pct'] = wins / gp if gp > 0 else 0.5
@@ -298,20 +298,24 @@ def extract_core_features(
         features['home_def_rating'] = float(home_hist['home_def_rating'].mean()) if 'home_def_rating' in home_hist else 110.0
         features['home_pace'] = float(home_hist['home_pace'].mean()) if 'home_pace' in home_hist else 100.0
         features['home_efg'] = float(home_hist['home_efg'].mean()) if 'home_efg' in home_hist else 0.50
-        features['home_tov_rate'] = float(home_hist['home_tov_rate'].mean()) if 'home_tov_rate' in home_hist else 0.15
-        features['home_orb_rate'] = float(home_hist['home_orb_rate'].mean()) if 'home_orb_rate' in home_hist else 0.25
+        features['home_tor'] = float(home_hist['home_tor'].mean()) if 'home_tor' in home_hist else 0.15
+        features['home_orbp'] = float(home_hist['home_orbp'].mean()) if 'home_orbp' in home_hist else 0.25
         features['home_win_pct'] = float(home_hist['home_win_pct'].mean()) if 'home_win_pct' in home_hist else 0.5
     else:
         # Default values if stats unavailable
-        for feat in ['off_rating', 'def_rating', 'pace', 'efg', 'tov_rate', 'orb_rate', 'win_pct']:
-            features[f'home_{feat}'] = 110.0 if feat in ['off_rating', 'def_rating'] else (100.0 if feat == 'pace' else 0.5 if feat == 'efg' else 0.25)
+        for feat in ['off_rating', 'def_rating', 'pace', 'efg', 'tor', 'orbp', 'ftr', 'tpar', 'win_pct']:            features[f'home_{feat}'] = 110.0 if feat in ['off_rating', 'def_rating'] else (100.0 if feat == 'pace' else 0.5 if feat == 'efg' else 0.25)
         features['home_win_pct'] = 0.5
     
     # Add ft_rate defaults (not available in NBA API Advanced measure type)
-    if 'home_ft_rate' not in features:
-        features['home_ft_rate'] = 0.25
-    if 'away_ft_rate' not in features:
-        features['away_ft_rate'] = 0.25
+    if 'home_ftr' not in features:
+        features['home_ftr'] = 0.25
+    if 'away_ftr' not in features:
+        features['away_ftr'] = 0.25
+        if 'home_tpar' not in features:
+            features['home_tpar'] = 0.41  # League average
+        if 'away_tpar' not in features:
+            features['away_tpar'] = 0.41  # League average
+
     
     # Away team stats (using mapped columns)
     if away_stats is not None:
@@ -319,8 +323,8 @@ def extract_core_features(
         features['away_def_rating'] = away_mapped.get('def_rating', 110.0)
         features['away_pace'] = away_mapped.get('pace', 100.0)
         features['away_efg'] = away_mapped.get('efg', 0.50)
-        features['away_tov_rate'] = away_mapped.get('tov_rate', 0.15)
-        features['away_orb_rate'] = away_mapped.get('orb_rate', 0.25)
+        features['away_tor'] = away_mapped.get('tov_rate', 0.15)
+        features['away_orbp'] = away_mapped.get('orb_rate', 0.25)
         gp = away_stats.get('GP', 1.0)
         wins = away_stats.get('W', 0)
         features['away_win_pct'] = wins / gp if gp > 0 else 0.5
@@ -331,19 +335,30 @@ def extract_core_features(
         features['away_def_rating'] = float(away_hist['away_def_rating'].mean()) if 'away_def_rating' in away_hist else 110.0
         features['away_pace'] = float(away_hist['away_pace'].mean()) if 'away_pace' in away_hist else 100.0
         features['away_efg'] = float(away_hist['away_efg'].mean()) if 'away_efg' in away_hist else 0.50
-        features['away_tov_rate'] = float(away_hist['away_tov_rate'].mean()) if 'away_tov_rate' in away_hist else 0.15
-        features['away_orb_rate'] = float(away_hist['away_orb_rate'].mean()) if 'away_orb_rate' in away_hist else 0.25
+        features['away_tor'] = float(away_hist['away_tor'].mean()) if 'away_tor' in away_hist else 0.15
+        features['away_orbp'] = float(away_hist['away_orbp'].mean()) if 'away_orbp' in away_hist else 0.25
         features['away_win_pct'] = float(away_hist['away_win_pct'].mean()) if 'away_win_pct' in away_hist else 0.5
     else:
-        for feat in ['off_rating', 'def_rating', 'pace', 'efg', 'ft_rate', 'tov_rate', 'orb_rate', 'win_pct']:
+        for feat in ['off_rating', 'def_rating', 'pace', 'efg', 'ftr', 'tor', 'orbp', 'tpar', 'win_pct']:
             features[f'away_{feat}'] = 110.0 if feat in ['off_rating', 'def_rating'] else (100.0 if feat == 'pace' else 0.5 if feat == 'efg' else 0.25)
         features['away_win_pct'] = 0.5
     
-    # Add ft_rate defaults (not available in NBA API Advanced measure type)
-    if 'home_ft_rate' not in features:
-        features['home_ft_rate'] = 0.25
-    if 'away_ft_rate' not in features:
-        features['away_ft_rate'] = 0.25
+        for feat in ['off_rating', 'def_rating', 'pace', 'efg', 'ftr', 'tor', 'orbp', 'tpar', 'win_pct']:
+            features[f'home_{feat}'] = 110.0 if feat in ['off_rating', 'def_rating'] else (100.0 if feat == 'pace' else 0.5 if feat == 'efg' else 0.25)
+        features['home_win_pct'] = 0.5
+    
+    # Add tpar defaults (3-point attempt rate - not available in NBA API)
+    if 'home_tpar' not in features:
+        features['home_tpar'] = 0.41  # League average
+    if 'away_tpar' not in features:
+        features['away_tpar'] = 0.41  # League average
+    
+    if 'home_ftr' not in features:
+        features['home_ftr'] = 0.25
+    if 'away_ftr' not in features:
+        features['home_ftr'] = 0.25
+    if 'away_ftr' not in features:
+        features['away_ftr'] = 0.25
     
     # ===== SCHEDULE FEATURES (8 features) =====
     # Use historical data for rest days and back-to-back
@@ -386,8 +401,8 @@ def extract_core_features(
     features['net_rating_diff'] = features['home_net_rating'] - features['away_net_rating']
     
     # TS proxy and assist ratio (simplified)
-    features['home_ts_proxy'] = features['home_efg'] * features['home_ft_rate']
-    features['away_ts_proxy'] = features['away_efg'] * features['away_ft_rate']
+    features['home_ts_proxy'] = features['home_efg'] * features['home_ftr']
+    features['away_ts_proxy'] = features['away_efg'] * features['away_ftr']
     features['ts_proxy_diff'] = features['home_ts_proxy'] - features['away_ts_proxy']
     features['home_assist_ratio_proxy'] = features['home_pace'] / 100.0
     features['away_assist_ratio_proxy'] = features['away_pace'] / 100.0
@@ -396,15 +411,15 @@ def extract_core_features(
     # Four factor weighted (simplified)
     features['home_four_factor_weighted'] = (
         features['home_efg'] * 0.4 +
-        features['home_orb_rate'] * 0.3 +
-        features['home_tov_rate'] * -0.15 +
-        features['home_ft_rate'] * 0.15
+        features['home_orbp'] * 0.3 +
+        features['home_tor'] * -0.15 +
+        features['home_ftr'] * 0.15
     )
     features['away_four_factor_weighted'] = (
         features['away_efg'] * 0.4 +
-        features['away_orb_rate'] * 0.3 +
-        features['away_tov_rate'] * -0.15 +
-        features['away_ft_rate'] * 0.15
+        features['away_orbp'] * 0.3 +
+        features['away_tor'] * -0.15 +
+        features['away_ftr'] * 0.15
     )
     features['four_factor_weighted_diff'] = features['home_four_factor_weighted'] - features['away_four_factor_weighted']
     
@@ -414,9 +429,9 @@ def extract_core_features(
         features['def_rating_diff'] = features['home_def_rating'] - features['away_def_rating']
         features['pace_diff'] = features['home_pace'] - features['away_pace']
         features['efg_diff'] = features['home_efg'] - features['away_efg']
-        features['tov_rate_diff'] = features['home_tov_rate'] - features['away_tov_rate']
-        features['orb_rate_diff'] = features['home_orb_rate'] - features['away_orb_rate']
-        features['ft_rate_diff'] = features['home_ft_rate'] - features['away_ft_rate']
+        features['tov_rate_diff'] = features['home_tor'] - features['away_tor']
+        features['orb_rate_diff'] = features['home_orbp'] - features['away_orbp']
+        features['ft_rate_diff'] = features['home_ftr'] - features['away_ftr']
     
     # Home/Road splits (simplified)
     features['home_home_win_pct'] = features['home_win_pct'] * 1.03  # Home court advantage
