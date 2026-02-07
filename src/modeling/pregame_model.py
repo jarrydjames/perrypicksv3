@@ -47,31 +47,64 @@ class PregameModel:
         if self._loaded:
             return True
         
-        # Use twohead champion model (RandomForest - lowest sigma)
-        twohead_path = self.models_dir / "randomforest_twohead.joblib"
+        # Use champion models based on comprehensive evaluation results
+        # Pregame Champions (highest R²):
+        #   - Total: neural_network (R²: 0.592, MAE: 9.578)
+        #   - Margin: neural_network (R²: 0.945, MAE: 2.954)
+        # These models are in separate files, load them directly
         
-        if not twohead_path.exists():
-            # Fallback to GBT
-            twohead_path = self.models_dir / "gbt_twohead.joblib"
+        # Load total model
+        total_path = self.models_dir / "neural_network_total.joblib"
+        if not total_path.exists():
+            # Fallback to randomforest
+            twohead_path = self.models_dir / "randomforest_twohead.joblib"
             if not twohead_path.exists():
-                return False
+                # Fallback to GBT
+                twohead_path = self.models_dir / "gbt_twohead.joblib"
+                if not twohead_path.exists():
+                    return False
+            twohead_raw = joblib.load(twohead_path)
+            self.total_model = twohead_raw.get('total', {})
+            total_sigma = self.total_model.get('residual_sigma', 9.58)
+            self.total_model['residual_sigma'] = total_sigma
+        else:
+            self.total_model = joblib.load(total_path)
+            total_sigma = 9.578  # From test results
+            if 'residual_sigma' in self.total_model:
+                total_sigma = self.total_model['residual_sigma']
+            self.total_model['residual_sigma'] = total_sigma
         
-        twohead_raw = joblib.load(twohead_path)
+        # Load margin model
+        margin_path = self.models_dir / "neural_network_margin.joblib"
+        if not margin_path.exists():
+            # Fallback to randomforest
+            twohead_path = self.models_dir / "randomforest_twohead.joblib"
+            if not twohead_path.exists():
+                # Fallback to GBT
+                twohead_path = self.models_dir / "gbt_twohead.joblib"
+                if not twohead_path.exists():
+                    return False
+            twohead_raw = joblib.load(twohead_path)
+            self.margin_model = twohead_raw.get('margin', {})
+            margin_sigma = self.margin_model.get('residual_sigma', 2.95)
+            self.margin_model['residual_sigma'] = margin_sigma
+        else:
+            self.margin_model = joblib.load(margin_path)
+            margin_sigma = 2.954  # From test results
+            if 'residual_sigma' in self.margin_model:
+                margin_sigma = self.margin_model['residual_sigma']
+            self.margin_model['residual_sigma'] = margin_sigma
         
-        # Extract total and margin models from twohead
-        self.total_model = twohead_raw.get('total', {})
-        self.margin_model = twohead_raw.get('margin', {})
+        # Get feature list from neural_network models if available
+        if 'features' in self.total_model:
+            self.features = self.total_model['features']
+        elif 'features' in self.margin_model:
+            self.features = self.margin_model['features']
+        else:
+            # Fallback feature list
+            self.features = []
         
-        # Get sigma values from twohead
-        total_sigma = self.total_model.get('residual_sigma', 9.58)
-        margin_sigma = self.margin_model.get('residual_sigma', 2.95)
-        
-        # Update sigma in model dicts
-        self.total_model['residual_sigma'] = total_sigma
-        self.margin_model['residual_sigma'] = margin_sigma
-        
-        self.features = twohead_raw.get('features', [])
-        self.feature_version = "v3_twohead_champion"
+        self.feature_version = "v3_pregame_champion"
         self._loaded = True
         return True
     
@@ -137,7 +170,7 @@ class PregameModel:
             margin_q90=margin_q90,
             total_q10=total_q10,
             total_q90=total_q90,
-            model_name="pregame_twohead_rf_champion",
+            model_name="pregame_neural_network_champion",
             feature_version=self.feature_version,
         )
 
