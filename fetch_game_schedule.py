@@ -23,25 +23,159 @@ from typing import Dict, List, Optional, Tuple
 sys.path.insert(0, str(Path(__file__).parent))
 
 
-# Team abbreviation normalization: ESPN -> NBA
+# Team abbreviation normalization: ESPN -> NBA (Complete mapping for all 30 teams)
+# ESPN sometimes uses different abbreviations than NBA.com
+# This mapping normalizes ESPN abbreviations to NBA.com format
 TEAM_ABBR_NORMALIZATION = {
-    'WSH': 'WAS',   # Washington Wizards
-    'SA': 'SAS',    # San Antonio Spurs
-    'SAS': 'SAS',   # San Antonio Spurs (already normalized)
-    'UTAH': 'UTA',  # Utah Jazz
-    'UTA': 'UTA',   # Utah Jazz (already normalized)
-    'GS': 'GSW',    # Golden State Warriors
-    'GSW': 'GSW',   # Golden State Warriors (already normalized)
-    'NY': 'NYK',    # New York Knicks
-    'NYK': 'NYK',   # New York Knicks (already normalized)
-    'NO': 'NOP',    # New Orleans Pelicans
-    'NOP': 'NOP',   # New Orleans Pelicans (already normalized)
-    'PHX': 'PHO',  # Phoenix Suns (sometimes PHX in NBA)
-    'PHO': 'PHO',   # Phoenix Suns (already normalized)
+    # Atlanta Hawks
+    'ATL': 'ATL',
+    
+    # Boston Celtics
+    'BOS': 'BOS',
+    'BOSTON': 'BOS',
+    
+    # Brooklyn Nets
+    'BKN': 'BKN',
+    'BROOKLYN': 'BKN',
+    
+    # Charlotte Hornets
+    'CHA': 'CHA',
+    'CHARLOTTE': 'CHA',
+    
+    # Chicago Bulls
+    'CHI': 'CHI',
+    'CHICAGO': 'CHI',
+    
+    # Cleveland Cavaliers
+    'CLE': 'CLE',
+    'CLEVELAND': 'CLE',
+    'Cavs': 'CLE',
+    
+    # Dallas Mavericks
+    'DAL': 'DAL',
+    'DALLAS': 'DAL',
+    
+    # Denver Nuggets
+    'DEN': 'DEN',
+    'DENVER': 'DEN',
+    
+    # Detroit Pistons
+    'DET': 'DET',
+    'DETROIT': 'DET',
+    
+    # Golden State Warriors
+    'GSW': 'GSW',
+    'GS': 'GSW',
+    'GOLDEN STATE': 'GSW',
+    'WARRIORS': 'GSW',
+    
+    # Houston Rockets
+    'HOU': 'HOU',
+    'HOUSTON': 'HOU',
+    
+    # Indiana Pacers
+    'IND': 'IND',
+    'INDIANA': 'IND',
+    
+    # Los Angeles Clippers
+    'LAC': 'LAC',
+    'LA CLIPPERS': 'LAC',
+    'CLIPPERS': 'LAC',
+    
+    # Los Angeles Lakers
+    'LAL': 'LAL',
+    'LA LAKERS': 'LAL',
+    'LAKERS': 'LAL',
+    
+    # Memphis Grizzlies
+    'MEM': 'MEM',
+    'MEMPHIS': 'MEM',
+    
+    # Miami Heat
+    'MIA': 'MIA',
+    'MIAMI': 'MIA',
+    
+    # Milwaukee Bucks
+    'MIL': 'MIL',
+    'MILWAUKEE': 'MIL',
+    
+    # Minnesota Timberwolves
+    'MIN': 'MIN',
+    'MINNESOTA': 'MIN',
+    
+    # New Orleans Pelicans
+    'NOP': 'NOP',
+    'NO': 'NOP',
+    'NEW ORLEANS': 'NOP',
+    'PELICANS': 'NOP',
+    
+    # New York Knicks
+    'NYK': 'NYK',
+    'NY': 'NYK',
+    'NEW YORK': 'NYK',
+    'KNICKS': 'NYK',
+    
+    # Oklahoma City Thunder
+    'OKC': 'OKC',
+    'OKLAHOMA CITY': 'OKC',
+    'THUNDER': 'OKC',
+    
+    # Orlando Magic
+    'ORL': 'ORL',
+    'ORLANDO': 'ORL',
+    
+    # Philadelphia 76ers
+    'PHI': 'PHI',
+    'PHILADELPHIA': 'PHI',
+    '76ERS': 'PHI',
+    
+    # Phoenix Suns
+    'PHX': 'PHO',
+    'PHO': 'PHO',
+    'PHOENIX': 'PHO',
+    'SUNS': 'PHO',
+    
+    # Portland Trail Blazers
+    'POR': 'POR',
+    'PORTLAND': 'POR',
+    'TRAIL BLAZERS': 'POR',
+    'BLAZERS': 'POR',
+    
+    # Sacramento Kings
+    'SAC': 'SAC',
+    'SACRAMENTO': 'SAC',
+    'KINGS': 'SAC',
+    
+    # San Antonio Spurs
+    'SAS': 'SAS',
+    'SA': 'SAS',
+    'SAN ANTONIO': 'SAS',
+    'SPURS': 'SAS',
+    
+    # Toronto Raptors
+    'TOR': 'TOR',
+    'TORONTO': 'TOR',
+    'RAPTORS': 'TOR',
+    
+    # Utah Jazz
+    'UTA': 'UTA',
+    'UTAH': 'UTA',
+    'JAZZ': 'UTA',
+    
+    # Washington Wizards
+    'WAS': 'WAS',
+    'WSH': 'WAS',
+    'WASHINGTON': 'WAS',
+    'WIZARDS': 'WAS',
 }
 
-# Also handle reverse normalization for consistency
-TEAM_ABBR_NORMALIZATION.update({v: v for v in TEAM_ABBR_NORMALIZATION.values()})
+# Also handle reverse normalization for consistency (already normalized values)
+TEAM_ABBR_NORMALIZATION.update({v: v for v in [
+    'ATL', 'BOS', 'BKN', 'CHA', 'CHI', 'CLE', 'DAL', 'DEN', 'DET',
+    'GSW', 'HOU', 'IND', 'LAC', 'LAL', 'MEM', 'MIA', 'MIL', 'MIN',
+    'NOP', 'NYK', 'OKC', 'ORL', 'PHI', 'PHO', 'POR', 'SAC', 'SAS',
+    'TOR', 'UTA', 'WAS'
+]})
 
 
 def normalize_team_abbr(team_abbr: str) -> str:
