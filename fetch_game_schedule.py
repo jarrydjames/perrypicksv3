@@ -541,6 +541,12 @@ def main_with_output(date_str: str) -> Dict:
             status = game.get('status', {}).get('type', {}).get('name', 'Unknown')
             date_time = game.get('date', 'Unknown')
             
+            # Check if game is on the requested date
+            if 'T' in str(date_time):
+                game_date = date_time.split('T')[0]  # Extract date portion
+                if game_date != date_str:
+                    continue  # Skip games not on requested date
+            
             # Extract time portion
             if 'T' in str(date_time):
                 time_utc = date_time.split('T')[1][:5]  # Get HH:MM
