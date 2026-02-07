@@ -494,6 +494,76 @@ def get_nba_ids_for_predictions(mapping: dict, espn_data: dict) -> List[str]:
     return nba_ids
 
 
+def main_with_output(date_str: str) -> Dict:
+    """Fetch game schedule and return as dict (for programmatic use).
+    
+    Args:
+        date_str: Date in YYYY-MM-DD format
+        
+    Returns:
+        Dict containing:
+            - 'date': Date string
+            - 'mapping': ESPN ID to NBA ID mapping
+            - 'games': List of game dicts with nba_id, espn_id, teams, etc.
+    """
+    # Fetch schedules
+    espn_data = fetch_espn_schedule(date_str)
+    nba_data = fetch_nba_cdn_schedule()
+    
+    # Extract NBA games for target date
+    nba_games = extract_nba_games_for_date(nba_data, date_str)
+    
+    # Create mapping
+    mapping = create_espn_to_nba_mapping(espn_data, nba_games)
+    
+    # Build games list
+    games = []
+    
+    if 'events' in espn_data:
+        for game in espn_data['events']:
+            espn_id = game.get('id')
+            nba_id = mapping.get(espn_id)
+            
+            # Get teams
+            competitors = game.get('competitions', [{}])[0].get('competitors', [])
+            
+            if len(competitors) >= 2:
+                if competitors[0].get('homeAway') == 'home':
+                    home_team = competitors[0].get('team', {}).get('abbreviation', 'HOME')
+                    away_team = competitors[1].get('team', {}).get('abbreviation', 'AWAY')
+                else:
+                    home_team = competitors[1].get('team', {}).get('abbreviation', 'HOME')
+                    away_team = competitors[0].get('team', {}).get('abbreviation', 'AWAY')
+            else:
+                home_team = 'HOME'
+                away_team = 'AWAY'
+            
+            status = game.get('status', {}).get('type', {}).get('name', 'Unknown')
+            date_time = game.get('date', 'Unknown')
+            
+            # Extract time portion
+            if 'T' in str(date_time):
+                time_utc = date_time.split('T')[1][:5]  # Get HH:MM
+            else:
+                time_utc = str(date_time)
+            
+            games.append({
+                'espn_id': espn_id,
+                'nba_id': nba_id,
+                'away_team': away_team,
+                'home_team': home_team,
+                'status': status,
+                'time_utc': time_utc,
+                'date_time': date_time
+            })
+    
+    return {
+        'date': date_str,
+        'mapping': mapping,
+        'games': games
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Fetch NBA game schedule with ESPN to NBA.com ID mapping",
