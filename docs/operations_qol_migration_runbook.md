@@ -29,6 +29,8 @@ This ensures the following tables/columns exist:
 
 ```bash
 python scripts/healthcheck.py
+# Optional: infra-only health (ignore missing API keys)
+python scripts/healthcheck.py --no-require-env
 ```
 
 Expected keys:

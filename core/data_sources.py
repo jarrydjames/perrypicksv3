@@ -59,8 +59,19 @@ class NBADataSource:
     _cache: Dict[str, Tuple[Any, float]] = {}
 
     # Full schedule index cache:
-    # { "season_key": ( {"00225...": pendulum.DateTime(UTC), ...}, timestamp ) }
-    _full_schedule_index: Dict[str, Tuple[Dict[str, pendulum.DateTime], float]] = {}
+    # {
+    #   "season_key": (
+    #      {
+    #        "00225...": {
+    #           "start_time_utc": pendulum.DateTime(UTC),
+    #           "home_team": "BOS",
+    #           "away_team": "NYK",
+    #        },
+    #      },
+    #      timestamp
+    #   )
+    # }
+    _full_schedule_index: Dict[str, Tuple[Dict[str, Dict[str, Any]], float]] = {}
     FULL_SCHEDULE_TTL_SECONDS = 6 * 3600  # 6h (schedule changes rarely)
 
     # Cache TTL values (in seconds)
@@ -223,7 +234,7 @@ class NBADataSource:
             return int(pendulum.now('UTC').format('YYYY'))
 
     @classmethod
-    def _get_full_schedule_index(cls) -> Dict[str, pendulum.DateTime]:
+    def _get_full_schedule_index(cls) -> Dict[str, Dict[str, Any]]:
         """
         Build (or reuse) an index: game_id -> start_time_utc from data.nba.com full schedule.
         This is our long-term-stable source of truth for game start times.
@@ -251,7 +262,7 @@ class NBADataSource:
 
         # The full schedule file structure varies slightly by era; handle common patterns.
         # Common: data['lscd'][...]['mscd']['g'] list of games
-        idx: Dict[str, pendulum.DateTime] = {}
+        idx: Dict[str, Dict[str, Any]] = {}
         try:
             lscd = data.get('lscd', []) or []
             for month in lscd:
@@ -327,7 +338,13 @@ class NBADataSource:
                                 dt_utc = None
 
                     if dt_utc is not None:
-                        idx[str(gid)] = dt_utc
+                        h_obj = g.get('h') if isinstance(g.get('h'), dict) else {}
+                        v_obj = g.get('v') if isinstance(g.get('v'), dict) else {}
+                        idx[str(gid)] = {
+                            "start_time_utc": dt_utc,
+                            "home_team": h_obj.get('ta') or h_obj.get('triCode') or h_obj.get('tricode'),
+                            "away_team": v_obj.get('ta') or v_obj.get('triCode') or v_obj.get('tricode'),
+                        }
         except Exception as e:
             logger.error(f"Failed parsing full schedule structure: {e}")
 
@@ -435,8 +452,9 @@ class NBADataSource:
                 # Get start time using corrected parsing logic
                 time_str_utc = g.get('gameTimeUTC', '')
 
-                # 1) Prefer authoritative per-game start_time_utc from full schedule, if available
-                game_time_utc = full_idx.get(str(game_id))
+                # 1) Prefer authoritative per-game data from full schedule, if available
+                full_meta = full_idx.get(str(game_id)) or {}
+                game_time_utc = full_meta.get('start_time_utc')
 
                 # 2) If not available, fall back to scheduleLeagueV2 parsing, but only if not placeholder
                 if game_time_utc is None:
@@ -462,12 +480,20 @@ class NBADataSource:
                 # IMPORTANT: game_date must be derived from start_time_utc converted to CST
                 game_date_cst = cst_game_date_from_start_time_utc(game_time_utc, tz=CST)
                 
-                # Get team names
+                # Resolve teams using full-schedule metadata first (more reliable during placeholder slates)
                 home_team_obj = g.get('homeTeam', {})
                 away_team_obj = g.get('awayTeam', {})
-                home_team = home_team_obj.get('teamTricode', 'UNK')
-                away_team = away_team_obj.get('teamTricode', 'UNK')
-                
+                home_team = full_meta.get('home_team') or home_team_obj.get('teamTricode', 'UNK')
+                away_team = full_meta.get('away_team') or away_team_obj.get('teamTricode', 'UNK')
+
+                # Placeholder-team guard: skip unresolved schedule rows until teams are finalized.
+                if home_team in {None, '', 'UNK'} or away_team in {None, '', 'UNK'}:
+                    logger.warning(
+                        f"Game {game_id}: unresolved teams (home={home_team}, away={away_team}); "
+                        "skipping until schedule is finalized."
+                    )
+                    continue
+
                 games.append({
                     'game_id': game_id,
                     'game_date': game_date_cst,
@@ -864,14 +890,21 @@ class CombinedDataSource:
             normalized.append({
                 "game_id": g.get("game_id") or g.get("id") or g.get("gameId"),
                 "start_time_utc": dt_utc.to_iso8601_string() if hasattr(dt_utc, "to_iso8601_string") else str(st),
-                "home_team": g.get("home_team") or g.get("homeTeam") or g.get("teamTricode"),
-                "away_team": g.get("away_team") or g.get("awayTeam"),
+                "home_team": g.get("home_team") or g.get("homeTeam") or g.get("teamTricode") or g.get("homeTeam", {}).get("teamTricode"),
+                "away_team": g.get("away_team") or g.get("awayTeam") or g.get("awayTeam", {}).get("teamTricode"),
                 "status": g.get("status") or "Scheduled",
                 "game_date": game_date_cst,
             })
         
         # Final filter strictly to requested CST date
         final = [g for g in normalized if g.get("game_date") == cst_date]
+
+        # Drop unresolved/placeholder teams from final slate
+        final = [
+            g for g in final
+            if g.get("home_team") not in {None, "", "UNK"}
+            and g.get("away_team") not in {None, "", "UNK"}
+        ]
         logger.info(f"Fetched {len(final)} games for CST date {cst_date} (UTC window {utc_start}..{utc_end})")
         return final
     
