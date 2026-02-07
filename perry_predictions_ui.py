@@ -101,7 +101,7 @@ prediction_type = st.sidebar.selectbox(
 
 # Advanced options
 st.sidebar.subheader("Advanced Options")
-fetch_odds = st.sidebar.checkbox("Fetch Odds", value=True, help="Include betting odds in predictions")
+fetch_odds = st.sidebar.checkbox("Fetch Odds", value=False, help="Include betting odds in predictions")
 show_raw_output = st.sidebar.checkbox("Show Raw Output", value=False, help="Show raw prediction output")
 
 
@@ -214,26 +214,55 @@ if run_predictions:
     
     if results:
         # Summary
-        success_count = len(results)
+        success_count = sum(1 for r in results if r.get('status') in ('success', 'warning'))
         total_count = len(games)
+        error_count = total_count - success_count
+        
         st.markdown(f"<div class='success-box'>✅ Successfully generated {success_count}/{total_count} predictions</div>", unsafe_allow_html=True)
+        
+        if error_count > 0:
+            st.markdown(f"<div class='warning-box'>⚠️ {error_count} predictions failed due to team tricode errors</div>", unsafe_allow_html=True)
         
         # Create results dataframe
         results_data = []
         for r in results:
-            if r.get('success') and r.get('result'):
-                result = r['result']
+            if r.get('status') == 'success' or r.get('status') == 'warning':
+                result = r
+                
+                # Get prediction values
+                margin = result.get('margin', 0)
+                total = result.get('total', 0)
+                home_win_prob = result.get('home_win_prob', 0.5)
+                
+                # Calculate projected scores
+                # margin = home_score - away_score
+                # total = home_score + away_score
+                # home_score = (total + margin) / 2
+                # away_score = (total - margin) / 2
+                if isinstance(margin, (int, float)) and isinstance(total, (int, float)):
+                    home_score = (total + margin) / 2
+                    away_score = (total - margin) / 2
+                    winner = result.get('home_team', 'Home') if margin > 0 else result.get('away_team', 'Away')
+                    win_pct = home_win_prob if margin > 0 else (1 - home_win_prob)
+                else:
+                    home_score = 'N/A'
+                    away_score = 'N/A'
+                    winner = 'N/A'
+                    win_pct = 'N/A'
+                
                 prediction_data = {
-                    'Game ID': result.get('game_id', 'N/A'),
-                    'Teams': f"{result.get('away_team', '')} @ {result.get('home_team', '')}",
-                    'Pred Total': f"{result.get('predicted_total', 'N/A'):.1f}" if isinstance(result.get('predicted_total'), (int, float)) else 'N/A',
-                    'Pred Margin': f"{result.get('predicted_margin', 'N/A'):.1f}" if isinstance(result.get('predicted_margin'), (int, float)) else 'N/A',
-                    'Winner': result.get('predicted_winner', 'N/A'),
-                    'Confidence': f"{result.get('confidence', 0):.2f}" if isinstance(result.get('confidence'), (int, float)) else 'N/A',
+                    'Away Team': result.get('away_name', 'N/A'),
+                    'Away Score': f"{away_score:.1f}" if isinstance(away_score, (int, float)) else 'N/A',
+                    'Home Team': result.get('home_name', 'N/A'),
+                    'Home Score': f"{home_score:.1f}" if isinstance(home_score, (int, float)) else 'N/A',
+                    'Game Total': f"{total:.1f}" if isinstance(total, (int, float)) else 'N/A',
+                    'Margin': f"{margin:+.1f}" if isinstance(margin, (int, float)) else 'N/A',
+                    'Winner': winner,
+                    'Win %': f"{win_pct*100:.1f}%" if isinstance(win_pct, float) else 'N/A',
                 }
                 
                 # Add odds if available
-                if fetch_odds:
+                if fetch_odds and result.get('odds'):
                     odds = result.get('odds', {})
                     prediction_data['Spread'] = odds.get('spread', 'N/A')
                     prediction_data['O/U'] = odds.get('over_under', 'N/A')
@@ -247,19 +276,35 @@ if run_predictions:
         st.markdown('<div class="sub-header">📝 Formatted Posts (Copy & Paste)</div>', unsafe_allow_html=True)
         
         for i, r in enumerate(results):
-            if r.get('success') and r.get('result'):
-                result = r['result']
-                game_id = result.get('game_id', 'N/A')
-                away_team = result.get('away_team', 'N/A')
-                home_team = result.get('home_team', 'N/A')
+            if r.get('status') in ('success', 'warning'):
+                # Get prediction values
+                margin = r.get('margin', 0)
+                total = r.get('total', 0)
+                home_win_prob = r.get('home_win_prob', 0.5)
+                away_team = r.get('away_name', 'Away')
+                home_team = r.get('home_name', 'Home')
+                
+                # Calculate projected scores
+                if isinstance(margin, (int, float)) and isinstance(total, (int, float)):
+                    home_score = (total + margin) / 2
+                    away_score = (total - margin) / 2
+                    winner = home_team if margin > 0 else away_team
+                    win_prob = home_win_prob if margin > 0 else (1 - home_win_prob)
+                    win_pct_str = f"{win_prob*100:.1f}%"
+                else:
+                    home_score = 'N/A'
+                    away_score = 'N/A'
+                    winner = 'N/A'
+                    win_pct_str = 'N/A'
                 
                 # Generate post based on prediction type
                 if mode == 'pregame':
                     post = f"""🏀 Pregame Prediction: {away_team} @ {home_team}
 
-📊 Predicted Total: {result.get('predicted_total', 'N/A')}
-📈 Predicted Margin: {result.get('predicted_margin', 'N/A')} ({result.get('predicted_winner', 'N/A')})
-🎯 Predicted Winner: {result.get('predicted_winner', 'N/A')}"""
+📊 Predicted Score: {away_score:.1f} - {home_score:.1f}
+🎯 Predicted Total: {total:.1f}
+📈 Predicted Margin: {margin:+.1f}
+🏆 Predicted Winner: {winner} ({win_pct_str})"""
                 
                 elif mode == 'halftime':
                     h1_away = result.get('h1_away', 'N/A')
