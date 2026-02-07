@@ -10,15 +10,15 @@ import time
 from collections import Counter
 from pathlib import Path
 
-from dotenv import load_dotenv
-
-load_dotenv()
 sys.path.append(str(Path(__file__).parent))
 
+from core.env import load_environment
 from core.timezone import now_utc
 from core.discord_client import DiscordWebhookClient
 from src.predict_api import predict_game
 
+
+load_environment(search_from=Path(__file__).resolve())
 
 TARGET_DATE = os.getenv("SUMMARY_DATE", "2026-02-05")
 DB_PATH = os.getenv("AUTOMATION_DB_PATH", "data/automation.db")

@@ -1,7 +1,70 @@
 from __future__ import annotations
 from typing import Any, Dict, Optional, Tuple
 import datetime as dt
+import os
 import pandas as pd
+
+from src.data.import_health import read_import_watermark
+
+
+def _is_placeholder_team(tricode: Optional[str]) -> bool:
+    t = str(tricode or "").strip().upper()
+    return t in {"", "UNK", "HOME", "AWAY"}
+
+
+def _pregame_import_gate(
+    *,
+    game_id: str,
+    home_team: Optional[str],
+    away_team: Optional[str],
+) -> Optional[dict]:
+    if _is_placeholder_team(home_team) or _is_placeholder_team(away_team):
+        return {
+            "status": "error",
+            "error": "PLACEHOLDER_GAME: invalid team tricode(s) in schedule payload",
+            "game_id": game_id,
+            "model_used": "IMPORT_GATE",
+        }
+
+    watermark = read_import_watermark()
+    if not watermark:
+        return {
+            "status": "error",
+            "error": "STALE_DATA: import watermark not found; run game scanner/import job first",
+            "game_id": game_id,
+            "model_used": "IMPORT_GATE",
+        }
+
+    updated_at = watermark.get("updated_at_utc")
+    if not updated_at:
+        return {
+            "status": "error",
+            "error": "STALE_DATA: import watermark missing updated_at_utc",
+            "game_id": game_id,
+            "model_used": "IMPORT_GATE",
+        }
+
+    try:
+        updated_ts = pd.Timestamp(updated_at)
+        if updated_ts.tzinfo is None:
+            updated_ts = updated_ts.tz_localize("UTC")
+        else:
+            updated_ts = updated_ts.tz_convert("UTC")
+        age_hours = (pd.Timestamp.now(tz="UTC") - updated_ts).total_seconds() / 3600.0
+    except Exception:
+        age_hours = 1e9
+
+    max_hours = float(os.getenv("PREGAME_IMPORT_MAX_AGE_HOURS", "36"))
+    if age_hours > max_hours:
+        return {
+            "status": "error",
+            "error": f"STALE_DATA: import watermark is {age_hours:.1f}h old (max {max_hours:.1f}h)",
+            "game_id": game_id,
+            "model_used": "IMPORT_GATE",
+            "data_freshness": {"watermark_age_hours": age_hours, "max_hours": max_hours},
+        }
+
+    return None
 
 def detect_game_state(game_id: str) -> Tuple[str, Optional[dict]]:
     """
@@ -240,6 +303,14 @@ def predict_game(
                         "model_used": "ERROR",
                     }
             
+            gate_error = _pregame_import_gate(
+                game_id=game_input,
+                home_team=home_team,
+                away_team=away_team,
+            )
+            if gate_error is not None:
+                return gate_error
+
             result = predict_pregame(
                 game_id=game_input,
                 home_team=home_team,
