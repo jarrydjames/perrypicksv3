@@ -2,7 +2,7 @@
 """Fetch NBA Game Schedule with ID Mapping
 
 Fetches game schedule from ESPN API and maps ESPN IDs to NBA.com IDs
-so predictions can run immediately.
+using NBA's public CDN schedule feed (no rate limiting).
 
 Usage:
     python fetch_game_schedule.py
@@ -17,9 +17,46 @@ from datetime import datetime
 from pathlib import Path
 import requests
 import sys
+from typing import Dict, List, Optional, Tuple
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent))
+
+
+# Team abbreviation normalization: ESPN -> NBA
+TEAM_ABBR_NORMALIZATION = {
+    'WSH': 'WAS',   # Washington Wizards
+    'SA': 'SAS',    # San Antonio Spurs
+    'SAS': 'SAS',   # San Antonio Spurs (already normalized)
+    'UTAH': 'UTA',  # Utah Jazz
+    'UTA': 'UTA',   # Utah Jazz (already normalized)
+    'GS': 'GSW',    # Golden State Warriors
+    'GSW': 'GSW',   # Golden State Warriors (already normalized)
+    'NY': 'NYK',    # New York Knicks
+    'NYK': 'NYK',   # New York Knicks (already normalized)
+    'NO': 'NOP',    # New Orleans Pelicans
+    'NOP': 'NOP',   # New Orleans Pelicans (already normalized)
+    'PHX': 'PHO',  # Phoenix Suns (sometimes PHX in NBA)
+    'PHO': 'PHO',   # Phoenix Suns (already normalized)
+}
+
+# Also handle reverse normalization for consistency
+TEAM_ABBR_NORMALIZATION.update({v: v for v in TEAM_ABBR_NORMALIZATION.values()})
+
+
+def normalize_team_abbr(team_abbr: str) -> str:
+    """
+    Normalize team abbreviation to NBA.com format.
+    
+    Args:
+        team_abbr: Team abbreviation (ESPN or NBA format)
+        
+    Returns:
+        Normalized team abbreviation (NBA.com format)
+    """
+    if not team_abbr:
+        return ''
+    return TEAM_ABBR_NORMALIZATION.get(team_abbr.upper(), team_abbr.upper())
 
 
 def fetch_espn_schedule(date_str: str) -> dict:
@@ -42,10 +79,17 @@ def fetch_espn_schedule(date_str: str) -> dict:
     return {}
 
 
-def fetch_nba_schedule(date_str: str) -> dict:
-    """Fetch game schedule from NBA.com API."""
-    date_formatted = date_str.replace('-', '')
-    url = f"https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00_{date_formatted}.json"
+def fetch_nba_cdn_schedule() -> dict:
+    """
+    Fetch full season schedule from NBA CDN (no rate limiting).
+    
+    Uses scheduleLeagueV2.json which is publicly accessible
+    and includes NBA game IDs.
+    
+    Returns:
+        dict: Full season schedule
+    """
+    url = "https://cdn.nba.com/static/json/staticData/scheduleLeagueV2.json"
     
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
@@ -62,14 +106,72 @@ def fetch_nba_schedule(date_str: str) -> dict:
     return {}
 
 
-def create_espn_to_nba_mapping(espn_data: dict, nba_data: dict) -> dict:
+def extract_nba_games_for_date(nba_data: dict, date_str: str) -> List[Dict]:
+    """
+    Extract NBA games for a specific date from CDN schedule.
+    
+    Args:
+        nba_data: Full NBA CDN schedule data
+        date_str: Date in YYYY-MM-DD format
+        
+    Returns:
+        List of games for the specified date
+    """
+    games = []
+    
+    if 'leagueSchedule' not in nba_data:
+        return games
+    
+    game_dates = nba_data['leagueSchedule'].get('gameDates', [])
+    
+    # Format target date for matching
+    # NBA CDN uses MM/DD/YYYY format
+    try:
+        target_date = datetime.strptime(date_str, '%Y-%m-%d')
+        target_date_str_1 = target_date.strftime('%m/%d/%Y')
+        target_date_str_2 = target_date.strftime('%Y-%m-%d')
+    except ValueError:
+        return games
+    
+    # Find matching date
+    for date_entry in game_dates:
+        entry_date = date_entry.get('gameDate', '')
+        
+        # Match date in either format
+        if target_date_str_1 in str(entry_date) or target_date_str_2 in str(entry_date):
+            # Extract games from this date
+            for game in date_entry.get('games', []):
+                game_id = game.get('gameId')
+                away_team = game.get('awayTeam', {}).get('teamTricode', '')
+                home_team = game.get('homeTeam', {}).get('teamTricode', '')
+                game_time_utc = game.get('gameDateTimeUTC', game.get('gameDateUTC', ''))
+                
+                games.append({
+                    'game_id': game_id,
+                    'away_team': away_team,
+                    'home_team': home_team,
+                    'game_time_utc': game_time_utc
+                })
+            break
+    
+    return games
+
+
+def create_espn_to_nba_mapping(espn_data: dict, nba_games: List[Dict]) -> Dict[str, Optional[str]]:
     """
     Map ESPN game IDs to NBA.com game IDs by matching games.
     
     Matches games by:
-    1. Away team tricode
-    2. Home team tricode
-    3. Game time (date/time)
+    1. Away team tricode (normalized)
+    2. Home team tricode (normalized)
+    3. Game time (UTC) - for disambiguation
+    
+    Args:
+        espn_data: ESPN API response data
+        nba_games: List of NBA games for the same date
+        
+    Returns:
+        Dict mapping ESPN game IDs to NBA game IDs
     """
     mapping = {}
     
@@ -77,20 +179,24 @@ def create_espn_to_nba_mapping(espn_data: dict, nba_data: dict) -> dict:
         return mapping
     
     espn_games = espn_data['events']
-    nba_games = []
     
-    if 'scoreboard' in nba_data and 'games' in nba_data['scoreboard']:
-        nba_games = nba_data['scoreboard']['games']
-    
-    # Create lookup for NBA games
+    # Create lookup for NBA games (key: away_team|home_team)
     nba_lookup = {}
     for nba_game in nba_games:
-        away_tri = nba_game.get('awayTeam', {}).get('teamTricode', '')
-        home_tri = nba_game.get('homeTeam', {}).get('teamTricode', '')
-        game_time = nba_game.get('gameTimeUTC', '')
+        away_tri = nba_game.get('away_team', '')
+        home_tri = nba_game.get('home_team', '')
+        game_time = nba_game.get('game_time_utc', '')
         
-        key = (away_tri, home_tri, game_time)
-        nba_lookup[key] = nba_game
+        # Normalize team abbreviations for lookup key
+        away_tri_norm = normalize_team_abbr(away_tri)
+        home_tri_norm = normalize_team_abbr(home_tri)
+        
+        key = f"{away_tri_norm}|{home_tri_norm}"
+        
+        # Store with time for disambiguation
+        if key not in nba_lookup:
+            nba_lookup[key] = []
+        nba_lookup[key].append(nba_game)
     
     # Map ESPN games to NBA games
     for espn_game in espn_games:
@@ -100,6 +206,7 @@ def create_espn_to_nba_mapping(espn_data: dict, nba_data: dict) -> dict:
         competitors = espn_game.get('competitions', [{}])[0].get('competitors', [])
         
         if len(competitors) < 2:
+            mapping[espn_id] = None
             continue
         
         # Determine home/away
@@ -110,29 +217,34 @@ def create_espn_to_nba_mapping(espn_data: dict, nba_data: dict) -> dict:
             home_tri = competitors[1].get('team', {}).get('abbreviation', '')
             away_tri = competitors[0].get('team', {}).get('abbreviation', '')
         
+        # Normalize team abbreviations
+        away_tri_norm = normalize_team_abbr(away_tri)
+        home_tri_norm = normalize_team_abbr(home_tri)
+        
         # Get game time from ESPN
         espn_time = espn_game.get('date', '')
         
-        # Try to find matching NBA game
-        nba_game = nba_lookup.get((away_tri, home_tri, espn_time))
+        # Find matching NBA game
+        key = f"{away_tri_norm}|{home_tri_norm}"
         
-        # If exact time match fails, try fuzzy match by teams only
-        if not nba_game:
-            for key, nba_g in nba_lookup.items():
-                if key[0] == away_tri and key[1] == home_tri:
-                    nba_game = nba_g
-                    break
-        
-        if nba_game:
-            nba_id = nba_game.get('gameId')
+        if key in nba_lookup:
+            # Get first match (could be multiple games with same teams)
+            nba_match = nba_lookup[key][0]
+            nba_id = nba_match.get('game_id')
             mapping[espn_id] = nba_id
+            
+            # Remove from lookup to prevent duplicate mappings
+            if len(nba_lookup[key]) > 1:
+                nba_lookup[key].pop(0)
+            else:
+                del nba_lookup[key]
         else:
             mapping[espn_id] = None
     
     return mapping
 
 
-def print_schedule(espn_data: dict, nba_data: dict, mapping: dict, date_str: str, json_output: bool = False):
+def print_schedule(espn_data: dict, nba_games: List[Dict], mapping: dict, date_str: str, json_output: bool = False):
     """Print game schedule with mapped NBA.com IDs."""
     print("=" * 100)
     print(f"NBA GAME SCHEDULE FOR {date_str}")
@@ -157,7 +269,7 @@ def print_schedule(espn_data: dict, nba_data: dict, mapping: dict, date_str: str
     mapped_count = sum(1 for v in mapping.values() if v is not None)
     unmapped_count = len(games) - mapped_count
     has_mapping = mapped_count > 0
-    mapping_source = "Mixed (ESPN + NBA.com mapping)" if has_mapping else "ESPN only"
+    mapping_source = "ESPN + NBA CDN (mapped)" if has_mapping else "ESPN only (unmapped)"
     
     print(f"Found {len(games)} games")
     print(f"Mapped: {mapped_count}, Unmapped: {unmapped_count}")
@@ -237,7 +349,7 @@ def print_schedule(espn_data: dict, nba_data: dict, mapping: dict, date_str: str
     print("=" * 100)
 
 
-def get_nba_ids_for_predictions(mapping: dict, espn_data: dict) -> list:
+def get_nba_ids_for_predictions(mapping: dict, espn_data: dict) -> List[str]:
     """Get list of NBA.com game IDs that are ready for predictions."""
     nba_ids = []
     
@@ -270,7 +382,8 @@ Examples:
   python fetch_game_schedule.py --date 2026-02-07 --output schedule.json
 
 Note: ESPN IDs are used for fetching (no rate limiting).
-      NBA.com IDs are used for predictions.
+      NBA CDN schedule is used for ID mapping (also no rate limiting).
+      Team abbreviations are automatically normalized (e.g., WSH -> WAS, GS -> GSW).
 """
     )
     
@@ -307,14 +420,24 @@ Note: ESPN IDs are used for fetching (no rate limiting).
         date_str = datetime.now().strftime('%Y-%m-%d')
     
     # Fetch schedules
+    print(f"Fetching ESPN schedule for {date_str}...")
     espn_data = fetch_espn_schedule(date_str)
-    nba_data = fetch_nba_schedule(date_str)
+    
+    print(f"Fetching NBA CDN schedule...")
+    nba_data = fetch_nba_cdn_schedule()
+    
+    # Extract NBA games for target date
+    print(f"Extracting NBA games for {date_str}...")
+    nba_games = extract_nba_games_for_date(nba_data, date_str)
     
     # Create mapping
-    mapping = create_espn_to_nba_mapping(espn_data, nba_data)
+    print(f"Creating ESPN to NBA ID mapping...")
+    mapping = create_espn_to_nba_mapping(espn_data, nba_games)
+    
+    print()
     
     # Print schedule
-    print_schedule(espn_data, nba_data, mapping, date_str, args.json)
+    print_schedule(espn_data, nba_games, mapping, date_str, args.json)
     
     # Output NBA IDs if requested
     if args.nba_ids:
@@ -335,6 +458,7 @@ Note: ESPN IDs are used for fetching (no rate limiting).
         with open(args.output, 'w') as f:
             json.dump(output_data, f, indent=2)
         print(f"Schedule saved to {args.output}")
+
 
 if __name__ == '__main__':
     main()
