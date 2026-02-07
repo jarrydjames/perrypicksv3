@@ -214,7 +214,7 @@ if run_predictions:
     if results:
         # Summary
         success_count = len(results)
-        total_count = len(nba_game_ids)
+        total_count = len(games)
         st.markdown(f"<div class='success-box'>✅ Successfully generated {success_count}/{total_count} predictions</div>", unsafe_allow_html=True)
         
         # Create results dataframe
