@@ -276,8 +276,8 @@ def extract_nba_games_for_date(nba_data: dict, date_str: str) -> List[Dict]:
             # Extract games from this date
             for game in date_entry.get('games', []):
                 game_id = game.get('gameId')
-                away_team = game.get('awayTeam', {}).get('teamTricode', '')
-                home_team = game.get('homeTeam', {}).get('teamTricode', '')
+                away_team = normalize_team_abbr(game.get('awayTeam', {}).get('teamTricode', ''))
+                home_team = normalize_team_abbr(game.get('homeTeam', {}).get('teamTricode', ''))
                 game_time_utc = game.get('gameDateTimeUTC', game.get('gameDateUTC', ''))
                 
                 games.append({
@@ -421,11 +421,11 @@ def print_schedule(espn_data: dict, nba_games: List[Dict], mapping: dict, date_s
             
             if len(competitors) >= 2:
                 if competitors[0].get('homeAway') == 'home':
-                    home_team = competitors[0].get('team', {}).get('abbreviation', 'HOME')
-                    away_team = competitors[1].get('team', {}).get('abbreviation', 'AWAY')
+                    home_team = normalize_team_abbr(competitors[0].get('team', {}).get('abbreviation', 'HOME'))
+                    away_team = normalize_team_abbr(competitors[1].get('team', {}).get('abbreviation', 'AWAY'))
                 else:
-                    home_team = competitors[1].get('team', {}).get('abbreviation', 'HOME')
-                    away_team = competitors[0].get('team', {}).get('abbreviation', 'AWAY')
+                    home_team = normalize_team_abbr(competitors[1].get('team', {}).get('abbreviation', 'HOME'))
+                    away_team = normalize_team_abbr(competitors[0].get('team', {}).get('abbreviation', 'AWAY'))
             else:
                 home_team = 'HOME'
                 away_team = 'AWAY'
@@ -457,11 +457,11 @@ def print_schedule(espn_data: dict, nba_games: List[Dict], mapping: dict, date_s
             
             if len(competitors) >= 2:
                 if competitors[0].get('homeAway') == 'home':
-                    home_team = competitors[0].get('team', {}).get('abbreviation', 'HOME')
-                    away_team = competitors[1].get('team', {}).get('abbreviation', 'AWAY')
+                    home_team = normalize_team_abbr(competitors[0].get('team', {}).get('abbreviation', 'HOME'))
+                    away_team = normalize_team_abbr(competitors[1].get('team', {}).get('abbreviation', 'AWAY'))
                 else:
-                    home_team = competitors[1].get('team', {}).get('abbreviation', 'HOME')
-                    away_team = competitors[0].get('team', {}).get('abbreviation', 'AWAY')
+                    home_team = normalize_team_abbr(competitors[1].get('team', {}).get('abbreviation', 'HOME'))
+                    away_team = normalize_team_abbr(competitors[0].get('team', {}).get('abbreviation', 'AWAY'))
             else:
                 home_team = 'HOME'
                 away_team = 'AWAY'
@@ -529,11 +529,11 @@ def main_with_output(date_str: str) -> Dict:
             
             if len(competitors) >= 2:
                 if competitors[0].get('homeAway') == 'home':
-                    home_team = competitors[0].get('team', {}).get('abbreviation', 'HOME')
-                    away_team = competitors[1].get('team', {}).get('abbreviation', 'AWAY')
+                    home_team = normalize_team_abbr(competitors[0].get('team', {}).get('abbreviation', 'HOME'))
+                    away_team = normalize_team_abbr(competitors[1].get('team', {}).get('abbreviation', 'AWAY'))
                 else:
-                    home_team = competitors[1].get('team', {}).get('abbreviation', 'HOME')
-                    away_team = competitors[0].get('team', {}).get('abbreviation', 'AWAY')
+                    home_team = normalize_team_abbr(competitors[1].get('team', {}).get('abbreviation', 'HOME'))
+                    away_team = normalize_team_abbr(competitors[0].get('team', {}).get('abbreviation', 'AWAY'))
             else:
                 home_team = 'HOME'
                 away_team = 'AWAY'
