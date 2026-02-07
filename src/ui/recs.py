@@ -82,7 +82,7 @@ def render_recommendations(
 
             with c2:
                 if on_track is not None and r.get("action") == "BET":
-                    if st.button("📌 Track", key=f"pp_track_rec_{i}", width="stretch"):
+                    if st.button("📌 Track", key=f"pp_track_rec_{i}", use_container_width=True):
                         on_track(r)
 
             st.divider()

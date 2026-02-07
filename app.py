@@ -13,8 +13,6 @@ from datetime import timedelta  # Keep timedelta for time arithmetic
 import pendulum
 import streamlit as st
 
-import streamlit as st
-
 # Optional autorefresh (recommended)
 try:
     from streamlit_autorefresh import st_autorefresh
@@ -333,7 +331,7 @@ with st.container():
 
                 chosen = games[int(idx)]
 
-                if st.button("Use selected game", width="stretch"):
+                if st.button("Use selected game", use_container_width=True):
                     st.session_state["game_input"] = chosen.game_id
                     st.rerun()
 
@@ -367,8 +365,8 @@ with st.container():
             help="Stores prediction snapshots for tracking probability drift."
         )
 
-        manual_refresh = st.button("🔄 Refresh now", width="stretch")
-        refresh_odds = st.button("📊 Refresh odds only", width="stretch", help="Refresh odds from API without re-running predictions")
+        manual_refresh = st.button("🔄 Refresh now", use_container_width=True)
+        refresh_odds = st.button("📊 Refresh odds only", use_container_width=True, help="Refresh odds from API without re-running predictions")
 
     # Auto refresh hook
     if st.session_state.auto_refresh and HAS_AUTOREFRESH:
