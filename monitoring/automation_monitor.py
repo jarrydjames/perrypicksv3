@@ -243,7 +243,7 @@ else:
                     
                     if trigger['status'] == 'fired':
                         st.caption(f"~~{trigger['trigger_type']}~~ at {time_str} Fired at {trigger['fired_time_cst'].strftime('%I:%M %p')}")
-                    elif trigger['status'] == 'pending':
+                    elif trigger['status'] == 'scheduled':
                         st.caption(f"⏳ {trigger['trigger_type']} at {time_str}")
                     else:
                         is_next = (next_trigger and next_trigger['trigger_type'] == trigger['trigger_type'])
@@ -261,7 +261,7 @@ else:
             
             with btn_col1:
                 if st.button(f"Pre-Game Prediction", key=f"pregame_{game['game_id']}"):
-                    trigger_prediction(game['game_id'], 'PRE_3H')
+                    trigger_prediction(game['game_id'], 'PRE_GAME')
             
             with btn_col2:
                 if st.button(f"Halftime Prediction", key=f"halftime_{game['game_id']}"):
