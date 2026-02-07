@@ -11,6 +11,7 @@ Usage:
 
 import streamlit as st
 import sys
+import time
 from pathlib import Path
 from datetime import datetime, timedelta
 import pandas as pd
@@ -184,8 +185,12 @@ if run_predictions:
         results = []
         errors = []
         
-        for game_id in nba_game_ids:
+        for i, game_id in enumerate(nba_game_ids):
             try:
+                # Add delay between predictions to avoid NBA API rate limiting
+                if i > 0:
+                    time.sleep(1.0)  # 1 second delay between games
+                
                 result = predict_game(
                     game_input=game_id,
                     use_binned_intervals=False,
