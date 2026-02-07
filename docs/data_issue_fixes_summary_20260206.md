@@ -46,7 +46,7 @@ All 12 pregame predictions for games on 2026-02-05 returned **identical values**
      - Win %: 0.50 (50%)
    - Result: Model sees identical inputs → identical outputs
 
-### Fix Applied (Commit d4216f5)
+### Fix Applied (Commit d4216f5 + 1d6623c)
 
 #### 1. Multi-Season Fallback
 
@@ -57,20 +57,19 @@ All 12 pregame predictions for games on 2026-02-05 returned **identical values**
 ```python
 def fetch_team_stats(
     team_id: int,
-    seasons: list = None
-) -> tuple[Optional[pd.Series], Optional[str]]:
+    seasons: Optional[Sequence[str]] = None,
+) -> Tuple[Optional[pd.Series], Optional[str]]:
     """
-    Fetch team stats, trying multiple seasons in order.
-    
+    Fetch team stats with multi-season fallback.
+
     Returns:
-        Tuple of (stats_series, season_used)
-        - stats_series: Team stats if found, None otherwise
-        - season_used: Which season stats came from, None if none found
+        Tuple of (team stats row, season string used).
     """
-    if seasons is None:
-        seasons = ['2025-26', '2024-25']
-    
-    for season in seasons:
+    if leaguedashteamstats is None:
+        return None, None
+
+    seasons_to_try = list(seasons or ['2025-26', '2024-25'])
+    for season in seasons_to_try:
         try:
             stats = leaguedashteamstats.LeagueDashTeamStats(
                 team_id_nullable=team_id,
@@ -79,17 +78,41 @@ def fetch_team_stats(
                 per_mode_detailed='PerGame',
             )
             df = stats.get_data_frames()[0]
-            
-            if len(df) > 0:
+
+            if len(df) == 0:
+                logger.warning("No stats found for team_id %s in season %s", team_id, season)
+                continue
+
+            # Always select by TEAM_ID when present
+            if 'TEAM_ID' in df.columns:
                 team_rows = df[df['TEAM_ID'] == team_id]
                 if len(team_rows) > 0:
-                    logger.info(f"Found stats for team_id {team_id} in season {season}")
                     return team_rows.iloc[0], season
-        except Exception as e:
-            logger.info(f"Error fetching stats for team_id {team_id} in season {season}: {e}")
+
+                logger.warning(
+                    "TEAM_ID %s not found in fetched stats payload for season %s; trying next season",
+                    team_id,
+                    season,
+                )
+                continue
+
+            if len(df) == 1:
+                logger.warning(
+                    "TEAM_ID column missing for team_id %s in season %s; using single-row response",
+                    team_id,
+                    season,
+                )
+                return df.iloc[0], season
+
+            logger.warning(
+                "TEAM_ID column missing and multiple rows returned for team_id %s in season %s; trying next season",
+                team_id,
+                season,
+            )
             continue
-    
-    logger.warning(f"No stats found for team_id {team_id} in any season: {seasons}")
+        except Exception as e:
+            logger.error("Error fetching stats for team_id %s in season %s: %s", team_id, season, e)
+
     return None, None
 ```
 
@@ -98,6 +121,8 @@ def fetch_team_stats(
 - ✅ Falls back to last season (2024-25) if current unavailable
 - ✅ Returns which season was used for transparency
 - ✅ Better error handling with per-season logging
+- ✅ Removed unsafe fallback to first row (commit 1d6623c)
+- ✅ Proper TEAM_ID filtering for accurate stats selection
 
 #### 2. Game Metadata Season Inference
 
@@ -134,37 +159,111 @@ def infer_season_from_datetime(game_datetime: pd.Timestamp) -> str:
 
 #### 3. Detect Default Feature Values
 
-**New Function:**
+**New Function (Commit d4216f5 + 1d6623c):**
 
 ```python
 def are_features_all_defaults(features: Dict[str, float]) -> bool:
-    """
-    Check if all features are using default league average values.
-    
-    Default indicators:
-    - off_rating = 110.0 for both teams
-    - def_rating = 110.0 for both teams
-    - pace = 100.0 for both teams
-    - All differentials = 0.0
-    
-    Returns True if it looks like all defaults, False otherwise.
-    """
-    default_checks = [
-        features.get('home_off_rating') == 110.0,
-        features.get('away_off_rating') == 110.0,
-        features.get('home_def_rating') == 110.0,
-        features.get('away_def_rating') == 110.0,
-        features.get('home_pace') == 100.0,
-        features.get('away_pace') == 100.0,
-        features.get('off_rating_diff', 0) == 0.0,
-        features.get('def_rating_diff', 0) == 0.0,
-        features.get('pace_diff', 0) == 0.0,
+    """Detect when both teams are effectively using default placeholder values."""
+    checks = [
+        np.isclose(features.get('home_off_rating', -1.0), 110.0),
+        np.isclose(features.get('away_off_rating', -1.0), 110.0),
+        np.isclose(features.get('home_def_rating', -1.0), 110.0),
+        np.isclose(features.get('away_def_rating', -1.0), 110.0),
+        np.isclose(features.get('home_pace', -1.0), 100.0),
+        np.isclose(features.get('away_pace', -1.0), 100.0),
+        np.isclose(features.get('off_rating_diff', 999.0), 0.0),
+        np.isclose(features.get('def_rating_diff', 999.0), 0.0),
+        np.isclose(features.get('pace_diff', 999.0), 0.0),
     ]
-    
-    return sum(default_checks) >= 7
+    return sum(bool(c) for c in checks) >= 8
 ```
 
-#### 4. Transparency in Predictions
+**Improvement in commit 1d6623c:**
+- Uses `np.isclose()` instead of exact equality
+- Better floating-point comparison
+- Safer defaults for missing keys (-1.0, 999.0)
+
+#### 4. Data Freshness Detection (New in Commit 1d6623c)
+
+**New Functions:**
+
+```python
+def _safe_days_between(game_datetime: pd.Timestamp, reference_datetime: Optional[pd.Timestamp]) -> Optional[int]:
+    """Safely calculate days between two datetimes, handling timezone conversions."""
+    if reference_datetime is None:
+        return None
+    try:
+        gdt = pd.Timestamp(game_datetime)
+        rdt = pd.Timestamp(reference_datetime)
+        if gdt.tzinfo is None:
+            gdt = gdt.tz_localize("UTC")
+        else:
+            gdt = gdt.tz_convert("UTC")
+        if rdt.tzinfo is None:
+            rdt = rdt.tz_localize("UTC")
+        else:
+            rdt = rdt.tz_convert("UTC")
+        return max(int((gdt - rdt).days), 0)
+    except Exception:
+        return None
+
+
+def build_data_freshness_context(
+    game_datetime: pd.Timestamp,
+    home_team_id: int,
+    away_team_id: int,
+    max_stale_days: int = 3,
+) -> Dict[str, Any]:
+    """Build freshness metadata and stale flags from historical game data."""
+    context: Dict[str, Any] = {
+        "is_stale": False,
+        "max_stale_days": max_stale_days,
+        "historical_latest_game_date": None,
+        "days_since_historical_update": None,
+        "home_days_since_last_game": None,
+        "away_days_since_last_game": None,
+        "force_historical_stats": False,
+    }
+
+    hist_mgr = get_historical_data_manager()
+    if not hist_mgr:
+        return context
+
+    latest_game_date: Optional[pd.Timestamp] = None
+    if getattr(hist_mgr, "games_df", None) is not None and len(hist_mgr.games_df) > 0:
+        latest_game_date = pd.Timestamp(hist_mgr.games_df["game_date"].max())
+        context["historical_latest_game_date"] = latest_game_date.isoformat()
+        context["days_since_historical_update"] = _safe_days_between(game_datetime, latest_game_date)
+
+    home_recent = hist_mgr.get_team_games(home_team_id, before_date=game_datetime, n=1)
+    away_recent = hist_mgr.get_team_games(away_team_id, before_date=game_datetime, n=1)
+
+    if len(home_recent) > 0:
+        home_last = pd.Timestamp(home_recent.iloc[0]["game_date"])
+        context["home_days_since_last_game"] = _safe_days_between(game_datetime, home_last)
+    if len(away_recent) > 0:
+        away_last = pd.Timestamp(away_recent.iloc[0]["game_date"])
+        context["away_days_since_last_game"] = _safe_days_between(game_datetime, away_last)
+
+    # Determine if data is stale
+    global_gap = context.get("days_since_historical_update")
+    home_gap = context.get("home_days_since_last_game")
+    away_gap = context.get("away_days_since_last_game")
+
+    if global_gap is not None and global_gap > max_stale_days:
+        context["is_stale"] = True
+        context["force_historical_stats"] = True
+
+    return context
+```
+
+**Purpose:**
+- Detects when historical data is stale (older than `max_stale_days`)
+- Tracks days since last historical update and team games
+- Forces historical stats usage when data is stale
+- Provides transparency about data freshness
+
+#### 5. Transparency in Predictions
 
 **Updated:** `predict_from_game_id()`
 
@@ -187,7 +286,7 @@ result = {
 }
 ```
 
-### Testing (Commit d4216f5)
+### Testing (Commit d4216f5 + 1d6623c)
 
 **File:** `tests/test_predict_pregame_stats_selection.py`
 
@@ -227,6 +326,30 @@ result = {
 - This is **expected behavior** given data gap
 - 2025-26 stats are from before games being predicted
 - Once season starts and real-time data is available, predictions will vary
+
+### Improved Daily Summary (Commit 1d6623c)
+
+**New Script:** `run_daily_summary_improved.py`
+
+**Features:**
+- Shows data source for each prediction
+- Displays data source summary (which seasons were used)
+- Collects and displays warnings
+- Posts improved summary to Discord with transparency
+- Tracks data freshness metrics
+
+**Sample Output:**
+```
+Data Source Summary:
+| Data Source | Teams |
+|-------------|--------|
+| 2025-26 | 23 teams (96% success) |
+| DEFAULTS | 1 team (WAS) |
+
+Warnings:
+- Using league averages as default values for WAS
+- Data freshness: Historical data is 6 days stale
+```
 
 ---
 
@@ -498,9 +621,10 @@ load_environment(search_from=Path(__file__).resolve().parents[1])
 
 | Issue | Commit | Status | Impact |
 |-------|---------|--------|--------|
-| Identical Pregame Predictions | d4216f5 | ✅ Applied | Multi-season fallback, season inference, transparency |
+| Identical Pregame Predictions | d4216f5 + 1d6623c | ✅ Applied | Multi-season fallback, season inference, transparency, data freshness detection |
 | UNK Placeholder Games | e3483f3 | ✅ Applied | Prefer full schedule, drop UNK games |
 | Environment Loading | e3483f3 | ✅ Applied | Centralized loading, better fallback |
+| Improved Daily Summary | 1d6623c | ✅ Added | Data source tracking, warnings, freshness metrics |
 
 ---
 
@@ -574,6 +698,9 @@ The system now:
 - Detects and warns when using default values
 - Handles UNK placeholder games gracefully
 - Loads environment variables consistently
+- Tracks data freshness and staleness
+- Provides transparency about data sources
+- Posts improved summaries with warnings to Discord
 
 **No Further Action Required** - Current behavior is correct given data limitations.
 
