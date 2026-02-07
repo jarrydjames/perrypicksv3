@@ -61,13 +61,13 @@ def render_ops_dashboard(db_path: str = "data/automation.db") -> None:
             st.metric("Miss explainers", int(misses.iloc[0]["miss_explanations"]) if not misses.empty else 0)
 
         st.markdown("### Trigger Status")
-        st.dataframe(triggers if not triggers.empty else pd.DataFrame([{"status": "none", "n": 0}]), width="stretch")
+        st.dataframe(triggers if not triggers.empty else pd.DataFrame([{"status": "none", "n": 0}]), use_container_width=True)
 
         st.markdown("### Pending by Trigger Type")
-        st.dataframe(pending if not pending.empty else pd.DataFrame([{"trigger_type": "none", "n": 0}]), width="stretch")
+        st.dataframe(pending if not pending.empty else pd.DataFrame([{"trigger_type": "none", "n": 0}]), use_container_width=True)
 
         st.markdown("### Fired in Last 24h")
-        st.dataframe(fired_24h if not fired_24h.empty else pd.DataFrame([{"trigger_type": "none", "n": 0}]), width="stretch")
+        st.dataframe(fired_24h if not fired_24h.empty else pd.DataFrame([{"trigger_type": "none", "n": 0}]), use_container_width=True)
 
         st.markdown("### Active Incidents")
         dlq_rows = _fetch_df(
@@ -79,6 +79,6 @@ def render_ops_dashboard(db_path: str = "data/automation.db") -> None:
             LIMIT 50
             """,
         )
-        st.dataframe(dlq_rows if not dlq_rows.empty else pd.DataFrame([{"created_at_utc": "n/a", "game_id": "none", "trigger_type": "none", "retry_count": 0, "error_text": "none"}]), width="stretch")
+        st.dataframe(dlq_rows if not dlq_rows.empty else pd.DataFrame([{"created_at_utc": "n/a", "game_id": "none", "trigger_type": "none", "retry_count": 0, "error_text": "none"}]), use_container_width=True)
     finally:
         conn.close()
