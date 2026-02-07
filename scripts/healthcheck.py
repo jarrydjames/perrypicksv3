@@ -5,13 +5,28 @@ import sys
 import os
 import sqlite3
 import json
+import argparse
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from core.env import load_environment
 
-def run_healthcheck(db_path: Path) -> dict:
+
+REQUIRED_ENV_KEYS = ["ODDS_API_KEY", "DISCORD_WEBHOOK_URL"]
+
+
+def _default_require_env() -> bool:
+    return os.getenv("HEALTHCHECK_REQUIRE_ENV", "true").strip().lower() in {"1", "true", "yes"}
+
+
+def run_healthcheck(db_path: Path, require_env: bool | None = None) -> dict:
+    if require_env is None:
+        require_env = _default_require_env()
+
+    loaded_env_path = load_environment()
+
     results = {
         "db_read_write": False,
         "env_complete": False,
@@ -20,16 +35,20 @@ def run_healthcheck(db_path: Path) -> dict:
         "dlq_backlog_ok": False,
         "degraded_mode": False,
         "pendulum_available": False,
+        "require_env": require_env,
+        "env_file_loaded": str(loaded_env_path) if loaded_env_path else None,
     }
 
     try:
         import pendulum  # noqa: F401
+
         results["pendulum_available"] = True
     except Exception:
         results["pendulum_available"] = False
 
     if results["pendulum_available"]:
         from core.storage import init_database
+
         init_database(db_path)
     else:
         db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -51,9 +70,9 @@ def run_healthcheck(db_path: Path) -> dict:
     results["degraded_mode"] = os.getenv("DEGRADED_MODE", "0") in {"1", "true", "TRUE"}
     conn.close()
 
-    required_env = ["ODDS_API_KEY", "DISCORD_WEBHOOK_URL"]
-    results["env_complete"] = all(os.getenv(k) for k in required_env)
-    results["api_configured"] = results["env_complete"]
+    env_present = all(os.getenv(k) for k in REQUIRED_ENV_KEYS)
+    results["api_configured"] = env_present
+    results["env_complete"] = env_present if require_env else True
 
     model_paths = [Path("models_v3/pregame"), Path("models_v3/halftime"), Path("models_v3/q3")]
     results["models_present"] = all(p.exists() for p in model_paths)
@@ -61,10 +80,37 @@ def run_healthcheck(db_path: Path) -> dict:
     return results
 
 
-if __name__ == "__main__":
-    db_path = Path(os.getenv("AUTOMATION_DB_PATH", "data/automation.db"))
-    out = run_healthcheck(db_path)
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Run platform health checks")
+    parser.add_argument(
+        "--db-path",
+        default=os.getenv("AUTOMATION_DB_PATH", "data/automation.db"),
+        help="Path to automation SQLite DB",
+    )
+    parser.add_argument(
+        "--require-env",
+        dest="require_env",
+        action="store_true",
+        help="Fail the healthcheck when required API env vars are missing",
+    )
+    parser.add_argument(
+        "--no-require-env",
+        dest="require_env",
+        action="store_false",
+        help="Do not fail the healthcheck when API env vars are missing",
+    )
+    parser.set_defaults(require_env=None)
+
+    args = parser.parse_args()
+    out = run_healthcheck(Path(args.db_path), require_env=args.require_env)
     print(json.dumps(out, indent=2, sort_keys=True))
-    must_pass = ["db_read_write", "env_complete", "models_present", "api_configured", "dlq_backlog_ok", "pendulum_available"]
-    if not all(out.get(k) for k in must_pass):
-        raise SystemExit(1)
+
+    must_pass = ["db_read_write", "models_present", "dlq_backlog_ok", "pendulum_available"]
+    if out["require_env"]:
+        must_pass.extend(["env_complete", "api_configured"])
+
+    return 0 if all(out.get(k) for k in must_pass) else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

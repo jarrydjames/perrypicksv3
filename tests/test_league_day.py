@@ -13,6 +13,7 @@ import pendulum
 import tempfile
 from pathlib import Path
 import sys
+from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -114,6 +115,119 @@ class TestGameStorageLeagueDay:
             
             assert game['league_day'] == "2026-02-05", "league_day should be preserved when not provided in upsert"
             assert game['status'] == "In Progress", "Other fields should be updated"
+
+
+class TestSchedulePlaceholderHandling:
+    def test_fetch_games_uses_full_schedule_teams_when_schedule_has_unk(self, monkeypatch):
+        target_dt = pendulum.now("UTC").add(hours=4).replace(minute=0, second=0, microsecond=0)
+        target_date = target_dt.in_timezone("America/New_York").format("YYYY-MM-DD")
+        target_game_date = target_dt.in_timezone("America/New_York").format("MM/DD/YYYY")
+
+        schedule_payload = {
+            "leagueSchedule": {
+                "gameDates": [
+                    {
+                        "gameDate": f"{target_game_date} 00:00:00",
+                        "games": [
+                            {
+                                "gameId": "0022599991",
+                                "gameTimeUTC": "1900-01-01T00:00:00Z",
+                                "homeTeam": {"teamTricode": "UNK"},
+                                "awayTeam": {"teamTricode": "UNK"},
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+
+        full_schedule_payload = {
+            "lscd": [
+                {
+                    "mscd": {
+                        "g": [
+                            {
+                                "gid": "0022599991",
+                                "utcdate": target_dt.format("YYYYMMDD"),
+                                "utctm": target_dt.format("HHmm"),
+                                "h": {"ta": "BOS"},
+                                "v": {"ta": "NYK"},
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+
+        def fake_get(url, headers=None, timeout=None):
+            if "scheduleLeagueV2" in url:
+                return SimpleNamespace(raise_for_status=lambda: None, json=lambda: schedule_payload)
+            return SimpleNamespace(raise_for_status=lambda: None, json=lambda: full_schedule_payload)
+
+        monkeypatch.setattr("core.data_sources.requests.get", fake_get)
+        monkeypatch.setattr("core.data_sources.validate_nba_schedule", lambda *_: {"valid": True, "warnings": []})
+
+        NBADataSource._cache.clear()
+        NBADataSource._full_schedule_index.clear()
+        games = NBADataSource.fetch_games_for_date(target_date)
+
+        assert len(games) == 1
+        assert games[0]["home_team"] == "BOS"
+        assert games[0]["away_team"] == "NYK"
+
+    def test_fetch_games_drops_unresolved_unk_matchups(self, monkeypatch):
+        target_dt = pendulum.now("UTC").add(hours=4).replace(minute=0, second=0, microsecond=0)
+        target_date = target_dt.in_timezone("America/New_York").format("YYYY-MM-DD")
+        target_game_date = target_dt.in_timezone("America/New_York").format("MM/DD/YYYY")
+
+        schedule_payload = {
+            "leagueSchedule": {
+                "gameDates": [
+                    {
+                        "gameDate": f"{target_game_date} 00:00:00",
+                        "games": [
+                            {
+                                "gameId": "0022599992",
+                                "gameTimeUTC": "1900-01-01T00:00:00Z",
+                                "homeTeam": {"teamTricode": "UNK"},
+                                "awayTeam": {"teamTricode": "UNK"},
+                            }
+                        ],
+                    }
+                ]
+            }
+        }
+
+        # Full schedule has start time but missing team tricodes -> still unresolved and must be dropped.
+        full_schedule_payload = {
+            "lscd": [
+                {
+                    "mscd": {
+                        "g": [
+                            {
+                                "gid": "0022599992",
+                                "utcdate": target_dt.format("YYYYMMDD"),
+                                "utctm": target_dt.format("HHmm"),
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+
+        def fake_get(url, headers=None, timeout=None):
+            if "scheduleLeagueV2" in url:
+                return SimpleNamespace(raise_for_status=lambda: None, json=lambda: schedule_payload)
+            return SimpleNamespace(raise_for_status=lambda: None, json=lambda: full_schedule_payload)
+
+        monkeypatch.setattr("core.data_sources.requests.get", fake_get)
+        monkeypatch.setattr("core.data_sources.validate_nba_schedule", lambda *_: {"valid": True, "warnings": []})
+
+        NBADataSource._cache.clear()
+        NBADataSource._full_schedule_index.clear()
+        games = NBADataSource.fetch_games_for_date(target_date)
+
+        assert games == []
 
 
 if __name__ == "__main__":

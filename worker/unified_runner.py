@@ -15,16 +15,10 @@ import time
 import pytz
 import pendulum
 
+from core.env import load_environment
+
 # Load environment variables from .env file (if it exists)
-try:
-    from dotenv import load_dotenv
-    env_path = Path(__file__).parent.parent / '.env'
-    if env_path.exists():
-        load_dotenv(env_path)
-        logger = logging.getLogger(__name__)
-        logger.debug(f"Loaded environment from {env_path}")
-except ImportError:
-    pass
+load_environment(search_from=Path(__file__).resolve().parents[1])
 
 from core.timezone import parse_iso_utc
 from core.storage import (
