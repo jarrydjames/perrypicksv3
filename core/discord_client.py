@@ -6,6 +6,8 @@ Handles posting messages to Discord with proper formatting.
 import logging
 import requests
 from typing import Optional, Dict, Any
+import time
+import os
 from datetime import datetime, timezone
 import pytz
 
@@ -17,6 +19,9 @@ class DiscordWebhookClient:
     
     def __init__(self, webhook_url: str):
         self.webhook_url = webhook_url
+        self.max_retries = int(os.getenv("DISCORD_MAX_RETRIES", "3"))
+        self.backoff_seconds = float(os.getenv("DISCORD_RETRY_BACKOFF_SECONDS", "1.5"))
+        self.alert_mode = os.getenv("DISCORD_ALERT_MODE", "balanced").lower()
     
     def post_message(self, content: str, embed: Optional[Dict] = None) -> Optional[str]:
         """
@@ -29,35 +34,37 @@ class DiscordWebhookClient:
         Returns:
             message_id if successful, None otherwise
         """
-        try:
-            payload = {'content': content}
-            if embed:
-                payload['embeds'] = [embed]
-            
-            response = requests.post(self.webhook_url, json=payload, timeout=10)
-            response.raise_for_status()
-            
-            # Try to extract message ID from response
-            # Webhook responses don't always include message ID
-            # Some webhooks return JSON with id, others return empty response
-            message_id = None
+        payload = {'content': content}
+        if embed:
+            payload['embeds'] = [embed]
+
+        last_error = None
+        for attempt in range(1, self.max_retries + 1):
             try:
-                if response.content:
-                    data = response.json()
-                    message_id = data.get('id')
-            except Exception:
-                # Response is empty or not JSON - that's okay
-                pass
-            
-            logger.info(f"Posted Discord message (id={message_id})")
-            return message_id
-            
-        except requests.exceptions.RequestException as e:
-            logger.error(f"HTTP error posting to Discord: {e}")
-            return None
-        except Exception as e:
-            logger.error(f"Error posting to Discord: {e}")
-            return None
+                response = requests.post(self.webhook_url, json=payload, timeout=10)
+                response.raise_for_status()
+                message_id = None
+                try:
+                    if response.content:
+                        data = response.json()
+                        message_id = data.get('id')
+                except Exception:
+                    pass
+                logger.info(f"Posted Discord message (id={message_id}) on attempt {attempt}")
+                return message_id
+            except requests.exceptions.RequestException as e:
+                last_error = str(e)
+                logger.warning(f"Discord post attempt {attempt}/{self.max_retries} failed: {e}")
+                if attempt < self.max_retries:
+                    time.sleep(self.backoff_seconds * attempt)
+            except Exception as e:
+                last_error = str(e)
+                logger.warning(f"Unexpected Discord post failure attempt {attempt}/{self.max_retries}: {e}")
+                if attempt < self.max_retries:
+                    time.sleep(self.backoff_seconds * attempt)
+
+        logger.error(f"Error posting to Discord after retries: {last_error}")
+        return None
     
     def format_bet_post(
         self,
@@ -100,7 +107,15 @@ class DiscordWebhookClient:
         body_lines = []
         body_lines.append("\n**Top Bets:**\n")
         
-        for i, pick in enumerate(picks[:3], 1):
+        visible = picks
+        if self.alert_mode == "conservative":
+            visible = [p for p in picks if p.get("confidence_tier") == "HIGH"]
+        elif self.alert_mode == "balanced":
+            visible = [p for p in picks if p.get("confidence_tier") in {"HIGH", "MEDIUM"}]
+        if not visible:
+            visible = picks
+
+        for i, pick in enumerate(visible[:3], 1):
             bet_type = pick.get('bet_type', 'Unknown')
             side = pick.get('side', 'Unknown')
             line = pick.get('line')
@@ -117,7 +132,15 @@ class DiscordWebhookClient:
             bet_line += f"** ({bet_type})"
             
             # Add odds and edge
+            confidence = pick.get('confidence_tier', 'LOW')
+            width = pick.get('interval_width')
+            edge_points = pick.get('edge_points')
             bet_line += f" | Prob: {probability:.1f}% | Edge: {edge:.1f}% | Odds: {odds} ({book})"
+            bet_line += f" | Confidence: {confidence}"
+            if width is not None:
+                bet_line += f" | Interval width: {width:.1f}"
+            if edge_points is not None:
+                bet_line += f" | Market edge: {edge_points:+.1f} pts"
             
             body_lines.append(bet_line)
             

@@ -27,7 +27,7 @@ except ImportError:
     # python-dotenv not installed, fall back to os.getenv
     pass
 
-from core.storage import init_database, GameStorage, TriggerStorage, PickStorage, TrackingStorage, DiscordPostStorage
+from core.storage import init_database, GameStorage, TriggerStorage, PickStorage, TrackingStorage, DiscordPostStorage, DLQStorage, FeatureTelemetryStorage, ExperimentStorage, CLVStorage
 from core.data_sources import CombinedDataSource
 from core.discord_client import DiscordWebhookClient
 from core.analysis import AnalysisEngine
@@ -35,6 +35,7 @@ from worker.scheduler import TriggerScheduler, AutoScheduler
 from worker.triggers import TriggerFirer
 from core.timezone import now_utc, to_iso, parse_date_str
 from core.validation import validate_schedule_date, validate_system_clock
+from core.qol import canonical_pick_id, confidence_tier, interval_width, explain_trigger_decision, should_use_degraded_mode
 
 logger = logging.getLogger(__name__)
 logger = logging.getLogger(__name__)
@@ -109,6 +110,15 @@ class AutomationRunner:
             else:
                 logger.info(f"System clock validated: {clock_result['drift_seconds']:.1f}s drift")
             
+            ExperimentStorage.register(
+                experiment_id=os.getenv("EXPERIMENT_ID", "baseline-balanced-v1"),
+                model_version=os.getenv("MODEL_VERSION", "v3"),
+                calibration_version=os.getenv("CALIBRATION_VERSION", "default"),
+                bet_policy_version=os.getenv("BET_POLICY_VERSION", "adaptive_v1"),
+                output_template_version=os.getenv("OUTPUT_TEMPLATE_VERSION", "confidence_edge_v1"),
+                db_path=self.db_path
+            )
+
             # Schedule games for the specified date
             # (Date was already validated in __init__)
             games_scheduled = self.scheduler.schedule_games_for_date(self.date)
@@ -153,6 +163,9 @@ class AutomationRunner:
         )
         
         for trigger in due_triggers:
+            if not TriggerStorage.claim_trigger(trigger['id'], db_path=self.db_path):
+                logger.info(f"Skipping already-claimed trigger {trigger['id']}")
+                continue
             processed = self._process_scheduled_trigger(trigger)
             if processed:
                 total_processed += 1
@@ -191,8 +204,13 @@ class AutomationRunner:
             
             if not data['game_state']:
                 logger.warning(f"Game {game_id} not found; skipping trigger")
+                logger.info(f"Trigger decision: {explain_trigger_decision(trigger_type, {}, False, False)}")
                 return False
             
+            degraded_mode = should_use_degraded_mode(data.get('odds', {}), data.get('game_state', {}))
+            if degraded_mode:
+                logger.warning(f"Degraded mode active for {game_id} {trigger_type} (odds fallback/limited data)")
+
             # Run analysis
             picks = self.analysis_engine.run_analysis(
                 game_state=data['game_state'],
@@ -202,6 +220,7 @@ class AutomationRunner:
             
             if not picks:
                 logger.warning(f"No picks generated for {game_id} {trigger_type}")
+                logger.info(f"Trigger decision: {explain_trigger_decision(trigger_type, data['game_state'], True, False)}")
                 return False
             
             # Handle PRE_GAME trigger (special formatting with odds and top 3 bets)
@@ -214,6 +233,16 @@ class AutomationRunner:
             
             # Store picks for other trigger types (Q3)
             for pick in picks:
+                pick_id = canonical_pick_id(game_id, trigger_type, pick['bet_type'], str(pick['side']), os.getenv("MODEL_VERSION", "v3"))
+                conf = confidence_tier(pick.get('probability', 0.5), pick.get('edge', 0.0))
+                w = interval_width(pick.get('interval_low'), pick.get('interval_high'))
+                pick['pick_id'] = pick_id
+                pick['confidence_tier'] = conf
+                pick['interval_width'] = w
+                market_line = pick.get('line')
+                fair_line = pick.get('fair_line', market_line)
+                if market_line is not None and fair_line is not None:
+                    pick['edge_points'] = fair_line - market_line
                 PickStorage.store_pick(
                     game_id=game_id,
                     trigger_type=trigger_type,
@@ -227,6 +256,35 @@ class AutomationRunner:
                     edge=pick['edge'],
                     rationale=pick.get('rationale'),
                     payload=pick,
+                    pick_id=pick_id,
+                    confidence_tier=conf,
+                    interval_low=pick.get('interval_low'),
+                    interval_high=pick.get('interval_high'),
+                    model_version=os.getenv("MODEL_VERSION", "v3"),
+                    market_line=market_line,
+                    fair_line=fair_line,
+                    experiment_id=os.getenv("EXPERIMENT_ID", "baseline-balanced-v1"),
+                    db_path=self.db_path
+                )
+                FeatureTelemetryStorage.store(
+                    game_id=game_id,
+                    trigger_type=trigger_type,
+                    pick_id=pick_id,
+                    missing_count=int(pick.get('feature_missing_count', 0)),
+                    stale_count=int(pick.get('feature_stale_count', 0)),
+                    fallback_used=bool(pick.get('fallback_used', False)),
+                    payload={'features': pick.get('feature_profile', {})},
+                    db_path=self.db_path
+                )
+                CLVStorage.upsert_clv(
+                    pick_id=pick_id,
+                    game_id=game_id,
+                    trigger_type=trigger_type,
+                    market_type=pick.get('bet_type', ''),
+                    side=str(pick.get('side', '')),
+                    opening_line=pick.get('opening_line'),
+                    posted_line=market_line,
+                    closing_line=pick.get('closing_line'),
                     db_path=self.db_path
                 )
             
@@ -238,6 +296,8 @@ class AutomationRunner:
                     picks=picks,
                     timestamp=now_utc()
                 )
+                if degraded_mode:
+                    message = "⚠️ DEGRADED MODE: upstream data limited; outputs may be lower confidence.\n" + message
                 
                 message_id = self.discord_client.post_message(message)
                 
@@ -254,6 +314,16 @@ class AutomationRunner:
                         },
                         db_path=self.db_path
                     )
+                else:
+                    DLQStorage.store_failed_post(
+                        game_id=game_id,
+                        trigger_type=trigger_type,
+                        channel_id='main',
+                        payload={'message': message, 'picks': picks, 'game_state': data['game_state']},
+                        error_text='discord_post_failed_after_retries',
+                        retry_count=3,
+                        db_path=self.db_path
+                    )
             
             # Mark trigger as fired
             TriggerStorage.mark_triggered(
@@ -262,6 +332,7 @@ class AutomationRunner:
                 db_path=self.db_path
             )
             
+            logger.info(f"Trigger decision: {explain_trigger_decision(trigger_type, data['game_state'], True, True)}")
             logger.info(f"Completed {trigger_type} trigger for {game_id}")
             return True
             
@@ -298,8 +369,13 @@ class AutomationRunner:
             
             if not data['game_state']:
                 logger.warning(f"Game {game_id} not found; skipping trigger")
+                logger.info(f"Trigger decision: {explain_trigger_decision(trigger_type, {}, False, False)}")
                 return False
             
+            degraded_mode = should_use_degraded_mode(data.get('odds', {}), data.get('game_state', {}))
+            if degraded_mode:
+                logger.warning(f"Degraded mode active for {game_id} {trigger_type} (odds fallback/limited data)")
+
             # Run analysis
             picks = self.analysis_engine.run_analysis(
                 game_state=data['game_state'],
@@ -309,6 +385,7 @@ class AutomationRunner:
             
             if not picks:
                 logger.warning(f"No picks generated for {game_id} {trigger_type}")
+                logger.info(f"Trigger decision: {explain_trigger_decision(trigger_type, data['game_state'], True, False)}")
                 return False
             
             # Handle HALFTIME trigger (special formatting without bets)
@@ -341,6 +418,8 @@ class AutomationRunner:
                     picks=picks,
                     timestamp=now_utc()
                 )
+                if degraded_mode:
+                    message = "⚠️ DEGRADED MODE: upstream data limited; outputs may be lower confidence.\n" + message
                 
                 message_id = self.discord_client.post_message(message)
                 

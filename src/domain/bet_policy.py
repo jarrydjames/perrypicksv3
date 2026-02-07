@@ -141,3 +141,47 @@ def preset(name: PolicyName) -> BetPolicy:
 
 def list_presets() -> List[PolicyName]:
     return ["Conservative", "Standard", "Aggressive"]
+
+
+@dataclass(frozen=True)
+class AdaptivePolicyConfig:
+    mode: Literal["flat", "confidence_scaled", "capped_kelly"] = "confidence_scaled"
+    flat_stake_frac: float = 0.005
+    confidence_low_frac: float = 0.003
+    confidence_med_frac: float = 0.007
+    confidence_high_frac: float = 0.012
+    daily_cap_frac: float = 0.05
+
+
+def apply_adaptive_staking(recs: List[Dict[str, Any]], cfg: AdaptivePolicyConfig, bankroll_frac_used_today: float = 0.0) -> List[Dict[str, Any]]:
+    """Apply bankroll-aware staking modes with daily cap guardrails."""
+    remaining = max(0.0, cfg.daily_cap_frac - float(bankroll_frac_used_today))
+    out: List[Dict[str, Any]] = []
+
+    for r in recs:
+        rr = dict(r)
+        if rr.get("action") != "BET":
+            rr["stake_frac"] = 0.0
+            out.append(rr)
+            continue
+
+        if cfg.mode == "flat":
+            stake = cfg.flat_stake_frac
+        elif cfg.mode == "capped_kelly":
+            stake = min(float(rr.get("stake_frac", 0.0)), 0.015)
+        else:  # confidence_scaled
+            tier = str(rr.get("confidence_tier", "LOW")).upper()
+            if tier == "HIGH":
+                stake = cfg.confidence_high_frac
+            elif tier == "MEDIUM":
+                stake = cfg.confidence_med_frac
+            else:
+                stake = cfg.confidence_low_frac
+
+        stake = min(stake, remaining)
+        remaining = max(0.0, remaining - stake)
+        rr["stake_frac"] = stake
+        rr["adaptive_mode"] = cfg.mode
+        out.append(rr)
+
+    return out

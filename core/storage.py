@@ -172,6 +172,77 @@ def init_database(db_path: Path = DEFAULT_DB_PATH) -> None:
             )
         """)
         
+        # 7. Discord dead-letter queue for failed deliveries
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS discord_post_dlq (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                game_id TEXT NOT NULL,
+                trigger_type TEXT NOT NULL,
+                channel_id TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                error_text TEXT,
+                retry_count INTEGER NOT NULL DEFAULT 0,
+                created_at_utc TIMESTAMP NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+
+        # 8. CLV tracking
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS clv_tracking (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                pick_id TEXT NOT NULL,
+                game_id TEXT NOT NULL,
+                trigger_type TEXT NOT NULL,
+                market_type TEXT,
+                side TEXT,
+                opening_line REAL,
+                posted_line REAL,
+                closing_line REAL,
+                clv_points REAL,
+                created_at_utc TIMESTAMP NOT NULL DEFAULT (datetime('now')),
+                UNIQUE(pick_id)
+            )
+        """)
+
+        # 9. Feature telemetry
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS feature_telemetry (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                game_id TEXT NOT NULL,
+                trigger_type TEXT NOT NULL,
+                pick_id TEXT,
+                missing_count INTEGER NOT NULL DEFAULT 0,
+                stale_count INTEGER NOT NULL DEFAULT 0,
+                fallback_used INTEGER NOT NULL DEFAULT 0,
+                payload_json TEXT,
+                created_at_utc TIMESTAMP NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+
+        # 10. Experiment registry
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS experiments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                experiment_id TEXT NOT NULL UNIQUE,
+                model_version TEXT,
+                calibration_version TEXT,
+                bet_policy_version TEXT,
+                output_template_version TEXT,
+                created_at_utc TIMESTAMP NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+
+        # 11. Miss explanations
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS miss_explanations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                game_id TEXT NOT NULL,
+                trigger_type TEXT NOT NULL,
+                explanation_bullets_json TEXT NOT NULL,
+                created_at_utc TIMESTAMP NOT NULL DEFAULT (datetime('now'))
+            )
+        """)
+
         # Schema migration: add league_day and local_day_cst columns if missing
         cursor.execute("PRAGMA table_info(games)")
         columns = {row['name'] for row in cursor.fetchall()}
@@ -187,7 +258,28 @@ def init_database(db_path: Path = DEFAULT_DB_PATH) -> None:
         # Create indexes for new columns
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_games_league_day ON games(league_day)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_games_local_day_cst ON games(local_day_cst)")
-        
+
+        # Migrations: picks metadata columns
+        cursor.execute("PRAGMA table_info(picks)")
+        pick_columns = {row['name'] for row in cursor.fetchall()}
+        for col, ddl in [
+            ('pick_id', "ALTER TABLE picks ADD COLUMN pick_id TEXT"),
+            ('confidence_tier', "ALTER TABLE picks ADD COLUMN confidence_tier TEXT"),
+            ('interval_low', "ALTER TABLE picks ADD COLUMN interval_low REAL"),
+            ('interval_high', "ALTER TABLE picks ADD COLUMN interval_high REAL"),
+            ('model_version', "ALTER TABLE picks ADD COLUMN model_version TEXT"),
+            ('market_line', "ALTER TABLE picks ADD COLUMN market_line REAL"),
+            ('fair_line', "ALTER TABLE picks ADD COLUMN fair_line REAL"),
+            ('experiment_id', "ALTER TABLE picks ADD COLUMN experiment_id TEXT"),
+        ]:
+            if col not in pick_columns:
+                cursor.execute(ddl)
+
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_picks_pick_id ON picks(pick_id)")
+
+        # Migration: trigger status processing for idempotent claims
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_triggers_status_due ON triggers(status, scheduled_time_utc)")
+
         logger.info(f"Database schema initialized at {db_path}")
 
 
@@ -455,6 +547,21 @@ class TriggerStorage:
             """, (fired_at_str, json.dumps(payload) if payload else None, trigger_id))
     
     @staticmethod
+    def claim_trigger(
+        trigger_id: int,
+        db_path: Path = DEFAULT_DB_PATH
+    ) -> bool:
+        """Atomically claim a trigger for processing (idempotent runner guard)."""
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                UPDATE triggers
+                SET status = 'processing'
+                WHERE id = ? AND status = 'scheduled'
+            """, (trigger_id,))
+            return cursor.rowcount == 1
+
+    @staticmethod
     def check_trigger_exists(
         game_id: str,
         trigger_type: str,
@@ -648,6 +755,14 @@ class PickStorage:
         line: Optional[float] = None,
         rationale: Optional[str] = None,
         payload: Optional[Dict] = None,
+        pick_id: Optional[str] = None,
+        confidence_tier: Optional[str] = None,
+        interval_low: Optional[float] = None,
+        interval_high: Optional[float] = None,
+        model_version: Optional[str] = None,
+        market_line: Optional[float] = None,
+        fair_line: Optional[float] = None,
+        experiment_id: Optional[str] = None,
         db_path: Path = DEFAULT_DB_PATH
     ) -> int:
         """Store a pick. Returns pick ID."""
@@ -656,13 +771,17 @@ class PickStorage:
             cursor.execute("""
                 INSERT INTO picks (
                     game_id, trigger_type, bet_rank, bet_type, side,
-                    line, odds, book, probability, edge, rationale, payload_json
+                    line, odds, book, probability, edge, rationale, payload_json,
+                    pick_id, confidence_tier, interval_low, interval_high,
+                    model_version, market_line, fair_line, experiment_id
                 )
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 game_id, trigger_type, bet_rank, bet_type, side,
                 line, odds, book, probability, edge, rationale,
-                json.dumps(payload) if payload else None
+                json.dumps(payload) if payload else None,
+                pick_id, confidence_tier, interval_low, interval_high,
+                model_version, market_line, fair_line, experiment_id
             ))
             return cursor.lastrowid
     
@@ -802,3 +921,70 @@ class DiscordPostStorage:
             """, (game_id, trigger_type, channel_id))
             row = cursor.fetchone()
             return dict(row) if row else None
+
+
+class DLQStorage:
+    """Dead-letter queue operations for failed Discord messages."""
+
+    @staticmethod
+    def store_failed_post(game_id: str, trigger_type: str, channel_id: str, payload: Dict[str, Any], error_text: str, retry_count: int = 0, db_path: Path = DEFAULT_DB_PATH) -> int:
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO discord_post_dlq (game_id, trigger_type, channel_id, payload_json, error_text, retry_count)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (game_id, trigger_type, channel_id, json.dumps(payload), error_text, retry_count))
+            return cursor.lastrowid
+
+
+class CLVStorage:
+    @staticmethod
+    def upsert_clv(pick_id: str, game_id: str, trigger_type: str, market_type: str, side: str, opening_line: Optional[float], posted_line: Optional[float], closing_line: Optional[float], db_path: Path = DEFAULT_DB_PATH) -> None:
+        clv_points = None
+        if posted_line is not None and closing_line is not None:
+            clv_points = closing_line - posted_line
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO clv_tracking (pick_id, game_id, trigger_type, market_type, side, opening_line, posted_line, closing_line, clv_points)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(pick_id) DO UPDATE SET
+                    closing_line = excluded.closing_line,
+                    clv_points = excluded.clv_points
+            """, (pick_id, game_id, trigger_type, market_type, side, opening_line, posted_line, closing_line, clv_points))
+
+
+class FeatureTelemetryStorage:
+    @staticmethod
+    def store(game_id: str, trigger_type: str, pick_id: Optional[str], missing_count: int, stale_count: int, fallback_used: bool, payload: Dict[str, Any], db_path: Path = DEFAULT_DB_PATH) -> int:
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO feature_telemetry (game_id, trigger_type, pick_id, missing_count, stale_count, fallback_used, payload_json)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            """, (game_id, trigger_type, pick_id, missing_count, stale_count, 1 if fallback_used else 0, json.dumps(payload)))
+            return cursor.lastrowid
+
+
+class ExperimentStorage:
+    @staticmethod
+    def register(experiment_id: str, model_version: Optional[str], calibration_version: Optional[str], bet_policy_version: Optional[str], output_template_version: Optional[str], db_path: Path = DEFAULT_DB_PATH) -> None:
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO experiments (experiment_id, model_version, calibration_version, bet_policy_version, output_template_version)
+                VALUES (?, ?, ?, ?, ?)
+                ON CONFLICT(experiment_id) DO NOTHING
+            """, (experiment_id, model_version, calibration_version, bet_policy_version, output_template_version))
+
+
+class MissExplanationStorage:
+    @staticmethod
+    def store(game_id: str, trigger_type: str, bullets: List[str], db_path: Path = DEFAULT_DB_PATH) -> int:
+        with get_db_connection(db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO miss_explanations (game_id, trigger_type, explanation_bullets_json)
+                VALUES (?, ?, ?)
+            """, (game_id, trigger_type, json.dumps(bullets[:3])))
+            return cursor.lastrowid

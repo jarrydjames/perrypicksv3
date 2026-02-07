@@ -25,6 +25,7 @@ from src.leakage_detection import detect_leakage, LeakageDetectionReport
 from src.statistical import run_statistical_tests, StatisticalTestReport
 from src.conformal import run_conformal_uncertainty, ConformalUncertaintyReport
 from src.registry import ModelRegistryExtended, ModelMetadata, ModelLineage
+from src.ui.ops_dashboard import render_ops_dashboard
 
 # -----------------------------
 # Page + Theme UX
@@ -90,6 +91,7 @@ pages = [
     '📊 Phase 3: Statistical Testing',
     '📏 Phase 4: Conformal Uncertainty',
     '📦 Phase 5: Model Registry',
+    '🧭 Ops Dashboard',
 ]
 
 st.session_state.page = st.sidebar.selectbox(
@@ -577,3 +579,11 @@ st.markdown('''
 Phases: Data Validation • Leakage Detection • Statistical Testing • Conformal Uncertainty • Model Registry
 </div>
 ''', unsafe_allow_html=True)
+
+
+# -----------------------------
+# Ops Dashboard
+# -----------------------------
+if st.session_state.page == '🧭 Ops Dashboard':
+    st.markdown('### Operations Dashboard')
+    render_ops_dashboard(db_path='data/automation.db')
