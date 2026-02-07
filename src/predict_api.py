@@ -245,6 +245,7 @@ def predict_game(
                 home_team=home_team,
                 away_team=away_team,
                 fetch_odds=fetch_odds,
+                game_datetime=(game_data or {}).get("gameTimeUTC") if isinstance(game_data, dict) else None,
             )
             
             # Add game state info to result

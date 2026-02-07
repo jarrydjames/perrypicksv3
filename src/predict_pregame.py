@@ -45,6 +45,30 @@ def get_team_id(tricode: str) -> Optional[int]:
     """Get team ID from tricode."""
     return TEAM_IDS.get(tricode.upper())
 
+
+def infer_season_from_game_id(game_id: str) -> Optional[str]:
+    """Infer NBA season string (e.g. 2025-26) from game_id prefix 002YYxxxxx."""
+    gid = str(game_id)
+    if len(gid) < 5 or not gid[3:5].isdigit():
+        return None
+
+    season_start_yy = int(gid[3:5])
+    season_start = 2000 + season_start_yy
+    season_end_yy = (season_start_yy + 1) % 100
+    return f"{season_start}-{season_end_yy:02d}"
+
+
+def infer_season_from_datetime(game_datetime: pd.Timestamp) -> str:
+    """Infer NBA season string from game datetime (season starts in October)."""
+    ts = pd.Timestamp(game_datetime)
+    if ts.tzinfo is None:
+        ts = ts.tz_localize("UTC")
+    else:
+        ts = ts.tz_convert("UTC")
+
+    season_start = ts.year if ts.month >= 10 else ts.year - 1
+    return f"{season_start}-{(season_start + 1) % 100:02d}"
+
 def fetch_team_stats(team_id: int, season: str = '2025-26') -> Optional[pd.Series]:
     """Fetch current season stats for a team (Advanced mode)."""
     if leaguedashteamstats is None:
@@ -280,7 +304,8 @@ def predict_from_game_id(
     home_team: str,
     away_team: str,
     fetch_odds: bool = False,
-    season: str = '2025-26',
+    season: Optional[str] = None,
+    game_datetime: Optional[Any] = None,
 ) -> Dict[str, Any]:
     """
     Predict game outcome before it starts using pregame model.
@@ -298,7 +323,8 @@ def predict_from_game_id(
         home_team: Home team tricode
         away_team: Away team tricode
         fetch_odds: Whether to fetch odds from API
-        season: NBA season (default: 2025-26)
+        season: NBA season (if omitted, inferred from game_id / game datetime)
+        game_datetime: Scheduled game time (if available) for temporal features
     
     Returns:
         Dict with prediction results (same format as halftime/Q3)
@@ -335,18 +361,27 @@ def predict_from_game_id(
             "model_used": "ERROR",
         }
     
+    # Resolve game datetime
+    if game_datetime is not None:
+        resolved_game_datetime = pd.Timestamp(game_datetime)
+        if resolved_game_datetime.tzinfo is None:
+            resolved_game_datetime = resolved_game_datetime.tz_localize('UTC')
+        else:
+            resolved_game_datetime = resolved_game_datetime.tz_convert('UTC')
+    else:
+        # Fallback when schedule date is not available
+        resolved_game_datetime = pd.Timestamp.now('UTC') - pd.Timedelta(days=1)
+
+    # Resolve season
+    resolved_season = season or infer_season_from_game_id(game_id) or infer_season_from_datetime(resolved_game_datetime)
+
     # Fetch team stats
-    home_stats = fetch_team_stats(home_id, season)
-    away_stats = fetch_team_stats(away_id, season)
-    
-    # For pregame predictions, we don't have the game_date from the API
-    # Use current date minus a day for historical lookup (simulating pregame context)
-    # In production, this should be fetched from the scoreboard or schedule API
-    # Use timezone-aware timestamp to match historical data (UTC)
-    game_datetime = pd.Timestamp.now('UTC') - pd.Timedelta(days=1)
+    logger.info("Using season=%s for pregame game_id=%s", resolved_season, game_id)
+    home_stats = fetch_team_stats(home_id, resolved_season)
+    away_stats = fetch_team_stats(away_id, resolved_season)
     
     # Extract features with historical data
-    features = extract_core_features(home_stats, away_stats, home_id, away_id, game_datetime)
+    features = extract_core_features(home_stats, away_stats, home_id, away_id, resolved_game_datetime)
     
     logger.info(f"Extracted {len(features)} features for prediction")
     
