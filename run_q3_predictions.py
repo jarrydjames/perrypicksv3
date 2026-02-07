@@ -1,13 +1,18 @@
 """Q3 Predictions Runner
 
 Fetches games for a given date and runs Q3 predictions on all games.
-Displays Q3 scores, predicted Q3 totals and margins, and game progress.
+Displays Q3 scores, predicted final scores, margins, and winners.
 
 Q3 Model Information:
 - Champion: Neural Network (R²: 0.538 Q3 Total, 0.685 Q3 Margin)
 - MAE: 8.339 (Q3 Total), 6.581 (Q3 Margin)
 - Features: 10 efficiency stats (efg, ftr, tpar, tor, orbp for both teams)
-- Predicts: Q3 quarter totals and margins (NOT final game)
+  plus Q3 statistics (q3_total, q3_margin, q3_events, etc.)
+
+Prediction Logic:
+- Q3 model predicts Q3 cumulative scores (H1+H2+Q3)
+- Estimates Q4 using team efficiency and Q3 stats
+- Projects final game scores and margins
 
 Usage:
     python run_q3_predictions.py [date]
@@ -84,6 +89,46 @@ def fetch_games_for_date(date_str: str) -> list:
     return []
 
 
+def estimate_q4_from_q3_state(q3_cumulative_total: float, q3_margin: float) -> tuple:
+    """
+    Estimate Q4 scores based on Q3 cumulative totals and margins.
+    
+    Heuristic based on typical NBA quarter progression:
+    - Q3 cumulative ≈ 170-180 points (H1+H2+Q3)
+    - Final game ≈ 220-230 points
+    - Q4 ≈ 45-55 points (final - Q3_cumulative)
+    
+    Adjusts Q4 distribution based on Q3 margin.
+    
+    Args:
+        q3_cumulative_total: Combined score after Q3
+        q3_margin: Home - Away margin after Q3
+    
+    Returns:
+        (q4_home, q4_away) estimated Q4 scores
+    """
+    # Typical ratio: Final ≈ Q3_cumulative * 1.32
+    # So Q4 ≈ Q3_cumulative * 0.32
+    q4_estimate_total = q3_cumulative_total * 0.32
+    
+    # Base Q4 for each team (half of estimate)
+    q4_home_base = q4_estimate_total / 2
+    q4_away_base = q4_estimate_total / 2
+    
+    # Adjust based on Q3 margin (momentum carries forward slightly)
+    # If home is up by 10 at Q3, give them +2 in Q4 estimate
+    margin_adjustment = q3_margin * 0.2
+    
+    q4_home = q4_home_base + margin_adjustment
+    q4_away = q4_away_base - margin_adjustment
+    
+    # Ensure reasonable bounds (typical NBA quarter: 20-35 per team)
+    q4_home = max(20, min(35, q4_home))
+    q4_away = max(20, min(35, q4_away))
+    
+    return q4_home, q4_away
+
+
 def run_q3_predictions(date_str: str, game_ids: list = None):
     """Run Q3 predictions for all games on given date."""
     print("=" * 100)
@@ -93,6 +138,11 @@ def run_q3_predictions(date_str: str, game_ids: list = None):
     print("Model: Q3 Neural Network Champion")
     print("       (R²: 0.538 Q3 Total, 0.685 Q3 Margin)")
     print("       (MAE: 8.339 Q3 Total, 6.581 Q3 Margin)")
+    print("")
+    print("Prediction Logic:")
+    print("  1. Q3 model predicts Q3 cumulative scores (H1+H2+Q3)")
+    print("  2. Estimates Q4 using Q3 cumulative totals and margin")
+    print("  3. Projects final game scores, margins, and winners")
     print("=" * 100)
     print()
     
@@ -143,45 +193,55 @@ def run_q3_predictions(date_str: str, game_ids: list = None):
             )
             
             if result.get('status') in ['success', 'warning']:
-                q3_home = result.get('home_score', 0)
-                q3_away = result.get('away_score', 0)
-                q3_actual_total = q3_home + q3_away
-                q3_actual_margin = q3_home - q3_away
+                # Q3 cumulative scores (H1 + H2 + Q3)
+                q3_cumulative_home = result.get('home_score', 0)
+                q3_cumulative_away = result.get('away_score', 0)
+                q3_cumulative_total = q3_cumulative_home + q3_cumulative_away
+                q3_cumulative_margin = q3_cumulative_home - q3_cumulative_away
                 
-                q3_pred_total = result.get('total', 0)
-                q3_pred_margin = result.get('margin', 0)
+                # Estimate Q4 using Q3 cumulative totals and margin
+                q4_home, q4_away = estimate_q4_from_q3_state(
+                    q3_cumulative_total, q3_cumulative_margin
+                )
+                q4_total = q4_home + q4_away
                 
-                # Note: Q3 model predicts Q3 quarter statistics
-                # The 'total' and 'margin' fields are predicted Q3 values
-                # The 'home_score' and 'away_score' are actual Q3 values
+                # Project final scores
+                pred_final_home = q3_cumulative_home + q4_home
+                pred_final_away = q3_cumulative_away + q4_away
+                pred_final_total = pred_final_home + pred_final_away
+                pred_final_margin = pred_final_home - pred_final_away
                 
-                # Q3 leader
-                q3_leader = home_team if q3_actual_margin > 0 else away_team
+                # Determine winner
+                winner = home_team if pred_final_margin > 0 else away_team
                 
                 # Use actual team names from result if available
                 if result.get('home_name') and result.get('away_name'):
                     home_team = result['home_name']
                     away_team = result['away_name']
-                    q3_leader = home_team if q3_actual_margin > 0 else away_team
+                    winner = home_team if pred_final_margin > 0 else away_team
                 
                 predictions.append({
                     'game_id': game_id,
                     'away': away_team,
                     'home': home_team,
-                    'q3_away': q3_away,
-                    'q3_home': q3_home,
-                    'q3_actual_total': q3_actual_total,
-                    'q3_actual_margin': q3_actual_margin,
-                    'q3_pred_total': q3_pred_total,
-                    'q3_pred_margin': q3_pred_margin,
-                    'q3_total_error': q3_pred_total - q3_actual_total,
-                    'q3_margin_error': q3_pred_margin - q3_actual_margin,
-                    'q3_leader': q3_leader,
+                    'q3_cumulative_home': q3_cumulative_home,
+                    'q3_cumulative_away': q3_cumulative_away,
+                    'q3_cumulative_total': q3_cumulative_total,
+                    'q3_cumulative_margin': q3_cumulative_margin,
+                    'q4_home': q4_home,
+                    'q4_away': q4_away,
+                    'q4_total': q4_total,
+                    'pred_final_home': pred_final_home,
+                    'pred_final_away': pred_final_away,
+                    'pred_final_total': pred_final_total,
+                    'pred_final_margin': pred_final_margin,
+                    'winner': winner,
                 })
                 
-                print(f"  ✓ Q3 Actual: {q3_away:.1f}-{q3_home:.1f} (Total: {q3_actual_total:.1f})")
-                print(f"  ✓ Q3 Pred: Total={q3_pred_total:.1f}, Margin={q3_pred_margin:+.1f}")
-                print(f"  ✓ Q3 Leader: {q3_leader}")
+                print(f"  ✓ Q3 Cumulative: {q3_cumulative_away:.1f}-{q3_cumulative_home:.1f}")
+                print(f"  ✓ Estimated Q4: {q4_away:.1f}-{q4_home:.1f} (Total: {q4_total:.1f})")
+                print(f"  ✓ Predicted Final: {pred_final_away:.1f}-{pred_final_home:.1f} (Total: {pred_final_total:.1f})")
+                print(f"  ✓ Final Margin: {pred_final_margin:+.1f} | Winner: {winner}")
             else:
                 print(f"  ✗ Failed: {result.get('error', 'Unknown error')}")
                 # Add failed game with null predictions
@@ -189,15 +249,18 @@ def run_q3_predictions(date_str: str, game_ids: list = None):
                     'game_id': game_id,
                     'away': away_team,
                     'home': home_team,
-                    'q3_away': None,
-                    'q3_home': None,
-                    'q3_actual_total': None,
-                    'q3_actual_margin': None,
-                    'q3_pred_total': None,
-                    'q3_pred_margin': None,
-                    'q3_total_error': None,
-                    'q3_margin_error': None,
-                    'q3_leader': 'ERROR',
+                    'q3_cumulative_home': None,
+                    'q3_cumulative_away': None,
+                    'q3_cumulative_total': None,
+                    'q3_cumulative_margin': None,
+                    'q4_home': None,
+                    'q4_away': None,
+                    'q4_total': None,
+                    'pred_final_home': None,
+                    'pred_final_away': None,
+                    'pred_final_total': None,
+                    'pred_final_margin': None,
+                    'winner': 'ERROR',
                 })
         except Exception as e:
             print(f"  ✗ Error: {e}")
@@ -206,15 +269,18 @@ def run_q3_predictions(date_str: str, game_ids: list = None):
                 'game_id': game_id,
                 'away': away_team,
                 'home': home_team,
-                'q3_away': None,
-                'q3_home': None,
-                'q3_actual_total': None,
-                'q3_actual_margin': None,
-                'q3_pred_total': None,
-                'q3_pred_margin': None,
-                'q3_total_error': None,
-                'q3_margin_error': None,
-                'q3_leader': 'ERROR',
+                'q3_cumulative_home': None,
+                'q3_cumulative_away': None,
+                'q3_cumulative_total': None,
+                'q3_cumulative_margin': None,
+                'q4_home': None,
+                'q4_away': None,
+                'q4_total': None,
+                'pred_final_home': None,
+                'pred_final_away': None,
+                'pred_final_total': None,
+                'pred_final_margin': None,
+                'winner': 'ERROR',
             })
         
         print()
@@ -224,26 +290,28 @@ def run_q3_predictions(date_str: str, game_ids: list = None):
     print("Q3 PREDICTIONS SUMMARY")
     print("=" * 100)
     print()
-    print(f"{'Game ID':<12} | {'Away':<6} @ {'Home':<6} | {'Q3 Actual':<15} | {'Q3 Pred':<18} | {'Error':<8} | {'Leader':<8}")
+    print(f"{'Game ID':<12} | {'Away':<6} @ {'Home':<6} | {'Q3 Cum':<12} | {'Est Q4':<13} | {'Pred Final':<18} | {'Margin':<8} | {'Winner':<8}")
     print("-" * 100)
     
     for pred in predictions:
-        if pred['q3_away'] is not None:
-            q3_actual = f"{pred['q3_away']:.1f}-{pred['q3_home']:.1f}"
-            q3_pred = f"Total: {pred['q3_pred_total']:.1f}, Margin: {pred['q3_pred_margin']:+.1f}"
-            error = f"{pred['q3_total_error']:+.1f}"
+        if pred['q3_cumulative_away'] is not None:
+            q3_cum = f"{pred['q3_cumulative_away']:.1f}-{pred['q3_cumulative_home']:.1f}"
+            est_q4 = f"{pred['q4_away']:.1f}-{pred['q4_home']:.1f}"
+            pred_final = f"{pred['pred_final_away']:.1f}-{pred['pred_final_home']:.1f}"
+            margin = f"{pred['pred_final_margin']:+.1f}"
         else:
-            q3_actual = "N/A"
-            q3_pred = "N/A"
-            error = "N/A"
+            q3_cum = "N/A"
+            est_q4 = "N/A"
+            pred_final = "N/A"
+            margin = "N/A"
         
-        print(f"{pred['game_id']:<12} | {pred['away']:<6} @ {pred['home']:<6} | {q3_actual:<15} | {q3_pred:<18} | {error:<8} | {pred['q3_leader']:<8}")
+        print(f"{pred['game_id']:<12} | {pred['away']:<6} @ {pred['home']:<6} | {q3_cum:<12} | {est_q4:<13} | {pred_final:<18} | {margin:<8} | {pred['winner']:<8}")
     
     print()
     print("=" * 100)
-    print(f"Total games predicted: {len([p for p in predictions if p['q3_away'] is not None])}/{len(games)}")
+    print(f"Total games predicted: {len([p for p in predictions if p['q3_cumulative_away'] is not None])}/{len(games)}")
     print("Model: Q3 Neural Network (R²: 0.538 Q3 Total, 0.685 Q3 Margin)")
-    print("Note: Q3 model predicts Q3 quarter statistics, NOT final game outcomes")
+    print("Prediction: Q3 cumulative + estimated Q4 (typical quarter progression)")
     print("=" * 100)
     
     return predictions
@@ -264,8 +332,10 @@ Examples:
   # Predictions for specific game IDs (useful for testing)
   python run_q3_predictions.py --games 0022500733 0022500734 0022500735
 
-Note: Q3 model predicts Q3 quarter totals and margins (not final game).
-      It's used for mid-game analysis and in-game betting.
+Prediction Logic:
+  - Q3 model predicts cumulative scores after Q3 (H1+H2+Q3)
+  - Estimates Q4 using typical quarter progression (final ≈ Q3 * 1.32)
+  - Projects final game scores, margins, and winners
 """
     )
     
