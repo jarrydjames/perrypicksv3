@@ -439,7 +439,7 @@ def render_manual_predictions():
                                                 st.markdown(f"✓ `{post_id}` → `{platform}`: **{status}**")
                                             else:
                                                 st.markdown(f"✗ `{post_id}` → `{platform}`: **{status}**")
-                                st.rerun()"}
+                                st.rerun()
                     
                 st.rerun()
         
@@ -578,7 +578,7 @@ def render_manual_predictions():
                             st.info("💡 Posts are queued but not yet sent to platforms. Click below to send them now!")
                             
                             if st.button("📤 Send Posts to Platforms", use_container_width=True):
-                                with st.spinner("Processing queue...")
+                                with st.spinner("Processing queue..."):
                                     orchestrator = get_orchestrator()
                                     process_result = orchestrator.process_post_queue(batch_size=50)
                                     
