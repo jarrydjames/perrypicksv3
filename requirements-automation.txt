@@ -1,0 +1,17 @@
+# PerryPicks v3 - Social Media Automation Requirements
+
+# Core dependencies (already in requirements.txt)
+# - pendulum
+# - requests
+
+# Social Media API Clients
+
+tweepy>=4.14.0  # Twitter/X API
+atproto>=0.0.0    # Bluesky Social API
+
+# Scheduling
+schedule>=1.2.0
+
+# Optional: For extended features
+# python-dotenv>=1.0.0  # Environment variable loading
+# boto3>=1.28.0       # For S3 delivery (optional)
