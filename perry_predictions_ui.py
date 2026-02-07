@@ -278,6 +278,7 @@ if run_predictions:
         for i, r in enumerate(results):
             if r.get('status') in ('success', 'warning'):
                 # Get prediction values
+                game_id = r.get('game_id', f'game_{i}')
                 margin = r.get('margin', 0)
                 total = r.get('total', 0)
                 home_win_prob = r.get('home_win_prob', 0.5)
@@ -307,38 +308,38 @@ if run_predictions:
 🏆 Predicted Winner: {winner} ({win_pct_str})"""
                 
                 elif mode == 'halftime':
-                    h1_away = result.get('h1_away', 'N/A')
-                    h1_home = result.get('h1_home', 'N/A')
-                    pred_2h_away = result.get('pred_2h_away', 'N/A')
-                    pred_2h_home = result.get('pred_2h_home', 'N/A')
-                    pred_final_away = result.get('pred_final_away', 'N/A')
-                    pred_final_home = result.get('pred_final_home', 'N/A')
+                    h1_away = r.get('h1_away', 'N/A')
+                    h1_home = r.get('h1_home', 'N/A')
+                    pred_2h_away = r.get('pred_2h_away', 'N/A')
+                    pred_2h_home = r.get('pred_2h_home', 'N/A')
+                    pred_final_away = r.get('pred_final_away', 'N/A')
+                    pred_final_home = r.get('pred_final_home', 'N/A')
                     
                     post = f"""🔥 Halftime Update: {away_team} @ {home_team}
 
 📊 Halftime: {h1_away} - {h1_home}
 📈 Projected 2H: {pred_2h_away:.1f} - {pred_2h_home:.1f}
 🎯 Projected Final: {pred_final_away:.1f} - {pred_final_home:.1f}
-🏆 Projected Winner: {result.get('predicted_winner', 'N/A')} by {result.get('predicted_margin', 'N/A'):.1f}"""
+🏆 Projected Winner: {r.get('predicted_winner', 'N/A')} by {r.get('predicted_margin', 'N/A'):.1f}"""
                 
                 elif mode == 'q3':
-                    q3_cum_away = result.get('q3_cum_away', 'N/A')
-                    q3_cum_home = result.get('q3_cum_home', 'N/A')
-                    est_q4_away = result.get('est_q4_away', 'N/A')
-                    est_q4_home = result.get('est_q4_home', 'N/A')
-                    pred_final_away = result.get('pred_final_away', 'N/A')
-                    pred_final_home = result.get('pred_final_home', 'N/A')
+                    q3_cum_away = r.get('q3_cum_away', 'N/A')
+                    q3_cum_home = r.get('q3_cum_home', 'N/A')
+                    est_q4_away = r.get('est_q4_away', 'N/A')
+                    est_q4_home = r.get('est_q4_home', 'N/A')
+                    pred_final_away = r.get('pred_final_away', 'N/A')
+                    pred_final_home = r.get('pred_final_home', 'N/A')
                     
                     post = f"""⚡ Q3 Update: {away_team} @ {home_team}
 
 📊 Q3 Cumulative: {q3_cum_away:.1f} - {q3_cum_home:.1f}
 📈 Estimated Q4: {est_q4_away:.1f} - {est_q4_home:.1f}
 🎯 Projected Final: {pred_final_away:.1f} - {pred_final_home:.1f}
-🏆 Projected Winner: {result.get('predicted_winner', 'N/A')} by {result.get('predicted_margin', 'N/A'):.1f}"""
+🏆 Projected Winner: {r.get('predicted_winner', 'N/A')} by {r.get('predicted_margin', 'N/A'):.1f}"""
                 
                 # Add odds if available
-                if fetch_odds and result.get('odds'):
-                    odds = result['odds']
+                if fetch_odds and r.get('odds'):
+                    odds = r['odds']
                     spread = odds.get('spread', 'N/A')
                     ou = odds.get('over_under', 'N/A')
                     post += f"\n\n💰 Odds: Spread {spread}, O/U {ou}"
@@ -348,10 +349,10 @@ if run_predictions:
                 
                 # Display post with copy button
                 with st.expander(f"📄 Post for {away_team} @ {home_team}", expanded=i == 0):
-                    st.text_area("Post Content", post, height=200, key=f"post_{game_id}")
+                    st.text_area("Post Content", post, height=200, key=f"post_{i}")
                     
                     # Add copy button (simulated)
-                    if st.button(f"📋 Copy to Clipboard", key=f"copy_{game_id}"):
+                    if st.button(f"📋 Copy to Clipboard", key=f"copy_{i}"):
                         st.code(post, language=None)
                         st.success("Post copied! Use Ctrl+C to copy from above.")
     
