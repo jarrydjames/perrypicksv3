@@ -31,7 +31,6 @@ from core.validation import validate_schedule_date, validate_system_clock
 from core.qol import canonical_pick_id, confidence_tier, interval_width, explain_trigger_decision, should_use_degraded_mode
 
 logger = logging.getLogger(__name__)
-logger = logging.getLogger(__name__)
 
 
 class AutomationRunner:
@@ -489,8 +488,8 @@ class AutomationRunner:
                 all_triggers = TriggerStorage.get_triggers_for_game(game_id, db_path=self.db_path)
                 
                 # Filter for triggers created in last 2 minutes
-                now_utc = now_utc()
-                recent_cutoff = now_utc - pendulum.duration(minutes=2)
+                current_utc = now_utc()
+                recent_cutoff = current_utc - pendulum.duration(minutes=2)
                 
                 # FIX: Use created_at_utc instead of fired_at_utc
                 # Game-state triggers are created on-the-fly with fired_at_utc=NULL
@@ -908,8 +907,8 @@ def main():
     parser.add_argument(
         '--date',
         type=str,
-        default='today',
-        help='Date to process (YYYY-MM-DD or "today") (default: today)'
+        default=pendulum.now('UTC').to_date_string(),
+        help='Date to process (YYYY-MM-DD). Defaults to current UTC date.'
     )
     
     parser.add_argument(
