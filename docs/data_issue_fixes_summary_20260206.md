@@ -27,18 +27,27 @@ All 12 pregame predictions for games on 2026-02-05 returned **identical values**
 
 ### Root Causes
 
-1. **No Current Season Stats**
-   - NBA API has no stats for 2025-26 season yet
-   - Preseason/early season stats are unavailable
-   - Result: `fetch_team_stats()` returns `None` for all teams
+**IMPORTANT:** The 2025-26 NBA season **IS in progress**. The issue is NOT that "no season exists".
+
+**Actual Root Causes:**
+
+1. **NBA API Not Returning Stats (Despite Season In Progress)** ⚠️
+   - Error: "No stats found for team_id 1610612767" (and other teams)
+   - API returns empty DataFrames for 2025-26 season requests
+   - Possible causes:
+     - Scheduled NBA gap (All-Star break, trade deadline rest)
+     - API delay during game gaps (no recent games to aggregate)
+     - Season string format issue
+     - Temporary API outage
 
 2. **Historical Data Gap**
    - Latest historical game: 2026-01-30
    - Games being predicted: 2026-02-05
    - Gap: 6 days with no data
-   - Result: Historical lookups return empty DataFrames
+   - Result: Historical lookups may return empty DataFrames
 
 3. **Default Value Fallback**
+   - When both NBA API and historical data are unavailable:
    - All teams get identical default stats:
      - Off/Def Rating: 110.0 (NBA average)
      - Pace: 100.0 (NBA average)
@@ -314,7 +323,7 @@ result = {
 
 ### Results After Fix
 
-**Data Source Summary:**
+**Data Source Summary (Feb 5, 2026):**
 
 | Data Source | Teams |
 |-------------|--------|
@@ -323,9 +332,24 @@ result = {
 
 **Predictions:**
 - Still nearly identical (90.2-90.3 @ 91.2-91.3)
-- This is **expected behavior** given data gap
-- 2025-26 stats are from before games being predicted
-- Once season starts and real-time data is available, predictions will vary
+
+### Critical Questions to Investigate:
+
+1. **Is the NBA API now returning 2025-26 season stats?**
+   - The system successfully fetched 2025-26 stats for 23/24 teams
+   - But why were stats nearly identical across teams?
+   - Are we actually getting real season stats or cached defaults?
+
+2. **Why was 1 team (WAS) falling back to DEFAULTS?**
+   - Was this a transient API error?
+   - Is it now resolved?
+
+3. **If 2025-26 season IS in progress, predictions SHOULD vary:**
+   - Different teams should have different stats
+   - Check if predictions are now working correctly
+   - Run a test prediction to verify current status
+
+**Recommendation:** Run a test prediction to verify NBA API data availability and prediction quality.
 
 ### Improved Daily Summary (Commit 1d6623c)
 
@@ -567,7 +591,11 @@ load_environment(search_from=Path(__file__).resolve().parents[1])
 | Season Start | ❌ No NBA API + ✅ Historical | **Moderate accuracy** |
 | Preseason/Future | ❌ No NBA API + ⚠️ Outdated Historical | **Identical predictions (baseline)** |
 
-**Current State:** Preseason/Future (using last season stats + historical data gap)
+**Current State:** 2025-26 NBA season in progress, but:
+- NBA API may have intermittent issues during game gaps
+- Multi-season fallback provides redundancy (2025-26 → 2024-25)
+- Historical data gaps during scheduled breaks
+- Predictions may vary once API returns current season stats consistently
 
 ### Data Flow Diagram
 
@@ -708,4 +736,4 @@ The system now:
 
 **Document Generated:** 2026-02-06
 **Status:** All fixes applied and tested
-**Next Review:** After 2025-26 season starts
+**Next Review:** Run test prediction to verify NBA API is returning 2025-26 stats correctly

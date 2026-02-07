@@ -13,9 +13,12 @@ All 12 pregame predictions for games on 2026-02-05 returned **identical values**
 - **Predicted Winner:** Home team by ~1.0 point
 
 This is **not a bug** but rather an **expected behavior** when:
-1. No current season stats are available from NBA API
-2. Historical data doesn't cover the prediction date
+1. NBA API returns no stats (despite 2025-26 season being in progress)
+2. Historical data doesn't cover prediction date
 3. Model falls back to default values for all teams
+
+**IMPORTANT:** The 2025-26 NBA season IS in progress. The issue is that the NBA API
+is not returning stats (possibly due to All-Star break, trade deadline, or scheduled gap).
 
 ---
 
@@ -96,7 +99,10 @@ Since all teams get the same values, the model predicts **identical scores** for
 
 ## Why No Data Is Available
 
-### 1. NBA API Returns No Stats for 2026-27 Season
+**IMPORTANT:** The 2025-26 NBA season IS in progress. The issue is that NBA API
+is not returning stats for some teams, possibly due to:
+
+### 1. NBA API Returns No Stats (Despite Season In Progress)
 
 ```python
 # From predict_pregame.py line 45
