@@ -38,8 +38,8 @@ TEAM_IDS = {
     'MIA': 1610612748, 'MIL': 1610612749, 'MIN': 1610612750,
     'NOP': 1610612752, 'NYK': 1610612753, 'OKC': 1610612760,
     'ORL': 1610612755, 'PHI': 1610612756, 'PHX': 1610612757,
-    'POR': 1610612758, 'SAC': 1610612759, 'SAS': 1610612761,
-    'TOR': 1610612762, 'UTA': 1610612764, 'WAS': 1610612767,
+    'POR': 1610612757, 'SAC': 1610612758, 'SAS': 1610612759,
+    'TOR': 1610612761, 'UTA': 1610612762, 'WAS': 1610612764,
 }
 
 def get_team_id(tricode: str) -> Optional[int]:
@@ -238,8 +238,6 @@ def extract_core_features(
     home_team_id: int,
     away_team_id: int,
     game_date: datetime,
-    force_home_historical: bool = False,
-    force_away_historical: bool = False,
 ) -> Dict[str, float]:
     """
     Extract core pregame features from team stats + historical data.
@@ -253,20 +251,45 @@ def extract_core_features(
     - Schedule strength features (2 features): opponent strength
     """
     features = {}
-    
-    # Get historical data manager
     hist_mgr = get_historical_data_manager()
     
+    # Helper function to map NBA API column names to feature names
+    def map_api_columns(stats_row: Optional[pd.Series]) -> Dict[str, float]:
+        """Map NBA API column names to expected feature names.
+        
+        NBA API returns TM_TOV_PCT but code expects TOV_PCT.
+        This helper handles the column name mapping."""
+        if stats_row is None:
+            return {}
+        
+        mapping = {
+            'OFF_RATING': 'off_rating',
+            'DEF_RATING': 'def_rating',
+            'PACE': 'pace',
+            'EFG_PCT': 'efg',
+            'TM_TOV_PCT': 'tov_rate',  # NBA API returns TM_TOV_PCT
+            'OREB_PCT': 'orb_rate',
+        }
+        
+        result = {}
+        for api_col, feat_name in mapping.items():
+            if api_col in stats_row.index:
+                result[feat_name] = float(stats_row[api_col])
+        return result
+    
     # ===== BASIC TEAM RATINGS (18 features) =====
+    # Map NBA API column names to feature names for both teams
+    home_mapped = map_api_columns(home_stats)
+    away_mapped = map_api_columns(away_stats)
+    
     # Use current season stats if available, otherwise use historical averages
-    if home_stats is not None and not force_home_historical:
-        features['home_off_rating'] = home_stats.get('OFF_RATING', 110.0)
-        features['home_def_rating'] = home_stats.get('DEF_RATING', 110.0)
-        features['home_pace'] = home_stats.get('PACE', 100.0)
-        features['home_efg'] = home_stats.get('EFG_PCT', 0.50)
-        features['home_ft_rate'] = home_stats.get('FTA_RATE', 0.25)
-        features['home_tov_rate'] = home_stats.get('TOV_PCT', 0.15)
-        features['home_orb_rate'] = home_stats.get('OREB_PCT', 0.25)
+    if home_stats is not None:
+        features['home_off_rating'] = home_mapped.get('off_rating', 110.0)
+        features['home_def_rating'] = home_mapped.get('def_rating', 110.0)
+        features['home_pace'] = home_mapped.get('pace', 100.0)
+        features['home_efg'] = home_mapped.get('efg', 0.50)
+        features['home_tov_rate'] = home_mapped.get('tov_rate', 0.15)
+        features['home_orb_rate'] = home_mapped.get('orb_rate', 0.25)
         gp = home_stats.get('GP', 1.0)
         wins = home_stats.get('W', 0)
         features['home_win_pct'] = wins / gp if gp > 0 else 0.5
@@ -277,25 +300,29 @@ def extract_core_features(
         features['home_def_rating'] = float(home_hist['home_def_rating'].mean()) if 'home_def_rating' in home_hist else 110.0
         features['home_pace'] = float(home_hist['home_pace'].mean()) if 'home_pace' in home_hist else 100.0
         features['home_efg'] = float(home_hist['home_efg'].mean()) if 'home_efg' in home_hist else 0.50
-        features['home_ft_rate'] = float(home_hist['home_ft_rate'].mean()) if 'home_ft_rate' in home_hist else 0.25
         features['home_tov_rate'] = float(home_hist['home_tov_rate'].mean()) if 'home_tov_rate' in home_hist else 0.15
         features['home_orb_rate'] = float(home_hist['home_orb_rate'].mean()) if 'home_orb_rate' in home_hist else 0.25
         features['home_win_pct'] = float(home_hist['home_win_pct'].mean()) if 'home_win_pct' in home_hist else 0.5
     else:
         # Default values if stats unavailable
-        for feat in ['off_rating', 'def_rating', 'pace', 'efg', 'ft_rate', 'tov_rate', 'orb_rate', 'win_pct']:
+        for feat in ['off_rating', 'def_rating', 'pace', 'efg', 'tov_rate', 'orb_rate', 'win_pct']:
             features[f'home_{feat}'] = 110.0 if feat in ['off_rating', 'def_rating'] else (100.0 if feat == 'pace' else 0.5 if feat == 'efg' else 0.25)
         features['home_win_pct'] = 0.5
     
-    # Away team stats
-    if away_stats is not None and not force_away_historical:
-        features['away_off_rating'] = away_stats.get('OFF_RATING', 110.0)
-        features['away_def_rating'] = away_stats.get('DEF_RATING', 110.0)
-        features['away_pace'] = away_stats.get('PACE', 100.0)
-        features['away_efg'] = away_stats.get('EFG_PCT', 0.50)
-        features['away_ft_rate'] = away_stats.get('FTA_RATE', 0.25)
-        features['away_tov_rate'] = away_stats.get('TOV_PCT', 0.15)
-        features['away_orb_rate'] = away_stats.get('OREB_PCT', 0.25)
+    # Add ft_rate defaults (not available in NBA API Advanced measure type)
+    if 'home_ft_rate' not in features:
+        features['home_ft_rate'] = 0.25
+    if 'away_ft_rate' not in features:
+        features['away_ft_rate'] = 0.25
+    
+    # Away team stats (using mapped columns)
+    if away_stats is not None:
+        features['away_off_rating'] = away_mapped.get('off_rating', 110.0)
+        features['away_def_rating'] = away_mapped.get('def_rating', 110.0)
+        features['away_pace'] = away_mapped.get('pace', 100.0)
+        features['away_efg'] = away_mapped.get('efg', 0.50)
+        features['away_tov_rate'] = away_mapped.get('tov_rate', 0.15)
+        features['away_orb_rate'] = away_mapped.get('orb_rate', 0.25)
         gp = away_stats.get('GP', 1.0)
         wins = away_stats.get('W', 0)
         features['away_win_pct'] = wins / gp if gp > 0 else 0.5
@@ -306,7 +333,6 @@ def extract_core_features(
         features['away_def_rating'] = float(away_hist['away_def_rating'].mean()) if 'away_def_rating' in away_hist else 110.0
         features['away_pace'] = float(away_hist['away_pace'].mean()) if 'away_pace' in away_hist else 100.0
         features['away_efg'] = float(away_hist['away_efg'].mean()) if 'away_efg' in away_hist else 0.50
-        features['away_ft_rate'] = float(away_hist['away_ft_rate'].mean()) if 'away_ft_rate' in away_hist else 0.25
         features['away_tov_rate'] = float(away_hist['away_tov_rate'].mean()) if 'away_tov_rate' in away_hist else 0.15
         features['away_orb_rate'] = float(away_hist['away_orb_rate'].mean()) if 'away_orb_rate' in away_hist else 0.25
         features['away_win_pct'] = float(away_hist['away_win_pct'].mean()) if 'away_win_pct' in away_hist else 0.5
@@ -314,6 +340,12 @@ def extract_core_features(
         for feat in ['off_rating', 'def_rating', 'pace', 'efg', 'ft_rate', 'tov_rate', 'orb_rate', 'win_pct']:
             features[f'away_{feat}'] = 110.0 if feat in ['off_rating', 'def_rating'] else (100.0 if feat == 'pace' else 0.5 if feat == 'efg' else 0.25)
         features['away_win_pct'] = 0.5
+    
+    # Add ft_rate defaults (not available in NBA API Advanced measure type)
+    if 'home_ft_rate' not in features:
+        features['home_ft_rate'] = 0.25
+    if 'away_ft_rate' not in features:
+        features['away_ft_rate'] = 0.25
     
     # ===== SCHEDULE FEATURES (8 features) =====
     # Use historical data for rest days and back-to-back
@@ -524,18 +556,15 @@ def predict_from_game_id(
     home_stats, home_stats_season = fetch_team_stats(home_id, seasons_to_try)
     away_stats, away_stats_season = fetch_team_stats(away_id, seasons_to_try)
 
-    # If historical data is stale, prefer historical-derived ratings instead of stale API season table.
-    force_historical_stats = bool(freshness.get("force_historical_stats"))
-
-    # Extract features with historical data
+    # Extract features with NBA API data (when available)
+    # Note: We always use NBA API data if available, regardless of historical staleness.
+    # Historical data is still used for schedule/form/H2H features which have no NBA API alternative.
     features = extract_core_features(
         home_stats,
         away_stats,
         home_id,
         away_id,
         resolved_game_datetime,
-        force_home_historical=force_historical_stats,
-        force_away_historical=force_historical_stats,
     )
     
     logger.info(f"Extracted {len(features)} features for prediction")
@@ -613,8 +642,8 @@ def predict_from_game_id(
         "feature_version": pred.feature_version,
         "status": "warning" if (used_defaults or stale_data) else "success",
         "data_source": {
-            "home_stats_season": "HISTORICAL" if force_historical_stats else (home_stats_season or "DEFAULTS"),
-            "away_stats_season": "HISTORICAL" if force_historical_stats else (away_stats_season or "DEFAULTS"),
+            "home_stats_season": home_stats_season or "DEFAULTS",
+            "away_stats_season": away_stats_season or "DEFAULTS",
             "requested_season": resolved_season,
             "fallback_season": fallback_season,
         },
