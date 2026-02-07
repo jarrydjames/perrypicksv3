@@ -19,7 +19,7 @@ import pandas as pd
 sys.path.insert(0, str(Path(__file__).parent))
 
 # Import prediction functions
-from src.predict_api import predict
+from src.predict_api import predict_game
 import fetch_game_schedule
 
 
@@ -186,11 +186,11 @@ if run_predictions:
         
         for game_id in nba_game_ids:
             try:
-                result = predict(
-                    game_id=game_id,
-                    mode=mode,
+                result = predict_game(
+                    game_input=game_id,
+                    use_binned_intervals=False,
                     fetch_odds=fetch_odds,
-                    verbose=False
+                    mode=mode
                 )
                 results.append(result)
             except Exception as e:
