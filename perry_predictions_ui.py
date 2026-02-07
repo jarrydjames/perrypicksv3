@@ -234,6 +234,10 @@ if run_predictions:
                 total = result.get('total', 0)
                 home_win_prob = result.get('home_win_prob', 0.5)
                 
+                # Get team names for winner calculation
+                home_team = result.get('home_name', 'Home')
+                away_team = result.get('away_name', 'Away')
+                
                 # Calculate projected scores
                 # margin = home_score - away_score
                 # total = home_score + away_score
