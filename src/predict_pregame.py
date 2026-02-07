@@ -10,7 +10,8 @@ focused on core predictive features while we build full temporal features.
 """
 from __future__ import annotations
 import logging
-from typing import Any, Dict, Optional
+import os
+from typing import Any, Dict, Optional, Sequence, Tuple
 from datetime import datetime
 import numpy as np
 import pandas as pd
@@ -69,40 +70,167 @@ def infer_season_from_datetime(game_datetime: pd.Timestamp) -> str:
     season_start = ts.year if ts.month >= 10 else ts.year - 1
     return f"{season_start}-{(season_start + 1) % 100:02d}"
 
-def fetch_team_stats(team_id: int, season: str = '2025-26') -> Optional[pd.Series]:
-    """Fetch current season stats for a team (Advanced mode)."""
-    if leaguedashteamstats is None:
-        return None
-    
+def _previous_season(season: str) -> Optional[str]:
+    """Return previous NBA season string from current season string."""
     try:
-        stats = leaguedashteamstats.LeagueDashTeamStats(
-            team_id_nullable=team_id,
-            season=season,
-            measure_type_detailed_defense='Advanced',
-            per_mode_detailed='PerGame',
-        )
-        df = stats.get_data_frames()[0]
-        
-        if len(df) == 0:
-            logger.warning(f"No stats found for team_id {team_id}")
-            return None
-
-        # Some API responses can return the full league table even when
-        # `team_id_nullable` is passed. Always select by TEAM_ID when present
-        # so each team gets its own feature row.
-        if 'TEAM_ID' in df.columns:
-            team_rows = df[df['TEAM_ID'] == team_id]
-            if len(team_rows) > 0:
-                return team_rows.iloc[0]
-
-        logger.warning(
-            "TEAM_ID %s not found in fetched stats payload; falling back to first row",
-            team_id,
-        )
-        return df.iloc[0]
-    except Exception as e:
-        logger.error(f"Error fetching stats for team_id {team_id}: {e}")
+        start_year = int(season.split('-')[0])
+        prev_start = start_year - 1
+        return f"{prev_start}-{(prev_start + 1) % 100:02d}"
+    except Exception:
         return None
+
+
+def fetch_team_stats(
+    team_id: int,
+    seasons: Optional[Sequence[str]] = None,
+) -> Tuple[Optional[pd.Series], Optional[str]]:
+    """Fetch team stats with multi-season fallback.
+
+    Returns:
+        Tuple of (team stats row, season string used).
+    """
+    if leaguedashteamstats is None:
+        return None, None
+
+    seasons_to_try = list(seasons or ['2025-26', '2024-25'])
+    for season in seasons_to_try:
+        try:
+            stats = leaguedashteamstats.LeagueDashTeamStats(
+                team_id_nullable=team_id,
+                season=season,
+                measure_type_detailed_defense='Advanced',
+                per_mode_detailed='PerGame',
+            )
+            df = stats.get_data_frames()[0]
+
+            if len(df) == 0:
+                logger.warning("No stats found for team_id %s in season %s", team_id, season)
+                continue
+
+            # Some API responses can return the full league table even when
+            # `team_id_nullable` is passed. Always select by TEAM_ID when present
+            # so each team gets its own feature row.
+            if 'TEAM_ID' in df.columns:
+                team_rows = df[df['TEAM_ID'] == team_id]
+                if len(team_rows) > 0:
+                    return team_rows.iloc[0], season
+
+                logger.warning(
+                    "TEAM_ID %s not found in fetched stats payload for season %s; trying next season",
+                    team_id,
+                    season,
+                )
+                continue
+
+            if len(df) == 1:
+                logger.warning(
+                    "TEAM_ID column missing for team_id %s in season %s; using single-row response",
+                    team_id,
+                    season,
+                )
+                return df.iloc[0], season
+
+            logger.warning(
+                "TEAM_ID column missing and multiple rows returned for team_id %s in season %s; trying next season",
+                team_id,
+                season,
+            )
+            continue
+        except Exception as e:
+            logger.error("Error fetching stats for team_id %s in season %s: %s", team_id, season, e)
+
+    return None, None
+
+
+def are_features_all_defaults(features: Dict[str, float]) -> bool:
+    """Detect when both teams are effectively using default placeholder values."""
+    checks = [
+        np.isclose(features.get('home_off_rating', -1.0), 110.0),
+        np.isclose(features.get('away_off_rating', -1.0), 110.0),
+        np.isclose(features.get('home_def_rating', -1.0), 110.0),
+        np.isclose(features.get('away_def_rating', -1.0), 110.0),
+        np.isclose(features.get('home_pace', -1.0), 100.0),
+        np.isclose(features.get('away_pace', -1.0), 100.0),
+        np.isclose(features.get('off_rating_diff', 999.0), 0.0),
+        np.isclose(features.get('def_rating_diff', 999.0), 0.0),
+        np.isclose(features.get('pace_diff', 999.0), 0.0),
+    ]
+    return sum(bool(c) for c in checks) >= 8
+
+def _safe_days_between(game_datetime: pd.Timestamp, reference_datetime: Optional[pd.Timestamp]) -> Optional[int]:
+    if reference_datetime is None:
+        return None
+    try:
+        gdt = pd.Timestamp(game_datetime)
+        rdt = pd.Timestamp(reference_datetime)
+        if gdt.tzinfo is None:
+            gdt = gdt.tz_localize("UTC")
+        else:
+            gdt = gdt.tz_convert("UTC")
+        if rdt.tzinfo is None:
+            rdt = rdt.tz_localize("UTC")
+        else:
+            rdt = rdt.tz_convert("UTC")
+        return max(int((gdt - rdt).days), 0)
+    except Exception:
+        return None
+
+
+def build_data_freshness_context(
+    game_datetime: pd.Timestamp,
+    home_team_id: int,
+    away_team_id: int,
+    max_stale_days: int = 3,
+) -> Dict[str, Any]:
+    """Build freshness metadata and stale flags from historical game data."""
+    context: Dict[str, Any] = {
+        "is_stale": False,
+        "max_stale_days": max_stale_days,
+        "historical_latest_game_date": None,
+        "days_since_historical_update": None,
+        "home_days_since_last_game": None,
+        "away_days_since_last_game": None,
+        "force_historical_stats": False,
+    }
+
+    hist_mgr = get_historical_data_manager()
+    if not hist_mgr:
+        return context
+
+    latest_game_date: Optional[pd.Timestamp] = None
+    if getattr(hist_mgr, "games_df", None) is not None and len(hist_mgr.games_df) > 0:  # type: ignore[attr-defined]
+        latest_game_date = pd.Timestamp(hist_mgr.games_df["game_date"].max())  # type: ignore[index]
+        context["historical_latest_game_date"] = latest_game_date.isoformat()
+        context["days_since_historical_update"] = _safe_days_between(game_datetime, latest_game_date)
+
+    home_recent = hist_mgr.get_team_games(home_team_id, before_date=game_datetime, n=1)
+    away_recent = hist_mgr.get_team_games(away_team_id, before_date=game_datetime, n=1)
+
+    if len(home_recent) > 0:
+        home_last = pd.Timestamp(home_recent.iloc[0]["game_date"])
+        context["home_days_since_last_game"] = _safe_days_between(game_datetime, home_last)
+    if len(away_recent) > 0:
+        away_last = pd.Timestamp(away_recent.iloc[0]["game_date"])
+        context["away_days_since_last_game"] = _safe_days_between(game_datetime, away_last)
+
+    global_gap = context.get("days_since_historical_update")
+    home_gap = context.get("home_days_since_last_game")
+    away_gap = context.get("away_days_since_last_game")
+
+    stale_reasons: list[str] = []
+    if isinstance(global_gap, int) and global_gap > max_stale_days:
+        stale_reasons.append(f"historical data is {global_gap} days old")
+    if isinstance(home_gap, int) and home_gap > max_stale_days:
+        stale_reasons.append(f"home team has {home_gap} days since last game")
+    if isinstance(away_gap, int) and away_gap > max_stale_days:
+        stale_reasons.append(f"away team has {away_gap} days since last game")
+
+    context["is_stale"] = len(stale_reasons) > 0
+    context["stale_reasons"] = stale_reasons
+    context["force_historical_stats"] = context["is_stale"]
+    context["staleness_policy"] = "force_historical_when_stale"
+    return context
+
 
 def extract_core_features(
     home_stats: Optional[pd.Series],
@@ -110,6 +238,8 @@ def extract_core_features(
     home_team_id: int,
     away_team_id: int,
     game_date: datetime,
+    force_home_historical: bool = False,
+    force_away_historical: bool = False,
 ) -> Dict[str, float]:
     """
     Extract core pregame features from team stats + historical data.
@@ -129,7 +259,7 @@ def extract_core_features(
     
     # ===== BASIC TEAM RATINGS (18 features) =====
     # Use current season stats if available, otherwise use historical averages
-    if home_stats is not None:
+    if home_stats is not None and not force_home_historical:
         features['home_off_rating'] = home_stats.get('OFF_RATING', 110.0)
         features['home_def_rating'] = home_stats.get('DEF_RATING', 110.0)
         features['home_pace'] = home_stats.get('PACE', 100.0)
@@ -158,7 +288,7 @@ def extract_core_features(
         features['home_win_pct'] = 0.5
     
     # Away team stats
-    if away_stats is not None:
+    if away_stats is not None and not force_away_historical:
         features['away_off_rating'] = away_stats.get('OFF_RATING', 110.0)
         features['away_def_rating'] = away_stats.get('DEF_RATING', 110.0)
         features['away_pace'] = away_stats.get('PACE', 100.0)
@@ -375,13 +505,38 @@ def predict_from_game_id(
     # Resolve season
     resolved_season = season or infer_season_from_game_id(game_id) or infer_season_from_datetime(resolved_game_datetime)
 
-    # Fetch team stats
-    logger.info("Using season=%s for pregame game_id=%s", resolved_season, game_id)
-    home_stats = fetch_team_stats(home_id, resolved_season)
-    away_stats = fetch_team_stats(away_id, resolved_season)
-    
+    # Build freshness context from historical data
+    max_stale_days = int(os.getenv("PREGAME_MAX_STALE_DAYS", "3"))
+    freshness = build_data_freshness_context(
+        resolved_game_datetime,
+        home_id,
+        away_id,
+        max_stale_days=max_stale_days,
+    )
+
+    # Fetch team stats with fallback season
+    fallback_season = _previous_season(resolved_season)
+    seasons_to_try = [resolved_season]
+    if fallback_season and fallback_season != resolved_season:
+        seasons_to_try.append(fallback_season)
+
+    logger.info("Using seasons=%s for pregame game_id=%s", seasons_to_try, game_id)
+    home_stats, home_stats_season = fetch_team_stats(home_id, seasons_to_try)
+    away_stats, away_stats_season = fetch_team_stats(away_id, seasons_to_try)
+
+    # If historical data is stale, prefer historical-derived ratings instead of stale API season table.
+    force_historical_stats = bool(freshness.get("force_historical_stats"))
+
     # Extract features with historical data
-    features = extract_core_features(home_stats, away_stats, home_id, away_id, resolved_game_datetime)
+    features = extract_core_features(
+        home_stats,
+        away_stats,
+        home_id,
+        away_id,
+        resolved_game_datetime,
+        force_home_historical=force_historical_stats,
+        force_away_historical=force_historical_stats,
+    )
     
     logger.info(f"Extracted {len(features)} features for prediction")
     
@@ -430,6 +585,9 @@ def predict_from_game_id(
             "model_used": "ERROR",
         }
     
+    used_defaults = (home_stats is None or away_stats is None) and are_features_all_defaults(features)
+    stale_data = bool(freshness.get("is_stale"))
+
     # Build result dict (same format as halftime/Q3)
     result = {
         "game_id": game_id,
@@ -453,8 +611,31 @@ def predict_from_game_id(
         "model_used": "PREGAME_V3_FINAL",
         "model_name": pred.model_name,
         "feature_version": pred.feature_version,
-        "status": "success",
+        "status": "warning" if (used_defaults or stale_data) else "success",
+        "data_source": {
+            "home_stats_season": "HISTORICAL" if force_historical_stats else (home_stats_season or "DEFAULTS"),
+            "away_stats_season": "HISTORICAL" if force_historical_stats else (away_stats_season or "DEFAULTS"),
+            "requested_season": resolved_season,
+            "fallback_season": fallback_season,
+        },
+        "data_freshness": freshness,
     }
+
+    warning_parts: list[str] = []
+    if stale_data:
+        stale_reasons = freshness.get("stale_reasons") or []
+        if stale_reasons:
+            warning_parts.append("Stale data detected: " + "; ".join(stale_reasons) + ".")
+        else:
+            warning_parts.append("Stale data detected from historical freshness checks.")
+    if used_defaults:
+        warning_parts.append(
+            "Using league averages as default values because team stats were unavailable "
+            "from NBA API/historical sources."
+        )
+
+    if warning_parts:
+        result["data_warning"] = " ".join(warning_parts)
     
     # Fetch odds if requested
     if fetch_odds:
