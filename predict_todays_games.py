@@ -24,7 +24,7 @@ TEAM_IDS = {
     'MIL': 1610612749, 'MIN': 1610612750, 'BKN': 1610612751, 'NYK': 1610612752,
     'ORL': 1610612753, 'IND': 1610612754, 'PHI': 1610612755, 'PHX': 1610612756,
     'POR': 1610612757, 'SAC': 1610612758, 'SAS': 1610612759, 'OKC': 1610612760,
-    'TOR': 1610612761, 'WAS': 1610612762, 'MEM': 1610612763, 'UTA': 1610612764,
+    'TOR': 1610612761, 'UTA': 1610612762, 'MEM': 1610612763, 'WAS': 1610612764,
     'DET': 1610612765, 'CHA': 1610612766
 }
 
@@ -147,7 +147,18 @@ def fetch_team_stats(team_id, team_name):
             logger.warning(f"No stats found for {team_name}")
             return None
         
-        return df.iloc[0]
+        if 'TEAM_ID' in df.columns:
+            team_rows = df[df['TEAM_ID'] == team_id]
+            if len(team_rows) > 0:
+                return team_rows.iloc[0]
+            logger.warning(f"TEAM_ID {team_id} not found in stats payload for {team_name}")
+            return None
+
+        if len(df) == 1:
+            return df.iloc[0]
+
+        logger.warning(f"Ambiguous stats payload for {team_name}; TEAM_ID missing")
+        return None
     except Exception as e:
         logger.error(f"Error fetching {team_name} stats: {e}")
         return None
