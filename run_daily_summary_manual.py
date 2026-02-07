@@ -81,7 +81,7 @@ for i, game in enumerate(games):
             fetch_odds=False
         )
         
-        if result.get('status') == 'success':
+        if result.get('status') in ['success', 'warning']:
             # Calculate individual scores from total and margin
             total = result.get('total', 0)
             margin = result.get('margin', 0)
