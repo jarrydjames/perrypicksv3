@@ -189,7 +189,8 @@ if run_predictions:
             try:
                 # Add delay between predictions to avoid NBA API rate limiting
                 if i > 0:
-                    time.sleep(1.0)  # 1 second delay between games
+                    st.info(f"Waiting 3s to avoid API rate limiting... ({i+1}/{len(nba_game_ids)} games)")
+                    time.sleep(3.0)  # 3 second delay between games (each prediction makes 2 API calls)
                 
                 result = predict_game(
                     game_input=game_id,
