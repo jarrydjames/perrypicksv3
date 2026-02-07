@@ -17,7 +17,12 @@ def _pregame_import_gate(
     game_id: str,
     home_team: Optional[str],
     away_team: Optional[str],
+    bypass: bool = False,
 ) -> Optional[dict]:
+    # Allow bypassing the import gate for manual predictions (e.g., Streamlit UI)
+    if bypass:
+        return None
+    
     if _is_placeholder_team(home_team) or _is_placeholder_team(away_team):
         return {
             "status": "error",
@@ -192,6 +197,7 @@ def predict_game(
     mode: str = 'auto',
     home_team: Optional[str] = None,
     away_team: Optional[str] = None,
+    bypass_import_gate: bool = False,
 ) -> Dict[str, Any]:
     """
     Single public entrypoint used by app.py.
@@ -230,6 +236,9 @@ def predict_game(
             - 'auto': Auto-detect based on game state (DEFAULT - RECOMMENDED)
         home_team: Home team tricode (optional, helps avoid API calls)
         away_team: Away team tricode (optional, helps avoid API calls)
+        bypass_import_gate: Whether to bypass the import data freshness check (default False).
+            Set True for manual predictions (e.g., Streamlit UI, ad-hoc predictions).
+            Set False for production automation to ensure data freshness.
     
     Returns:
         Dict with prediction results including:
@@ -307,6 +316,7 @@ def predict_game(
                 game_id=game_input,
                 home_team=home_team,
                 away_team=away_team,
+                bypass=bypass_import_gate,
             )
             if gate_error is not None:
                 return gate_error

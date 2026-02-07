@@ -201,7 +201,8 @@ if run_predictions:
                     fetch_odds=fetch_odds,
                     mode=mode,
                     home_team=home_team,
-                    away_team=away_team
+                    away_team=away_team,
+                    bypass_import_gate=True  # Bypass import gate for manual Streamlit UI predictions
                 )
                 results.append(result)
             except Exception as e:
