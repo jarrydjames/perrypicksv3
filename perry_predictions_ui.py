@@ -177,26 +177,31 @@ if run_predictions:
     }
     mode = mode_map[prediction_type]
     
-    # Get NBA game IDs
-    nba_game_ids = [game['nba_id'] for game in schedule_data['games']]
+    # Get games with team info
+    games = schedule_data['games']
     
     # Run predictions
     with st.spinner(f"Running {prediction_type.lower()} predictions..."):
         results = []
         errors = []
         
-        for i, game_id in enumerate(nba_game_ids):
+        for i, game in enumerate(games):
+            game_id = game['nba_id']
+            home_team = game.get('home_team')
+            away_team = game.get('away_team')
+            
             try:
                 # Add delay between predictions to avoid NBA API rate limiting
                 if i > 0:
-                    st.info(f"Waiting 3s to avoid API rate limiting... ({i+1}/{len(nba_game_ids)} games)")
-                    time.sleep(3.0)  # 3 second delay between games (each prediction makes 2 API calls)
+                    time.sleep(1.0)  # 1 second delay between games
                 
                 result = predict_game(
                     game_input=game_id,
                     use_binned_intervals=False,
                     fetch_odds=fetch_odds,
-                    mode=mode
+                    mode=mode,
+                    home_team=home_team,
+                    away_team=away_team
                 )
                 results.append(result)
             except Exception as e:
