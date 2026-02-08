@@ -53,7 +53,7 @@ class PostGenerator:
         Returns:
             Formatted post text
         """
-        if prediction.get("status") != "success":
+        if prediction.get("status") not in ("success", "warning"):
             return self._generate_error_post(prediction, platform)
         
         # Extract prediction data
@@ -127,7 +127,7 @@ class PostGenerator:
         Returns:
             Formatted post text
         """
-        if prediction.get("status") != "success":
+        if prediction.get("status") not in ("success", "warning"):
             return self._generate_error_post(prediction, platform)
         
         home_team = prediction.get("home_name", "Home")
@@ -172,7 +172,7 @@ class PostGenerator:
         Returns:
             Formatted post text
         """
-        if prediction.get("status") != "success":
+        if prediction.get("status") not in ("success", "warning"):
             return self._generate_error_post(prediction, platform)
         
         home_team = prediction.get("home_name", "Home")
@@ -322,7 +322,7 @@ class PostGenerator:
         tweets.append(self.generate_pregame_post(prediction, platform))
         
         # Second tweet: Detailed breakdown (if space needed)
-        if prediction.get("status") == "success":
+        if prediction.get("status") in ("success", "warning"):
             breakdown = self._generate_breakdown_post(prediction, platform)
             if breakdown:
                 tweets.append(breakdown)
