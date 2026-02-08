@@ -35,30 +35,23 @@ def _safe_team_name(team_block: dict, fallback: str) -> str:
     return fallback
 
 
-def _extract_status(game: dict) -> dict:
-    # Return a dict shaped like what your app previously displayed.
-    # Works with the "boxscore" style payload returned by fetch_box.
-    status = {}
-
-    # Common keys:
-    # - gameStatus, gameStatusText, period, gameClock, gameTimeUTC
-    for k in ("gameStatus", "gameStatusText", "period", "gameClock", "gameTimeUTC"):
-        if k in game:
-            status[k] = game.get(k)
-
-    # Sometimes nested:
-    if not status:
-        st = game.get("status") or {}
-        if isinstance(st, dict):
-            for k in ("gameStatus", "gameStatusText", "period", "gameClock", "gameTimeUTC"):
-                if k in st:
-                    status[k] = st.get(k)
-
-    # Final fallback: at least include something
-    if not status:
-        status = {"gameStatus": game.get("gameStatus", None), "gameStatusText": game.get("gameStatusText", None)}
-
-    return status
+def _extract_status(game: dict) -> str:
+    # Return a simple string status for post generator compatibility.
+    # 'success' - game completed or in progress (valid for predictions)
+    # 'warning' - game has minor issues but still valid
+    # 'error' - game failed or invalid data
+    
+    game_status = game.get("gameStatus")
+    
+    if game_status == 3:  # Final
+        return "success"
+    elif game_status in (1, 2):  # In progress (Q1, Q2, Q3, Q4, or OT)
+        return "success"
+    elif game_status == 0:  # Not started
+        return "success"
+    else:
+        # Unknown or other status
+        return "warning"
 
 
 def _elapsed_since_halftime_seconds(status: dict) -> int:
@@ -169,6 +162,9 @@ def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True, fet
     away_name = _safe_team_name(away_team, "Away")
     status = _extract_status(game)
     
+    # Don't need elapsed_since_halftime_seconds for post generator
+    elapsed_since_halftime = 0
+    
     # Fetch odds if requested (same as Q3 model)
     odds_data = {}
     if fetch_odds:
@@ -207,11 +203,7 @@ def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True, fet
         "total": float(final_total_mu),
         "margin": float(final_margin_mu),
         "status": status,
-        "elapsed_since_halftime_seconds": _elapsed_since_halftime_seconds(status),
-        "current_home": None,
-        "current_away": None,
-        "clock_adjustment": None,
-        "elapsed_since_halftime_seconds": _elapsed_since_halftime_seconds(status),
+        "elapsed_since_halftime_seconds": elapsed_since_halftime,
         "current_home": None,
         "current_away": None,
         "clock_adjustment": None,

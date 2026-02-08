@@ -43,6 +43,13 @@ class PersistentOddsCache:
             return None
         
         expires_at = row["expires_at_utc"]
+        # Convert to float (SQLite stores as text)
+        try:
+            expires_at = float(expires_at)
+        except (ValueError, TypeError):
+            # Invalid expires_at, treat as expired
+            return None
+        
         # Check if expired
         if expires_at < time.time():
             return None
@@ -123,10 +130,18 @@ class PersistentOddsCache:
                 (cache_key,)
             ).fetchone()
         
-        if not row:
+        if row is None:
             return True
         
-        return row["expires_at_utc"] < time.time()
+        # Convert to float (SQLite stores as text)
+        expires_at = row["expires_at_utc"]
+        try:
+            expires_at = float(expires_at)
+        except (ValueError, TypeError):
+            # Invalid expires_at, treat as expired
+            return True
+        
+        return expires_at < time.time()
     
     def get_or_fetch(self, home: str, away: str) -> Optional[OddsAPIMarketSnapshot]:
         """Get odds from cache, or fetch if not available/expired."""

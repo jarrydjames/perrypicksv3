@@ -155,14 +155,18 @@ def fetch_nba_odds_snapshot(
     an = _norm(away_name)
 
     def _team_score(want: str, got: str) -> float:
+        # Ensure both are strings
         if not want or not got:
             return 0.0
-        if want == got:
+        want_str = str(want) if not isinstance(want, str) else want
+        got_str = str(got) if not isinstance(got, str) else got
+        
+        if want_str == got_str:
             return 10.0
-        if want in got or got in want:
+        if want_str in got_str or got_str in want_str:
             return 8.0
-        want_tokens = set(want.split())
-        got_tokens = set(got.split())
+        want_tokens = set(want_str.split())
+        got_tokens = set(got_str.split())
         if not want_tokens or not got_tokens:
             return 0.0
         overlap = len(want_tokens & got_tokens)
