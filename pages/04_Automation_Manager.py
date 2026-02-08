@@ -804,16 +804,24 @@ def render_history():
     
     # Show posts
     for i, post in enumerate(posted_posts[:50]):
+        # Format created_at_utc for display
+        try:
+            from datetime import datetime
+            created_dt = datetime.fromisoformat(post.created_at_utc.replace("Z", "+00:00"))
+            created_str = created_dt.strftime('%Y-%m-%d %H:%M')
+        except (ValueError, AttributeError):
+            created_str = post.created_at_utc[:16] if post.created_at_utc else "Unknown"
+        
         with st.expander(
-            f"{post.game_id} | {post.platform} | {post.created_at.strftime('%Y-%m-%d %H:%M')}"
+            f"{post.game_id} | {post.platform} | {created_str}"
         ):
             st.markdown(f"**Post ID:** `{post.post_id}`")
             st.markdown(f"**Game ID:** `{post.game_id}`")
             st.markdown(f"**Platform:** `{post.platform}`")
-            st.markdown(f"**Created:** `{post.created_at}`")
+            st.markdown(f"**Created:** `{post.created_at_utc}`")
             
-            if post.posted_at:
-                st.markdown(f"**Posted:** `{post.posted_at}`")
+            if post.posted_at_utc:
+                st.markdown(f"**Posted:** `{post.posted_at_utc}`")
             
             if post.message_id:
                 st.markdown(f"**Message ID:** `{post.message_id}`")
