@@ -580,7 +580,13 @@ Error: Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment v
 26. **a3f811f** - Fix: Halftime predictions returning all zeros
    - 1 file changed, 26 insertions(+), 4 deletions(-)
    
-27. **(this commit)** - Add Bug #15 documentation and update stats
+27. **4716cb6** - Add Bug #15 documentation: Halftime predictions returning all zeros
+   - 3 files changed, 221 insertions(+), 9 deletions(-)
+   
+28. **68aa11e** - Fix: Halftime predictions missing margin/total keys - improved error handling
+   - 1 file changed, 15 insertions(+), 4 deletions(-)
+   
+29. **(this commit)** - Add Bug #16 documentation and update stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -707,9 +713,10 @@ All fixes are documented in:
 13. ✅ Better button labels and UI
 15. ✅ Pregame posts show team scores and winner (better format)
 16. ✅ Halftime predictions show actual scores (not all zeros)
+17. ✅ Halftime predictions have robust error handling for missing keys
 
 ### New Feature Added
-16. ✅ **Toggle to disable odds fetching for testing**
+18. ✅ **Toggle to disable odds fetching for testing**
    - Toggle in "Single Game Prediction" mode
    - Toggle in "Generate All Pregame Predictions" mode
    - Allows testing predictions without hitting odds API
@@ -717,14 +724,14 @@ All fixes are documented in:
    - ON by default (existing behavior)
 
 ### Total Stats
-- **Critical bugs fixed:** 14
+- **Critical bugs fixed:** 15
 - **High priority bugs fixed:** 2
 - **UX improvements:** 8
 - **Features added:** 1
-- **Total fixes:** 24
+- **Total fixes:** 25
 - **Files modified:** 7 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py, predict_from_gameid_v3_runtime.py, predict_api.py)
-- **Documentation created:** 11
-- **Commits pushed:** 16
+- **Documentation created:** 12
+- **Commits pushed:** 17
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
@@ -768,6 +775,6 @@ All fixes are documented in:
 **Author:** Perry (code-puppy)
 **Date:** February 7, 2026
 **Status:** ✅ COMPREHENSIVE REVIEW COMPLETE - ALL CRITICAL BUGS FIXED
-**Deployment:** ✅ Pushed to GitHub, Streamlit Cloud deploying now
+**Deployment:** ✅ Pushed to GitHub (commit 68aa11e), Streamlit Cloud deploying now
 
 🐶 *Systematic review complete. All critical bugs fixed. System ready!* 🚀
