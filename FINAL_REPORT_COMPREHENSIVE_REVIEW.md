@@ -544,7 +544,13 @@ Error: Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment v
 14. **263befc** - Fix: Better error handling and user feedback for posting failures
    - 2 files changed, 114 insertions(+), 31 deletions(-)
    
-15. **(this commit)** - Update documentation with Bug #10 (posting failures)
+15. **8ff7988** - Add Bug #10 documentation: Posting errors not shown to user
+   - 3 files changed, 392 insertions(+), 16 deletions(-)
+   
+16. **d0c728a** - Fix: Discord posting was failing - missing username parameter
+   - 1 file changed, 6 insertions(+), 2 deletions(-)
+   
+17. **(this commit)** - Add Bug #11 documentation and update stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -646,31 +652,33 @@ All fixes are documented in:
 2. 🔴 Code crashed when counting posts (summation bug)
 3. 🔴 Missing import for format_prediction (NameError)
 4. 🔴 Wrong field names (created_at vs created_at_utc)
-5. 🔴 Posting errors not shown to user (silent failures)
-6. 🟠 Test Mode was confusing (default ON)
-7. 🟡 No persistent feedback (no notifications)
-8. 🟡 No workflow guidance (users didn't know what to do)
+5. 🔴 Discord posting failing (missing username parameter)
+6. 🔴 Posting errors not shown to user (silent failures)
+7. 🟠 Test Mode was confusing (default ON)
+8. 🟡 No persistent feedback (no notifications)
+9. 🟡 No workflow guidance (users didn't know what to do)
 
 ### What Is Now Correct
 1. ✅ Results stay visible after generation
 2. ✅ No crashes when counting posts
 3. ✅ All required functions imported correctly
 4. ✅ All field names correct (created_at_utc, posted_at_utc)
-5. ✅ Posting errors shown to users (not just logged)
-6. ✅ Test Mode is OFF by default
-7. ✅ Persistent toast notifications for all actions
-8. ✅ Clear step-by-step workflow guide
-9. ✅ Accurate progress messages with counts
-10. ✅ Better button labels and UI
+5. ✅ Discord posts now send successfully (username parameter fixed)
+6. ✅ Posting errors shown to users (not just logged)
+7. ✅ Test Mode is OFF by default
+8. ✅ Persistent toast notifications for all actions
+9. ✅ Clear step-by-step workflow guide
+10. ✅ Accurate progress messages with counts
+11. ✅ Better button labels and UI
 
 ### Total Stats
-- **Critical bugs fixed:** 10
+- **Critical bugs fixed:** 11
 - **High priority bugs fixed:** 2
 - **UX improvements:** 7
-- **Total fixes:** 19
-- **Files modified:** 2
-- **Documentation created:** 5
-- **Commits pushed:** 10
+- **Total fixes:** 20
+- **Files modified:** 3 (added discord_client.py)
+- **Documentation created:** 6
+- **Commits pushed:** 11
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
