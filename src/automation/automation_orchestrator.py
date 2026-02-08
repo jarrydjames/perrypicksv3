@@ -130,12 +130,24 @@ class AutomationOrchestrator:
                 # Run prediction
                 if progress_callback:
                     progress_callback(progress, f"Predicting {game_id}...")
+                logger.info(f"Running prediction for {game_id} with mode={mode}, trigger_type={trigger_type}")
                 prediction = predict_game(game_id, mode=mode, fetch_odds=fetch_odds)
-                logger.info(f"Prediction result for {game_id}: {prediction.get('status', 'unknown')}")
+                
+                # Log detailed prediction result
+                logger.info(f"Prediction result for {game_id}:")
+                logger.info(f"  Type: {type(prediction)}")
+                if isinstance(prediction, dict):
+                    logger.info(f"  Keys: {list(prediction.keys())}")
+                    logger.info(f"  Status: {prediction.get('status', 'missing')}")
+                    logger.info(f"  Model used: {prediction.get('model_used', 'missing')}")
+                    logger.info(f"  Error: {prediction.get('error', 'none')}")
+                else:
+                    logger.warning(f"Prediction is not a dict: {prediction}")
+                
                 results["predictions"].append(prediction)
                 
                 # Post to social media
-                if prediction.get("status") == "success":
+                if prediction and prediction.get("status") == "success":
                     if progress_callback:
                         progress_callback(progress, f"Posting {game_id} to social media...")
                     post_results = self.social_manager.post_prediction(
@@ -166,12 +178,13 @@ class AutomationOrchestrator:
                             msg += ")"
                         progress_callback(progress, msg)
                 else:
-                    error_msg = prediction.get("error", "Unknown error")
+                    error_msg = prediction.get("error", "Unknown error") if isinstance(prediction, dict) else f"Invalid prediction type: {type(prediction)}"
                     results["errors"].append({
                         "game_id": game_id,
                         "error": error_msg,
                     })
                     logger.error(f"Prediction failed for {game_id}: {error_msg}")
+                    logger.error(f"Prediction details: {prediction}")
                     if progress_callback:
                         progress_callback(progress, f"✗ Failed {game_id}: {error_msg}")
             

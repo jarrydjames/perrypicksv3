@@ -325,6 +325,7 @@ def predict_game(
             if gate_error is not None:
                 return gate_error
 
+            logger.info(f"Calling predict_pregame for {game_input} with home_team={home_team}, away_team={away_team}")
             result = predict_pregame(
                 game_id=game_input,
                 home_team=home_team,
@@ -333,27 +334,39 @@ def predict_game(
                 game_datetime=(game_data or {}).get("gameTimeUTC") if isinstance(game_data, dict) else None,
             )
             
+            logger.info(f"Pregame result for {game_input}: type={type(result)}, keys={list(result.keys()) if isinstance(result, dict) else 'N/A'}, status={result.get('status') if isinstance(result, dict) else 'N/A'}")
+            
             # Add game state info to result
             if result and result.get('status') == 'success':
                 result['game_state'] = game_state if mode == 'auto' else 'pregame_forced'
                 result['mode_requested'] = mode
+                logger.info(f"Pregame prediction successful for {game_input}")
             elif result and result.get('status') == 'error':
                 # Pregame model returned error, just add metadata
                 result['game_state'] = game_state if mode == 'auto' else 'pregame_forced'
                 result['mode_requested'] = mode
+                logger.error(f"Pregame prediction error for {game_input}: {result.get('error')}")
             else:
                 # Pregame prediction has unexpected structure
                 logger.error(f"Pregame prediction for {game_input} has unexpected structure")
-                logger.error(f"Result: {result}")
+                logger.error(f"Result type: {type(result)}")
+                logger.error(f"Result value: {result}")
                 # Ensure result has required keys even if it's incomplete
                 if result and isinstance(result, dict):
+                    # Check if it has an error field but no status
+                    if 'error' in result and 'status' not in result:
+                        result['status'] = 'error'
+                        logger.error(f"Pregame prediction had error field but no status field")
+                    # Ensure all required fields exist
                     result.setdefault('status', 'error')
                     result.setdefault('game_id', game_input)
-                    result.setdefault('home_name', 'Home')
-                    result.setdefault('away_name', 'Away')
+                    result.setdefault('home_name', home_team or 'Home')
+                    result.setdefault('away_name', away_team or 'Away')
                     result.setdefault('margin', 0)
                     result.setdefault('total', 0)
-                    result.setdefault('model_used', 'PREGAME_UNEXPECTED')
+                    if 'error' not in result:
+                        result['error'] = 'Pregame prediction returned incomplete result'
+                    result.setdefault('model_used', 'PREGAME_INCOMPLETE')
                     result['game_state'] = game_state if mode == 'auto' else 'pregame_forced'
                     result['mode_requested'] = mode
                 else:
@@ -363,8 +376,8 @@ def predict_game(
                         'error': f'Pregame prediction returned unexpected type: {type(result)}',
                         'game_id': game_input,
                         'model_used': 'PREGAME_ERROR',
-                        'home_name': 'Home',
-                        'away_name': 'Away',
+                        'home_name': home_team or 'Home',
+                        'away_name': away_team or 'Away',
                         'margin': 0,
                         'total': 0,
                         'game_state': game_state if mode == 'auto' else 'pregame_forced',
