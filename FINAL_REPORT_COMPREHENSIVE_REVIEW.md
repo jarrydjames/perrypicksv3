@@ -419,6 +419,86 @@ st.button("📤 Send Posts to Platforms", key="send_posts_all_predictions")
 
 ---
 
+---
+
+### Bug #10: Posting Errors Not Shown to User 🔴 CRITICAL
+**Status:** ✅ FIXED
+**Date:** February 7, 2026 (User-reported issue)
+
+**The Problem:**
+User reported:
+- Predictions were created successfully
+- Posts showed as "pending" in queue
+- When clicking "Process Queue", it said "processed 2 posts"
+- But **nothing actually posted to Discord**!
+
+This was very confusing - user thought posts were being sent, but they were failing silently.
+
+**Root Cause:**
+1. **Discord webhook not configured**: `DISCORD_WEBHOOK_URL` not set → Discord client = None
+2. **Errors only logged**: When posting failed, errors were logged but **not shown to user**
+3. **Generic error messages**: Posts marked with "Posting failed" instead of specific error
+4. **Misleading "processed" message**: User saw "Processed 2 posts!" but actually 0 succeeded, 2 failed
+
+
+**Error Flow:**
+```
+1. Discord webhook not set → self.discord = None
+2. Try to post → if self.discord: (false)
+3. Log warning → logger.warning("Discord client not available")
+4. Return None → return None
+5. Mark as failed → queue.mark_failed(post_id, "Posting failed")
+6. Show to user → "Processed 2 posts!" (includes failures!)
+```
+
+**What User Saw:**
+```
+Processed 2 posts!
+```
+
+**What Should Have Been Shown:**
+```
+Processed 2 posts! (0 successful, 2 failed)
+
+Error: Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment variable.
+```
+
+**The Fixes:**
+
+1. **Better Discord error handling** (`social_media_manager.py` - `_post_to_platform`):
+   - Added try/except around Discord posting
+   - Return error dict with specific message instead of None
+   - Clear error: "Discord webhook URL not configured"
+
+2. **Better error processing** (`social_media_manager.py` - `process_queue`):
+   - Check if platform_result has 'error' key
+   - Store and return specific error messages
+   - Handle None returns with better message
+
+3. **Better user feedback** (`pages/04_Automation_Manager.py` - all Process Queue buttons):
+   - Show success/failed breakdown: "Processed 2 posts! (0 successful, 2 failed)"
+   - Added expandable "Error Details" section
+   - Shows specific error for each failed post
+   - Different toast messages for success vs all-failure
+   - Better error display in post lists
+
+
+**What This Fixes:**
+- ✅ Errors are now shown to users (not just logged)
+- ✅ Specific error messages returned from platforms
+- ✅ Clear success/failed breakdown in UI
+- ✅ Expandable error details section
+- ✅ User can now troubleshoot failures
+- ✅ No more silent failures
+
+**File Created:**
+- `BUG_POSTING_FAILURES.md` - Detailed bug analysis and fixes
+
+**Commit:**
+- `263befc` - Fix: Better error handling and user feedback for posting failures
+
+---
+
 ## 🚀 Deployment
 
 ### Commits Pushed
@@ -458,7 +538,13 @@ st.button("📤 Send Posts to Platforms", key="send_posts_all_predictions")
 12. **8ab03a3** - Fix: StreamlitDuplicateElementId - Added unique keys to duplicate buttons
    - 1 file changed, 4 insertions(+), 4 deletions(-)
    
-13. **(this commit)** - Update final report with Bug #9 and updated stats
+13. **c3ec1b4** - Update final report with Bug #9 and updated stats
+   - 2 files changed, 57 insertions(+), 7 deletions(-)
+   
+14. **263befc** - Fix: Better error handling and user feedback for posting failures
+   - 2 files changed, 114 insertions(+), 31 deletions(-)
+   
+15. **(this commit)** - Update documentation with Bug #10 (posting failures)
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -560,29 +646,31 @@ All fixes are documented in:
 2. 🔴 Code crashed when counting posts (summation bug)
 3. 🔴 Missing import for format_prediction (NameError)
 4. 🔴 Wrong field names (created_at vs created_at_utc)
-5. 🟠 Test Mode was confusing (default ON)
-6. 🟡 No persistent feedback (no notifications)
-7. 🟡 No workflow guidance (users didn't know what to do)
+5. 🔴 Posting errors not shown to user (silent failures)
+6. 🟠 Test Mode was confusing (default ON)
+7. 🟡 No persistent feedback (no notifications)
+8. 🟡 No workflow guidance (users didn't know what to do)
 
 ### What Is Now Correct
 1. ✅ Results stay visible after generation
 2. ✅ No crashes when counting posts
 3. ✅ All required functions imported correctly
 4. ✅ All field names correct (created_at_utc, posted_at_utc)
-5. ✅ Test Mode is OFF by default
-6. ✅ Persistent toast notifications for all actions
-7. ✅ Clear step-by-step workflow guide
-8. ✅ Accurate progress messages with counts
-9. ✅ Better button labels and UI
+5. ✅ Posting errors shown to users (not just logged)
+6. ✅ Test Mode is OFF by default
+7. ✅ Persistent toast notifications for all actions
+8. ✅ Clear step-by-step workflow guide
+9. ✅ Accurate progress messages with counts
+10. ✅ Better button labels and UI
 
 ### Total Stats
-- **Critical bugs fixed:** 9
+- **Critical bugs fixed:** 10
 - **High priority bugs fixed:** 2
 - **UX improvements:** 7
-- **Total fixes:** 18
+- **Total fixes:** 19
 - **Files modified:** 2
-- **Documentation created:** 4
-- **Commits pushed:** 9
+- **Documentation created:** 5
+- **Commits pushed:** 10
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
