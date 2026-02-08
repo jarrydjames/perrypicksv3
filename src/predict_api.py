@@ -333,6 +333,39 @@ def predict_game(
             if result and result.get('status') == 'success':
                 result['game_state'] = game_state if mode == 'auto' else 'pregame_forced'
                 result['mode_requested'] = mode
+            elif result and result.get('status') == 'error':
+                # Pregame model returned error, just add metadata
+                result['game_state'] = game_state if mode == 'auto' else 'pregame_forced'
+                result['mode_requested'] = mode
+            else:
+                # Pregame prediction has unexpected structure
+                logger.error(f"Pregame prediction for {game_input} has unexpected structure")
+                logger.error(f"Result: {result}")
+                # Ensure result has required keys even if it's incomplete
+                if result and isinstance(result, dict):
+                    result.setdefault('status', 'error')
+                    result.setdefault('game_id', game_input)
+                    result.setdefault('home_name', 'Home')
+                    result.setdefault('away_name', 'Away')
+                    result.setdefault('margin', 0)
+                    result.setdefault('total', 0)
+                    result.setdefault('model_used', 'PREGAME_UNEXPECTED')
+                    result['game_state'] = game_state if mode == 'auto' else 'pregame_forced'
+                    result['mode_requested'] = mode
+                else:
+                    # Result is not a dict - return error structure
+                    result = {
+                        'status': 'error',
+                        'error': f'Pregame prediction returned unexpected type: {type(result)}',
+                        'game_id': game_input,
+                        'model_used': 'PREGAME_ERROR',
+                        'home_name': 'Home',
+                        'away_name': 'Away',
+                        'margin': 0,
+                        'total': 0,
+                        'game_state': game_state if mode == 'auto' else 'pregame_forced',
+                        'mode_requested': mode,
+                    }
         
         elif use_model == 'halftime':
             # HALFTIME MODEL - Use at end of Q2
@@ -414,13 +447,30 @@ def predict_game(
                 # Halftime prediction returned unexpected structure
                 logger.error(f"Halftime prediction for {game_input} returned unexpected structure: {type(raw_result)}")
                 logger.error(f"Raw result: {raw_result}")
-                result = raw_result
-                if result and isinstance(result, dict):
-                    result['game_state'] = game_state if mode == 'auto' else 'halftime_forced'
-                    result['mode_requested'] = mode
-                    # Ensure status is set even if result is incomplete
-                    if 'status' not in result:
-                        result['status'] = 'error'
+                
+                # Return a proper error structure
+                result = {
+                    'status': 'error',
+                    'error': f"Halftime prediction returned unexpected structure: {type(raw_result)}",
+                    'game_id': game_input,
+                    'model_used': 'HALFTIME_ERROR',
+                    'home_name': 'Home',
+                    'away_name': 'Away',
+                    'margin': 0,
+                    'total': 0,
+                }
+                
+                if isinstance(raw_result, dict):
+                    # Try to salvage any useful info from raw_result
+                    if 'game_id' in raw_result:
+                        result['game_id'] = raw_result['game_id']
+                    if 'home_name' in raw_result:
+                        result['home_name'] = raw_result['home_name']
+                    if 'away_name' in raw_result:
+                        result['away_name'] = raw_result['away_name']
+                
+                result['game_state'] = game_state if mode == 'auto' else 'halftime_forced'
+                result['mode_requested'] = mode
         
         elif use_model == 'q3':
             # Q3 MODEL - Use after end of Q3
@@ -433,6 +483,27 @@ def predict_game(
                 result['status'] = 'success'  # Set status explicitly
                 result['game_state'] = game_state if mode == 'auto' else 'q3_forced'
                 result['mode_requested'] = mode
+            elif result and result.get('status') == 'error':
+                # Q3 model returned error, just add metadata
+                result['game_state'] = game_state if mode == 'auto' else 'q3_forced'
+                result['mode_requested'] = mode
+            else:
+                # Q3 prediction missing required keys - this is an error
+                logger.error(f"Q3 prediction for {game_input} missing required keys (margin/total)")
+                logger.error(f"Result: {result}")
+                # Return proper error structure
+                result = {
+                    'status': 'error',
+                    'error': 'Q3 prediction failed to generate margin and total predictions',
+                    'game_id': game_input,
+                    'model_used': 'Q3_ERROR',
+                    'home_name': 'Home',
+                    'away_name': 'Away',
+                    'margin': 0,
+                    'total': 0,
+                    'game_state': game_state if mode == 'auto' else 'q3_forced',
+                    'mode_requested': mode,
+                }
         
         else:
             # Invalid mode
@@ -448,12 +519,21 @@ def predict_game(
             error_msg = str(result) if isinstance(result, str) else f"Unexpected result type: {type(result)}"
             raise ValueError(f"Prediction returned unexpected type: {error_msg}")
         
-        # Validate that result has required keys (skip for pregame error responses)
+        # Validate that result has required keys (skip for error responses)
         required_keys = ["game_id", "home_name", "away_name", "margin", "total"]
         missing_keys = [k for k in required_keys if k not in result]
         
+        # Log missing keys for debugging
+        if missing_keys:
+            logger.error(f"Prediction for {game_input} is missing required keys: {missing_keys}")
+            logger.error(f"Result status: {result.get('status', 'NOT SET')}")
+            logger.error(f"Result keys: {list(result.keys())}")
+            logger.error(f"Result: {result}")
+        
         # Allow missing keys if status is error (pregame model might have data issues)
         if missing_keys and result.get('status') != 'error':
+            # This is a non-error response missing required keys - this is a bug!
+            logger.error(f"NON-ERROR PREDICTION MISSING KEYS: This is a bug! Game: {game_input}, Missing: {missing_keys}")
             raise ValueError(f"Prediction missing required keys: {missing_keys}")
         
         return result
