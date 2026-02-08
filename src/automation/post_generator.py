@@ -1,3 +1,4 @@
+
 """Post Generator for PerryPicks v3 Automation.
 
 Formats predictions into platform-optimized posts.
@@ -7,10 +8,16 @@ from __future__ import annotations
 import logging
 from typing import Dict, Any, List, Optional
 from datetime import datetime
-
 import json
 
 from src.automation.prediction_formatter import format_prediction
+from src.betting import (
+    breakeven_prob_from_american,
+    prob_over_under_from_mean_sd,
+    prob_spread_cover_from_mean_sd,
+    edge as calc_edge,
+)
+logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 
