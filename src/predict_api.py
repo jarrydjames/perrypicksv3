@@ -349,6 +349,7 @@ def predict_game(
                 total_q10, total_q90 = (normal.get('final_total') or [None, None])[:2]
                 
                 # Extract halftime scores and predictions from pred dict
+                # Use fallbacks to ensure all fields are set
                 h1_home = pred.get('h1_home') or raw_result.get('h1_home', 0)
                 h1_away = pred.get('h1_away') or raw_result.get('h1_away', 0)
                 pred_2h_home = pred.get('pred_2h_home', 0)
@@ -372,9 +373,9 @@ def predict_game(
                 total_sd = _sd_from_q10_q90(total_q10, total_q90)
 
                 result = {
-                    'game_id': raw_result.get('game_id'),
-                    'home_name': raw_result.get('home_name'),
-                    'away_name': raw_result.get('away_name'),
+                    'game_id': raw_result.get('game_id', game_input),
+                    'home_name': raw_result.get('home_name', 'Home'),
+                    'away_name': raw_result.get('away_name', 'Away'),
                     'margin': pred_final_margin,
                     'total': pred_final_total,
                     # Halftime scores (from top-level for post_generator compatibility)
@@ -405,11 +406,21 @@ def predict_game(
                     'mode_requested': mode,
                     'status': 'success',
                 }
+                
+                # Log warning if critical fields are still zero (might indicate extraction issue)
+                if pred_final_margin == 0 and pred_final_total == 0:
+                    logger.warning(f"Halftime prediction for {game_input} has zero margin/total. This might indicate an issue with prediction data.")
             else:
+                # Halftime prediction returned unexpected structure
+                logger.error(f"Halftime prediction for {game_input} returned unexpected structure: {type(raw_result)}")
+                logger.error(f"Raw result: {raw_result}")
                 result = raw_result
-                if result:
+                if result and isinstance(result, dict):
                     result['game_state'] = game_state if mode == 'auto' else 'halftime_forced'
                     result['mode_requested'] = mode
+                    # Ensure status is set even if result is incomplete
+                    if 'status' not in result:
+                        result['status'] = 'error'
         
         elif use_model == 'q3':
             # Q3 MODEL - Use after end of Q3
