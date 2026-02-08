@@ -5,6 +5,8 @@ import os
 import pandas as pd
 
 from src.data.import_health import read_import_watermark
+from src.odds.odds_api import OddsAPIError
+from src.odds.persistent_cache import PersistentOddsCache
 
 
 def _is_placeholder_team(tricode: Optional[str]) -> bool:
@@ -457,6 +459,31 @@ def predict_game(
                     'mode_requested': mode,
                     'status': 'success',
                 }
+                
+                # Fetch odds if requested (for bet recommendations)
+                if fetch_odds:
+                    try:
+                        # Use persistent cache to avoid repeated API calls
+                        cache = PersistentOddsCache()
+                        odds_snapshot = cache.get_or_fetch(raw_result.get('home_name', 'Home'), raw_result.get('away_name', 'Away'))
+                        
+                        if odds_snapshot:
+                            result.update({
+                                "odds_home_ml": odds_snapshot.moneyline_home,
+                                "odds_away_ml": odds_snapshot.moneyline_away,
+                                "odds_total_line": odds_snapshot.total_points,
+                                "odds_total_over": odds_snapshot.total_over_odds,
+                                "odds_total_under": odds_snapshot.total_under_odds,
+                                "odds_spread_home_line": odds_snapshot.spread_home,
+                                "odds_spread_home": odds_snapshot.spread_home_odds,
+                                "odds_spread_away": odds_snapshot.spread_away_odds,
+                            })
+                    except OddsAPIError as e:
+                        logger.warning(f"Odds API error for halftime prediction: {e}")
+                        result["odds_error"] = str(e)
+                    except Exception as e:
+                        logger.warning(f"Unexpected error fetching odds for halftime prediction: {e}")
+                        result["odds_error"] = str(e)
                 
                 # Log warning if critical fields are still zero (might indicate extraction issue)
                 if pred_final_margin == 0 and pred_final_total == 0:
