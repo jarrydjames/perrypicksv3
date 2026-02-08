@@ -297,9 +297,22 @@ def run_prediction(
     trigger_type: str = "pregame",
     platforms: Optional[List[str]] = None,
     dry_run: bool = False,
+    fetch_odds: bool = True,
     progress_callback=None,
 ) -> Dict[str, Any]:
-    """Run prediction for a single game."""
+    """Run prediction for a single game.
+    
+    Args:
+        game_id: Game ID to predict
+        trigger_type: Trigger type (pregame, halftime, q3)
+        platforms: Platforms to post to (None = all enabled)
+        dry_run: If True, don't actually post
+        fetch_odds: If True, fetch odds from API (default True). Set False for testing.
+        progress_callback: Optional callback(progress, message) for UI updates
+    
+    Returns:
+        Prediction results dictionary
+    """
     orchestrator = get_orchestrator(dry_run=dry_run)
     if not orchestrator:
         return {"success": False, "error": "Orchestrator not initialized"}
@@ -308,6 +321,7 @@ def run_prediction(
         game_ids=[game_id],
         trigger_type=trigger_type,
         mode="auto",
+        fetch_odds=fetch_odds,
         progress_callback=progress_callback,
     )
 
@@ -382,6 +396,7 @@ def run_predictions_for_all_games(
     trigger_type: str = "pregame",
     platforms: Optional[List[str]] = None,
     dry_run: bool = False,
+    fetch_odds: bool = True,
     progress_callback=None,
 ) -> Dict[str, Any]:
     """Run predictions for all games on a specific date.
@@ -391,6 +406,7 @@ def run_predictions_for_all_games(
         trigger_type: Trigger type (pregame, halftime, q3)
         platforms: Platforms to post to (None = all enabled)
         dry_run: If True, don't actually post
+        fetch_odds: If True, fetch odds from API (default True). Set False for testing.
         progress_callback: Optional callback(progress, message) for UI updates
     
     Returns:
@@ -413,6 +429,7 @@ def run_predictions_for_all_games(
         game_ids=game_ids,
         trigger_type=trigger_type,
         mode="auto",
+        fetch_odds=fetch_odds,
         progress_callback=progress_callback,
     )
 

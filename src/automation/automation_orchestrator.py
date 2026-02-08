@@ -84,6 +84,7 @@ class AutomationOrchestrator:
         game_ids: List[str],
         trigger_type: str = "pregame",
         mode: str = "auto",
+        fetch_odds: bool = True,
         progress_callback=None,
     ) -> Dict[str, Any]:
         """
@@ -93,6 +94,7 @@ class AutomationOrchestrator:
             game_ids: List of game IDs to predict
             trigger_type: Trigger type (pregame, halftime, q3)
             mode: Prediction mode (auto, pregame, halftime, q3)
+            fetch_odds: If True, fetch odds from API (default True). Set False for testing.
             progress_callback: Optional callback(progress, message) for UI updates
             
         Returns:
@@ -128,7 +130,7 @@ class AutomationOrchestrator:
                 # Run prediction
                 if progress_callback:
                     progress_callback(progress, f"Predicting {game_id}...")
-                prediction = predict_game(game_id, mode=mode)
+                prediction = predict_game(game_id, mode=mode, fetch_odds=fetch_odds)
                 logger.info(f"Prediction result for {game_id}: {prediction.get('status', 'unknown')}")
                 results["predictions"].append(prediction)
                 

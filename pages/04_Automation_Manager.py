@@ -368,6 +368,14 @@ def render_manual_predictions():
         col1, col2 = st.columns(2)
         
         with col1:
+            # Toggle for fetching odds
+            fetch_odds = st.toggle(
+                "📊 Fetch Odds from API",
+                value=True,
+                help="If OFF, predictions will be generated without odds data. Useful for testing.",
+                key="single_game_fetch_odds"
+            )
+            
             if st.button("🚀 Run Prediction", use_container_width=True):
                 with st.spinner(f"Running {trigger_type} prediction for {selected_game_id}..."):
                     result = run_prediction(
@@ -375,6 +383,7 @@ def render_manual_predictions():
                         trigger_type=trigger_type,
                         platforms=platforms if platforms else None,
                         dry_run=dry_run,
+                        fetch_odds=fetch_odds,
                     )
                     
                     st.markdown("### Result")
@@ -506,6 +515,14 @@ def render_manual_predictions():
         col1, col2 = st.columns(2)
         
         with col1:
+            # Toggle for fetching odds
+            fetch_odds = st.toggle(
+                "📊 Fetch Odds from API",
+                value=True,
+                help="If OFF, predictions will be generated without odds data. Useful for testing.",
+                key="pregame_fetch_odds"
+            )
+            
             if st.button(f"🚀 Generate Pregame Predictions for All {len(games)} Games", use_container_width=True):
                 # Create progress bar and status placeholder
                 progress_bar = st.progress(0)
@@ -523,6 +540,7 @@ def render_manual_predictions():
                         trigger_type="pregame",
                         platforms=platforms if platforms else None,
                         dry_run=dry_run,
+                        fetch_odds=fetch_odds,
                         progress_callback=progress_callback,
                     )
                     
