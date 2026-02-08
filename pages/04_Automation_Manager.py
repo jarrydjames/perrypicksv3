@@ -106,13 +106,13 @@ def render_dashboard():
             st.session_state["selected_dashboard_date"] = datetime.now().date()
         
         selected_date = st.date_input(
-            "Date",
+            "Dashboard Date",
             value=st.session_state["selected_dashboard_date"],
         )
         st.session_state["selected_dashboard_date"] = selected_date
     
     with col2:
-        if st.button("🔄 Go to Today"):
+        if st.button("🔄 Go to Dashboard Today"):
             st.session_state["selected_dashboard_date"] = datetime.now().date()
             st.rerun()
     
@@ -162,7 +162,7 @@ def render_dashboard():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🔄 Process Queue", use_container_width=True):
+        if st.button("🔄 Process Dashboard Queue", use_container_width=True):
             with st.spinner("Processing queue..."):
                 result = process_queue(max_posts=10)
                 processed = result.get('processed', 0)
@@ -264,13 +264,13 @@ def render_manual_predictions():
             st.session_state["selected_manual_date"] = datetime.now().date()
         
         selected_date = st.date_input(
-            "Date",
+            "Manual Date",
             value=st.session_state["selected_manual_date"],
         )
         st.session_state["selected_manual_date"] = selected_date
     
     with col2:
-        if st.button("🔄 Go to Today"):
+        if st.button("🔄 Go to Manual Today"):
             st.session_state["selected_manual_date"] = datetime.now().date()
             st.rerun()
     
@@ -338,7 +338,7 @@ def render_manual_predictions():
         with col1:
             # Toggle for fetching odds
             fetch_odds = st.toggle(
-                "📊 Fetch Odds from API",
+                "📊 Single Game: Fetch Odds from API",
                 value=True,
                 help="If OFF, predictions will be generated without odds data. Useful for testing.",
             )
@@ -484,7 +484,7 @@ def render_manual_predictions():
         with col1:
             # Toggle for fetching odds
             fetch_odds = st.toggle(
-                "📊 Fetch Odds from API",
+                "📊 Pregame: Fetch Odds from API",
                 value=True,
                 help="If OFF, predictions will be generated without odds data. Useful for testing.",
             )
@@ -769,7 +769,7 @@ def render_manual_predictions():
         with col1:
             # Toggle for fetching odds
             fetch_odds = st.toggle(
-                "📊 Fetch Odds from API",
+                "📊 Full Day: Fetch Odds from API",
                 value=True,
                 help="If OFF, predictions will be generated without odds data. Useful for testing.",
             )
