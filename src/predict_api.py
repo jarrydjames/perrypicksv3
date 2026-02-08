@@ -284,6 +284,10 @@ def predict_game(
                 'final': 'q3',
             }
             use_model = state_to_model.get(game_state, 'pregame')
+            logger.info(f"Auto-selected model: {use_model} for game {game_input} (game_state: {game_state})")
+        else:
+            # User explicitly selected a mode
+            logger.info(f"User-selected model: {use_model} for game {game_input}")
         
         # Step 3: Call appropriate model
         result = None

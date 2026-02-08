@@ -272,6 +272,31 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
                 }
         
         # Build result dict (same structure as halftime)
+        # Validate that pred has required attributes before accessing
+        if pred is None:
+            # Should have been caught above, but check again
+            logging.error(f"Q3 model returned None for {gid} after None check")
+            return {
+                "status": "error",
+                "error": "Q3 model failed to generate prediction",
+                "game_id": gid,
+                "model_used": "Q3_ERROR",
+            }
+        
+        # Check if pred has required attributes
+        required_attrs = ['margin_mean', 'total_mean', 'margin_q10', 'margin_q90', 'total_q10', 'total_q90', 'home_win_prob', 'margin_sd', 'total_sd', 'model_name', 'feature_version']
+        missing_attrs = [attr for attr in required_attrs if not hasattr(pred, attr)]
+        
+        if missing_attrs:
+            logging.error(f"Q3 prediction for {gid} missing attributes: {missing_attrs}")
+            logging.error(f"Pred type: {type(pred)}, dir: {dir(pred)}")
+            return {
+                "status": "error",
+                "error": f"Q3 prediction missing required attributes: {missing_attrs}",
+                "game_id": gid,
+                "model_used": "Q3_ERROR",
+            }
+        
         result = {
             "game_id": gid,
             "home_name": home_name,
@@ -292,6 +317,7 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             "model_used": "Q3",
             "model_name": pred.model_name,
             "feature_version": pred.feature_version,
+            "status": "success",
         }
         
         # Fetch odds if requested
