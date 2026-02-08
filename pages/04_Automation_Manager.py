@@ -47,9 +47,6 @@ from src.automation.automation_ui import (
     run_total_day_view,
     run_full_day_automation,
     queue_gamestate_conscious_posts,
-    GameStateMonitor,
-    GameState,
-    GameStateService,
     process_queue,
     refresh_data,
     render_status_card,
@@ -61,6 +58,9 @@ from src.automation.automation_ui import (
     filter_posts_by_game,
     SESSION_STATE_PLATFORMS,
 )
+
+from src.automation.game_state_monitor import GameStateMonitor, GameState
+from src.automation.game_state_service import GameStateService
 
 from src.automation.post_queue import PostStatus
 from src.data.scoreboard import format_game_label
