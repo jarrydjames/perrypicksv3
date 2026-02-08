@@ -568,7 +568,13 @@ Error: Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment v
 22. **34bd0c6** - Fix: OddsAPIMarketSnapshot attribute names were wrong
    - 2 files changed, 8 insertions(+), 8 deletions(-)
    
-23. **(this commit)** - Add Bug #14 documentation and update stats
+23. **5fd5072** - Add Bug #14 documentation: OddsAPIMarketSnapshot wrong attribute names
+   - 3 files changed, 196 insertions(+), 19 deletions(-)
+   
+24. **0d97b61** - Feature: Add toggle to disable odds fetching for testing
+   - 3 files changed, 39 insertions(+), 2 deletions(-)
+   
+25. **(this commit)** - Add feature documentation and update stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -693,16 +699,25 @@ All fixes are documented in:
 11. ✅ Clear step-by-step workflow guide
 12. ✅ Accurate progress messages with counts
 13. ✅ Better button labels and UI
-14. ✅ Pregame posts show team scores and winner (better format)
+15. ✅ Pregame posts show team scores and winner (better format)
+
+### New Feature Added
+16. ✅ **Toggle to disable odds fetching for testing**
+   - Toggle in "Single Game Prediction" mode
+   - Toggle in "Generate All Pregame Predictions" mode
+   - Allows testing predictions without hitting odds API
+   - Saves API calls during development/testing
+   - ON by default (existing behavior)
 
 ### Total Stats
 - **Critical bugs fixed:** 13
 - **High priority bugs fixed:** 2
 - **UX improvements:** 8
+- **Features added:** 1
 - **Total fixes:** 23
 - **Files modified:** 6 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py, predict_from_gameid_v3_runtime.py)
-- **Documentation created:** 9
-- **Commits pushed:** 14
+- **Documentation created:** 10
+- **Commits pushed:** 15
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
