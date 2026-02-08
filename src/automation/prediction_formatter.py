@@ -16,8 +16,18 @@ def format_prediction(game_id: str, pred: Dict[str, object]) -> str:
     away_team = pred.get("away_name", pred.get("away_team", "Away"))
     total = pred.get("total")
     margin = pred.get("margin")
-    winner = pred.get("winner")
     model_used = pred.get("model_used") or pred.get("model")
+    
+    # Calculate winner from margin
+    if margin is not None:
+        if margin > 0:
+            winner = home_team
+        elif margin < 0:
+            winner = away_team
+        else:
+            winner = "Tie"
+    else:
+        winner = pred.get("winner")  # Fallback to explicit winner field
     
     # Validate required fields
     if total is None or margin is None:

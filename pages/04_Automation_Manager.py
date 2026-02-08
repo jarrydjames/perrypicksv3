@@ -855,11 +855,24 @@ def render_queue_manager():
                         st.info("ℹ️ No pending posts to process")
         
         with col2:
-            if st.button("🗑️ Clear Queue", use_container_width=True):
-                if st.confirm("Are you sure you want to clear the queue?"):
-                    queue.clear_queue()
-                    st.success("Queue cleared!")
-                    st.rerun()
+            # Clear queue with confirmation
+            if st.button("🗑️ Clear Queue", use_container_width=True, key="clear_queue_btn"):
+                st.session_state["show_clear_queue_confirm"] = True
+                st.rerun()
+            
+            if st.session_state.get("show_clear_queue_confirm"):
+                st.warning("⚠️ Are you sure you want to clear the queue? This cannot be undone.")
+                col_confirm, col_cancel = st.columns(2)
+                with col_confirm:
+                    if st.button("✅ Yes, Clear Queue", type="primary"):
+                        queue.clear_queue()
+                        st.session_state["show_clear_queue_confirm"] = False
+                        st.success("Queue cleared!")
+                        st.rerun()
+                with col_cancel:
+                    if st.button("❌ Cancel"):
+                        st.session_state["show_clear_queue_confirm"] = False
+                        st.rerun()
     else:
         st.info("No posts match the filters")
 
@@ -1031,6 +1044,10 @@ def render_logs():
 
 def main():
     """Main app."""
+    # Initialize session state
+    if "show_clear_queue_confirm" not in st.session_state:
+        st.session_state["show_clear_queue_confirm"] = False
+    
     # Render sidebar
     render_sidebar()
     
