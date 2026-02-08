@@ -148,9 +148,10 @@ class AutomationOrchestrator:
                     self._mark_prediction_processed(game_id, trigger_type)
                     
                     # Count successful posts
-                    queued_count = sum(1 for p in post_results.get('platforms', {}).values() if p.get('status') == 'queued')
-                    duplicate_count = sum(1 for p in post_results.get('platforms', {}).values() if p.get('status') == 'duplicate')
-                    error_count = sum(1 for p in post_results.get('platforms', {}).values() if p.get('status') == 'error')
+                    platforms_dict = post_results.get('platforms', {})
+                    queued_count = sum(1 for p in platforms_dict.values() if p and p.get('status') == 'queued')
+                    duplicate_count = sum(1 for p in platforms_dict.values() if p and p.get('status') == 'duplicate')
+                    error_count = sum(1 for p in platforms_dict.values() if p and p.get('status') == 'error')
                     
                     if progress_callback:
                         msg = f"✓ Completed {game_id}"

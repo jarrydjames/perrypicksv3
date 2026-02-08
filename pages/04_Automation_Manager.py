@@ -101,7 +101,20 @@ def render_sidebar():
         st.markdown("- **History**: Post history")
         st.markdown("- **Settings**: Configuration")
         st.markdown("- **Logs**: View logs")
-
+        
+        st.markdown("---")
+        
+        # Quick Start Guide
+        st.markdown("### 🚀 Quick Start Guide")
+        st.markdown("**Step 1:** Select 'Manual' tab")
+        st.markdown("**Step 2:** Choose game(s) and prediction mode")
+        st.markdown("**Step 3:** Click 'Generate Predictions' button")
+        st.markdown("**Step 4:** Click 'Send Posts to Platforms' when it appears")
+        st.markdown("**Step 5:** Posts appear on your social platforms!")
+        st.markdown("")
+        st.markdown("ℹ️ **Test Mode** is OFF by default")
+        st.markdown("   Toggle 'Test Mode' to preview without posting")
+        
         st.markdown("---")
         
         # Info
@@ -183,11 +196,13 @@ def render_dashboard():
         if st.button("🔄 Process Queue", use_container_width=True):
             with st.spinner("Processing queue..."):
                 result = process_queue(max_posts=10)
-                if result.get("success"):
-                    st.success(f"Processed {result['processed']} posts!")
+                processed = result.get('processed', 0)
+                if processed > 0 or result.get("success"):
+                    st.success(f"✅ Processed {processed} posts!")
+                    st.toast("Queue processed successfully!", icon="✅")
                 else:
-                    st.error("Failed to process queue")
-            st.rerun()
+                    st.error("❌ Failed to process queue")
+                    st.toast("Queue processing failed", icon="❌")
     
     with col2:
         st.info("Use the 'Queue' tab above to view the queue")
@@ -319,7 +334,7 @@ def render_manual_predictions():
     )
     
     # Dry run toggle
-    dry_run = st.checkbox("🧪 Dry Run (don't actually post)", value=True)
+    dry_run = st.checkbox("🧪 Test Mode (don't actually post)", value=False)
     
     # Submit
     st.markdown("---")
@@ -424,10 +439,15 @@ def render_manual_predictions():
                                     orchestrator = get_orchestrator()
                                     process_result = orchestrator.process_post_queue(batch_size=50)
                                     
+                                    processed = process_result.get('processed', 0)
+                                    successful = process_result.get('successful', 0)
+                                    failed = process_result.get('failed', 0)
+                                    
                                     st.markdown("### Process Result")
-                                    st.success(f"✅ Processed {process_result.get('processed', 0)} posts!")
-                                    st.markdown(f"- **Successful:** {process_result.get('successful', 0)}")
-                                    st.markdown(f"- **Failed:** {process_result.get('failed', 0)}")
+                                    st.success(f"✅ Processed {processed} posts!")
+                                    st.markdown(f"- **Successful:** {successful}")
+                                    st.markdown(f"- **Failed:** {failed}")
+                                    st.toast(f"Sent {successful} posts successfully!", icon="✅")
                                     
                                     if process_result.get('posts'):
                                         st.markdown("**Posts Processed:**")
@@ -439,9 +459,6 @@ def render_manual_predictions():
                                                 st.markdown(f"✓ `{post_id}` → `{platform}`: **{status}**")
                                             else:
                                                 st.markdown(f"✗ `{post_id}` → `{platform}`: **{status}**")
-                                st.rerun()
-                    
-                st.rerun()
         
         with col2:
             st.info(f"Selected: {game_options.get(selected_game_id, selected_game_id)}")
@@ -609,8 +626,7 @@ def render_manual_predictions():
                     import traceback
                     st.code(traceback.format_exc())
                     logger.exception("Error in generate all predictions:")
-                
-                st.rerun()
+                    st.toast("Failed to generate predictions", icon="❌")
         
         with col2:
             st.info(f"Will generate pregame predictions for all {len(games)} games on {selected_date}")
@@ -669,8 +685,9 @@ def render_manual_predictions():
                     # Show overall success message
                     if success_count == 3:
                         st.success("🎉 All 3 gamestate-conscious posts queued successfully!")
-                    
-                st.rerun()
+                        st.toast("All 3 posts queued successfully!", icon="🎉")
+                    elif success_count > 0:
+                        st.toast(f"{success_count}/3 posts queued successfully", icon="✅")
         
         with col2:
             st.info(f"Selected: {game_options.get(selected_game_id, selected_game_id)}")
@@ -740,11 +757,12 @@ def render_queue_manager():
             if st.button("🔄 Process Queue", use_container_width=True):
                 with st.spinner("Processing queue..."):
                     result = process_queue(max_posts=10)
-                    if result.get("processed", 0) > 0:
-                        st.success(f"Processed {result['processed']} posts!")
+                    processed = result.get('processed', 0)
+                    if processed > 0:
+                        st.success(f"✅ Processed {processed} posts!")
+                        st.toast("Queue processed successfully!", icon="✅")
                     else:
-                        st.info("No pending posts to process")
-                st.rerun()
+                        st.info("ℹ️ No pending posts to process")
         
         with col2:
             if st.button("🗑️ Clear Queue", use_container_width=True):
