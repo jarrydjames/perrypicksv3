@@ -74,58 +74,11 @@ logger = logging.getLogger(__name__)
 
 def render_sidebar():
     """Render sidebar with controls."""
-    with st.sidebar:
-        st.markdown("# 🤖 Automation Manager")
-        st.markdown("---")
-        
-        # Refresh button
-        if st.button("🔄 Refresh Data", use_container_width=True):
-            refresh_data()
-            st.rerun()
-        
-        st.markdown("---")
-        
-        # Platform status
-        st.markdown("### Platform Status")
-        platform_status = get_platform_status()
-        render_platform_status(
-            platforms=["twitter", "bluesky", "discord"],
-            enabled_platforms=set(
-                p for p, enabled in platform_status.items() if enabled
-            ),
-        )
-        
-        st.markdown("---")
-
-        # Navigation
-        st.markdown("### Navigation")
-        st.markdown("Use the tabs above to navigate:")
-        st.markdown("- **Dashboard**: Overview & stats")
-        st.markdown("- **Manual**: Trigger predictions")
-        st.markdown("- **Queue**: Manage queued posts")
-        st.markdown("- **History**: Post history")
-        st.markdown("- **Settings**: Configuration")
-        st.markdown("- **Logs**: View logs")
-        
-        st.markdown("---")
-        
-        # Quick Start Guide
-        st.markdown("### 🚀 Quick Start Guide")
-        st.markdown("**Step 1:** Select 'Manual' tab")
-        st.markdown("**Step 2:** Choose game(s) and prediction mode")
-        st.markdown("**Step 3:** Click 'Generate Predictions' button")
-        st.markdown("**Step 4:** Click 'Send Posts to Platforms' when it appears")
-        st.markdown("**Step 5:** Posts appear on your social platforms!")
-        st.markdown("")
-        st.markdown("ℹ️ **Test Mode** is OFF by default")
-        st.markdown("   Toggle 'Test Mode' to preview without posting")
-        
-        st.markdown("---")
-        
-        # Info
-        st.markdown("### ℹ️ Info")
-        st.markdown("This automation manager is **separate** from the main PerryPicks v3 app.")
-        st.markdown("It does not impact manual research or reviews.")
+    # TEMPORARILY DISABLED TO DEBUG DUPLICATE ID ERROR
+    pass
+    
+    # TODO: Re-enable sidebar after fixing duplicate element ID error
+    # The sidebar was causing StreamlitDuplicateElementId errors
 
 
 def render_dashboard():
