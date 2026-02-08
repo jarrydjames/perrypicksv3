@@ -139,7 +139,10 @@ class PersistentOddsCache:
         # Not in cache or expired - fetch from API
         from src.odds.odds_api import fetch_nba_odds_snapshot, OddsAPIError
         try:
-            snapshot = fetch_nba_odds_snapshot(home, away)
+            snapshot = fetch_nba_odds_snapshot(
+                home_name=home,
+                away_name=away
+            )
             if snapshot:
                 # Store in cache
                 self.set(home, away, snapshot)

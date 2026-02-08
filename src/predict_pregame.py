@@ -683,7 +683,10 @@ def predict_from_game_id(
     if fetch_odds:
         try:
             from src.odds.odds_api import fetch_nba_odds_snapshot, OddsAPIError
-            odds_snapshot = fetch_nba_odds_snapshot(home_team, away_team)
+            odds_snapshot = fetch_nba_odds_snapshot(
+                home_name=home_team,
+                away_name=away_team
+            )
             
             if odds_snapshot:
                 result.update({
