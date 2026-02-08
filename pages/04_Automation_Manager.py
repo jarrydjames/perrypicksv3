@@ -243,9 +243,19 @@ def render_dashboard():
     all_posts = queue.get_all_posts()
     
     # Get recent posts (last 10)
+    # Parse created_at_utc for sorting (ISO 8601 string)
+    def parse_created_at(post):
+        try:
+            from datetime import datetime
+            return datetime.fromisoformat(post.created_at_utc.replace("Z", "+00:00"))
+        except (ValueError, AttributeError):
+            # Return old date for posts that fail to parse (they'll sort to end)
+            from datetime import datetime
+            return datetime.min
+    
     recent_posts = sorted(
         all_posts,
-        key=lambda p: p.created_at,
+        key=parse_created_at,
         reverse=True,
     )[:10]
     
@@ -793,9 +803,19 @@ def render_history():
         return
     
     # Sort by created date (newest first)
+    # Parse created_at_utc for sorting (ISO 8601 string)
+    def parse_created_at(post):
+        try:
+            from datetime import datetime
+            return datetime.fromisoformat(post.created_at_utc.replace("Z", "+00:00"))
+        except (ValueError, AttributeError):
+            # Return old date for posts that fail to parse (they'll sort to end)
+            from datetime import datetime
+            return datetime.min
+    
     posted_posts = sorted(
         posted_posts,
-        key=lambda p: p.created_at,
+        key=parse_created_at,
         reverse=True,
     )
     
