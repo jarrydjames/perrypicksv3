@@ -11,13 +11,10 @@ from datetime import datetime
 import json
 
 from src.automation.prediction_formatter import format_prediction
-from src.betting import (
-    breakeven_prob_from_american,
-    prob_over_under_from_mean_sd,
-    prob_spread_cover_from_mean_sd,
-    edge as calc_edge,
+from src.automation.post_generator_helpers import (
+    _format_probability,
+    _generate_best_bets,
 )
-logger = logging.getLogger(__name__)
 
 logger = logging.getLogger(__name__)
 
