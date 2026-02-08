@@ -627,6 +627,38 @@ def predict_from_game_id(
             "model_used": "ERROR",
         }
     
+    # Validate prediction object has all required attributes
+    required_attrs = ['margin_mean', 'total_mean', 'margin_q10', 'margin_q90', 'total_q10', 'total_q90', 'home_win_prob', 'margin_sd', 'total_sd', 'model_name', 'feature_version']
+    missing_attrs = [attr for attr in required_attrs if not hasattr(pred, attr)]
+    
+    if missing_attrs:
+        logger.error(f"Pregame prediction for {game_id} missing attributes: {missing_attrs}")
+        logger.error(f"Pred type: {type(pred)}, dir: {dir(pred)}")
+        return {
+            "status": "error",
+            "error": f"Pregame prediction missing required attributes: {missing_attrs}",
+            "game_id": game_id,
+            "home_name": home_team,
+            "away_name": away_team,
+            "margin": None,
+            "total": None,
+            "model_used": "ERROR",
+        }
+    
+    # Validate margin and total are valid numbers
+    if pred.margin_mean is None or pred.total_mean is None:
+        logger.error(f"Pregame prediction for {game_id} has invalid margin/total: margin={pred.margin_mean}, total={pred.total_mean}")
+        return {
+            "status": "error",
+            "error": f"Pregame prediction returned invalid values: margin={pred.margin_mean}, total={pred.total_mean}",
+            "game_id": game_id,
+            "home_name": home_team,
+            "away_name": away_team,
+            "margin": pred.margin_mean,
+            "total": pred.total_mean,
+            "model_used": "ERROR",
+        }
+    
     used_defaults = (home_stats is None or away_stats is None) and are_features_all_defaults(features)
     stale_data = bool(freshness.get("is_stale"))
 
@@ -704,5 +736,8 @@ def predict_from_game_id(
             result["odds_error"] = str(e)
     
     logger.info(f"Pregame prediction complete: total={pred.total_mean:.1f}, margin={pred.margin_mean:.1f}")
+    logger.info(f"Pregame result keys: {list(result.keys())}")
+    logger.info(f"Pregame result status: {result.get('status')}")
+    logger.info(f"Pregame result has error field: {'error' in result}")
     
     return result
