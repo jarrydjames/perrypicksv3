@@ -74,11 +74,14 @@ logger = logging.getLogger(__name__)
 
 def render_sidebar():
     """Render sidebar with controls."""
-    # TEMPORARILY DISABLED TO DEBUG DUPLICATE ID ERROR
-    pass
-    
-    # TODO: Re-enable sidebar after fixing duplicate element ID error
-    # The sidebar was causing StreamlitDuplicateElementId errors
+    # Minimal sidebar to test
+    with st.sidebar:
+        st.markdown("# 🤖 Automation Manager")
+        st.markdown("---")
+        
+        # Simple refresh button
+        if st.button("Refresh", key="min_sidebar_refresh"):
+            st.rerun()
 
 
 def render_dashboard():
