@@ -337,10 +337,11 @@ def predict_game(
             logger.info(f"Pregame result for {game_input}: type={type(result)}, keys={list(result.keys()) if isinstance(result, dict) else 'N/A'}, status={result.get('status') if isinstance(result, dict) else 'N/A'}")
             
             # Add game state info to result
-            if result and result.get('status') == 'success':
+            # Accept both 'success' and 'warning' statuses as valid predictions
+            if result and result.get('status') in ('success', 'warning'):
                 result['game_state'] = game_state if mode == 'auto' else 'pregame_forced'
                 result['mode_requested'] = mode
-                logger.info(f"Pregame prediction successful for {game_input}")
+                logger.info(f"Pregame prediction successful for {game_input} (status={result.get('status')})")
             elif result and result.get('status') == 'error':
                 # Pregame model returned error, just add metadata
                 result['game_state'] = game_state if mode == 'auto' else 'pregame_forced'
