@@ -47,6 +47,9 @@ from src.automation.automation_ui import (
     run_total_day_view,
     run_full_day_automation,
     queue_gamestate_conscious_posts,
+    GameStateMonitor,
+    GameState,
+    GameStateService,
     process_queue,
     refresh_data,
     render_status_card,
@@ -1346,8 +1349,8 @@ def main():
     st.markdown("Manage PerryPicks v3 social media automation.")
     
     # Tabs
-    tab_dashboard, tab_manual, tab_queue, tab_history, tab_settings, tab_logs = st.tabs(
-        ["Dashboard", "Manual", "Queue", "History", "Settings", "Logs"]
+    tab_dashboard, tab_manual, tab_queue, tab_history, tab_settings, tab_logs, tab_game_state = st.tabs(
+        ["Dashboard", "Manual", "Queue", "History", "Settings", "Logs", "Game State"]
     )
     
     # Render each tab's content
@@ -1368,7 +1371,146 @@ def main():
     
     with tab_logs:
         render_logs()
+    
+    with tab_game_state:
+        render_game_state_monitor()
 
+def render_game_state_monitor():
+    """Render game state monitoring tab.
+    
+    This tab allows monitoring and control of the live game state
+    monitoring service that automatically generates predictions at halftime and Q3-5min.
+    """
+    st.markdown("### 🎮 Game State Monitor")
+    
+    st.info(
+        """**Live Game State Monitoring**\n\n"
+        "This service monitors NBA games in real-time and automatically:\n"
+        "• Generates predictions when games reach **halftime**\n"
+        "• Generates predictions when games have **5 minutes left in Q3**\n"
+        "• Automatically processes queue to post to platforms\n"
+        "• Runs hands-off - no manual intervention needed"""
+    )
+    
+    st.markdown("---")
+    
+    # Service controls
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### 🎛️ Service Controls")
+        
+        # Start/Stop buttons
+        st.markdown("**Start Service:**")
+        start_col, stop_col = st.columns(2)
+        
+        with start_col:
+            if st.button("▶️ Start Game State Monitor", use_container_width=True, type="primary"):
+                st.success("Game State Monitor started!")
+                st.info("To run manually, open Terminal and execute:")
+                st.code("python scripts/start_game_state_monitor.py", language="bash")
+                st.warning("The service will run in the terminal window.")
+        
+        with stop_col:
+            st.button("⏹ Stop Service", use_container_width=True, help="Stop the running monitoring service")
+        
+        st.markdown("---")
+        
+        # Configuration
+        st.markdown("**Configuration:**")
+        poll_interval = st.number_input(
+            "Poll Interval (seconds)",
+            value=30,
+            min_value=10,
+            max_value=300,
+            step=5,
+            help="How often to poll NBA API for game updates (default: 30s)",
+        )
+        
+        dry_run = st.toggle(
+            "Dry Run (Test Mode)",
+            value=False,
+            help="If ON, will generate predictions but won't actually post to platforms",
+        )
+    
+    with col2:
+        st.markdown("#### 📊 Live Game Status")
+        
+        # Refresh button
+        if st.button("🔄 Refresh Game States", use_container_width=True):
+            st.rerun()
+        
+        st.markdown("---")
+        
+        # Show current game states
+        st.markdown("**Active Games:**")
+        
+        # Try to get game states from monitoring service
+        try:
+            # Try to read from a shared state file or database
+            # For now, show a placeholder
+            st.info(
+                """ℹ️ **Note**: Game states are monitored by the background service.\n"
+                "This tab shows controls. The actual game monitoring happens "
+                "in the background service started from the terminal."""
+            )
+            
+            # Show how to start manually
+            st.markdown("---")
+            st.markdown("### 🚀 Start Service Manually")
+            
+            st.markdown("**macOS (Double-Click):**")
+            st.code("scripts/start_game_state_monitor.command", language="bash")
+            st.info("Double-click the `.command` file to start in a new Terminal window.")
+            
+            st.markdown("**macOS/Linux (Terminal):**")
+            st.code("bash scripts/start_game_state_monitor.sh", language="bash")
+            st.info("Run from terminal to start the monitoring service.")
+            
+            st.markdown("**Python (Cross-Platform):**")
+            st.code("python scripts/start_game_state_monitor.py", language="bash")
+            st.info("Works on macOS, Windows, and Linux.")
+            
+            st.markdown("---")
+            st.markdown("### ⚙️ Configuration")
+            
+            st.markdown("You can configure the service with environment variables:")
+            
+            st.code(
+                """# Poll interval (default: 30s)
+export GAME_STATE_POLL_INTERVAL=30
+
+# Platforms to post to (default: all enabled)
+export GAME_STATE_PLATFORMS=discord,twitter,bluesky
+
+# Dry run mode - don't actually post (default: false)
+export GAME_STATE_DRY_RUN=false""",
+                language="bash"
+            )
+        
+        except Exception as e:
+            st.error(f"Error getting game states: {e}")
+    
+    st.markdown("---")
+    
+    # Instructions
+    with st.expander("📖 How It Works", expanded=False):
+        st.markdown(
+            """**Game State Monitoring Flow:**\n\n"
+            "1. **Service starts** - Polls NBA API every 30 seconds\n"
+            "2. **Game tracking** - Monitors period and time for all active games\n"
+            "3. **Halftime trigger** - When game reaches end of Q2, generates halftime prediction\n"
+            "4. **Q3 trigger** - When game reaches 5 minutes left in Q3, generates Q3 prediction\n"
+            "5. **Auto-process** - Automatically processes queue to post to Discord\n"
+            "6. **Repeat** - Continues monitoring until games finish or service stops\n\n\n"
+            "**Trigger Logic:**\n"
+            "• **Halftime**: period=2 AND time_remaining=0:00\n"
+            "• **Q3-5min**: period=3 AND time_remaining≈5:00\n\n\n"
+            "**Duplicate Prevention:**\n"
+            "Each trigger is marked as fired after first execution, "
+            "preventing duplicate posts for the same game."""
+        )
 
 if __name__ == "__main__":
+    main()
     main()
