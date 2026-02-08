@@ -690,12 +690,12 @@ def predict_from_game_id(
             
             if odds_snapshot:
                 result.update({
-                    "odds_home_ml": odds_snapshot.home_moneyline,
-                    "odds_away_ml": odds_snapshot.away_moneyline,
-                    "odds_total_line": odds_snapshot.total_line,
+                    "odds_home_ml": odds_snapshot.moneyline_home,
+                    "odds_away_ml": odds_snapshot.moneyline_away,
+                    "odds_total_line": odds_snapshot.total_points,
                     "odds_total_over": odds_snapshot.total_over_odds,
                     "odds_total_under": odds_snapshot.total_under_odds,
-                    "odds_spread_home_line": odds_snapshot.spread_home_line,
+                    "odds_spread_home_line": odds_snapshot.spread_home,
                     "odds_spread_home": odds_snapshot.spread_home_odds,
                     "odds_spread_away": odds_snapshot.spread_away_odds,
                 })
