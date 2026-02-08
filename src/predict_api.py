@@ -347,6 +347,16 @@ def predict_game(
 
                 margin_q10, margin_q90 = (normal.get('final_margin') or [None, None])[:2]
                 total_q10, total_q90 = (normal.get('final_total') or [None, None])[:2]
+                
+                # Extract halftime scores and predictions from pred dict
+                h1_home = pred.get('h1_home') or raw_result.get('h1_home', 0)
+                h1_away = pred.get('h1_away') or raw_result.get('h1_away', 0)
+                pred_2h_home = pred.get('pred_2h_home', 0)
+                pred_2h_away = pred.get('pred_2h_away', 0)
+                pred_final_home = pred.get('pred_final_home', 0)
+                pred_final_away = pred.get('pred_final_away', 0)
+                pred_final_total = pred.get('pred_final_total', 0)
+                pred_final_margin = pred.get('pred_final_margin', 0)
 
                 def _sd_from_q10_q90(q10, q90):
                     try:
@@ -365,10 +375,22 @@ def predict_game(
                     'game_id': raw_result.get('game_id'),
                     'home_name': raw_result.get('home_name'),
                     'away_name': raw_result.get('away_name'),
-                    'margin': pred.get('pred_final_margin'),
-                    'total': pred.get('pred_final_total'),
-                    'home_score': raw_result.get('h1_home'),
-                    'away_score': raw_result.get('h1_away'),
+                    'margin': pred_final_margin,
+                    'total': pred_final_total,
+                    # Halftime scores (from top-level for post_generator compatibility)
+                    'h1_home': h1_home,
+                    'h1_away': h1_away,
+                    # Predictions (from pred dict for post_generator compatibility)
+                    'pred_2h_home': pred_2h_home,
+                    'pred_2h_away': pred_2h_away,
+                    'pred_final_home': pred_final_home,
+                    'pred_final_away': pred_final_away,
+                    'pred_final_total': pred_final_total,
+                    'pred_final_margin': pred_final_margin,
+                    # For compatibility with existing code
+                    'home_score': h1_home,
+                    'away_score': h1_away,
+                    # Confidence intervals
                     'margin_q10': margin_q10,
                     'margin_q90': margin_q90,
                     'total_q10': total_q10,
