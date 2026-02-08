@@ -193,7 +193,7 @@ def render_dashboard():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🔄 Process Queue", use_container_width=True):
+        if st.button("🔄 Process Queue", use_container_width=True, key="dashboard_process_queue"):
             with st.spinner("Processing queue..."):
                 result = process_queue(max_posts=10)
                 processed = result.get('processed', 0)
@@ -444,7 +444,7 @@ def render_manual_predictions():
                             st.markdown("### 🚀 Process Queue Now")
                             st.info("💡 Posts are queued but not yet sent to platforms. Click below to send them now!")
                             
-                            if st.button("📤 Send Posts to Platforms", use_container_width=True):
+                            if st.button("📤 Send Posts to Platforms", use_container_width=True, key="send_posts_single"):
                                 with st.spinner("Processing queue..."):
                                     orchestrator = get_orchestrator()
                                     process_result = orchestrator.process_post_queue(batch_size=50)
@@ -604,7 +604,7 @@ def render_manual_predictions():
                             st.markdown("### 🚀 Process Queue Now")
                             st.info("💡 Posts are queued but not yet sent to platforms. Click below to send them now!")
                             
-                            if st.button("📤 Send Posts to Platforms", use_container_width=True):
+                            if st.button("📤 Send Posts to Platforms", use_container_width=True, key="send_posts_all_predictions"):
                                 with st.spinner("Processing queue..."):
                                     orchestrator = get_orchestrator()
                                     process_result = orchestrator.process_post_queue(batch_size=50)
@@ -764,7 +764,7 @@ def render_queue_manager():
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("🔄 Process Queue", use_container_width=True):
+            if st.button("🔄 Process Queue", use_container_width=True, key="queue_tab_process_queue"):
                 with st.spinner("Processing queue..."):
                     result = process_queue(max_posts=10)
                     processed = result.get('processed', 0)
