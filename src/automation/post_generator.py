@@ -177,27 +177,34 @@ class PostGenerator:
         
         home_team = prediction.get("home_name", "Home")
         away_team = prediction.get("away_name", "Away")
-        q3_cum_home = prediction.get("q3_cum_home", 0)
-        q3_cum_away = prediction.get("q3_cum_away", 0)
-        est_q4_home = prediction.get("est_q4_home", 0)
-        est_q4_away = prediction.get("est_q4_away", 0)
-        pred_final_home = prediction.get("pred_final_home", 0)
-        pred_final_away = prediction.get("pred_final_away", 0)
+        q3_cum_home = prediction.get("home_score", 0)  # Q3 cumulative = current score
+        q3_cum_away = prediction.get("away_score", 0)  # Q3 cumulative = current score
+        
+        # Get predicted margin and total
+        margin = prediction.get("margin", 0)
+        total = prediction.get("total", 0)
+        
+        # Calculate projected final scores
+        if isinstance(margin, (int, float)) and isinstance(total, (int, float)):
+            pred_final_home = (total + margin) / 2
+            pred_final_away = (total - margin) / 2
+        else:
+            pred_final_home = q3_cum_home
+            pred_final_away = q3_cum_away
         
         if platform == "twitter":
             emoji = "⚡" if self.use_emojis else "[Q3]"
             post = (
                 f"{emoji} Q3 UPDATE\n\n"
                 f"{away_team} @ {home_team}\n\n"
-                f"Q3 Cumulative: {away_team} {q3_cum_away:.1f} - {q3_cum_home:.1f} {home_team}\n\n"
-                f"Estimated Q4: {away_team} {est_q4_away:.1f} - {est_q4_home:.1f} {home_team}\n\n"
-                f"Projected Final: {away_team} {pred_final_away:.1f} - {pred_final_home:.1f} {home_team}\n"
+                f"Q3 Score: {away_team} {q3_cum_away:.1f} - {q3_cum_home:.1f} {home_team}\n\n"
+                f"Projected Final: {away_team} {pred_final_away:.1f} - {pred_final_home:.1f} {home_team}\n\n"
             )
         else:
             post = (
                 f"⚡ Q3 UPDATE: {away_team} @ {home_team}\n\n"
                 f"Q3 Score: {away_team} {q3_cum_away:.1f} - {q3_cum_home:.1f} {home_team}\n\n"
-                f"Projected Final: {away_team} {pred_final_away:.1f} - {pred_final_home:.1f} {home_team}\n"
+                f"Projected Final: {away_team} {pred_final_away:.1f} - {pred_final_home:.1f} {home_team}\n\n"
             )
         
         return self._add_hashtags(post, platform)
