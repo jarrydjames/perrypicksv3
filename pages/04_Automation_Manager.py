@@ -44,6 +44,7 @@ from src.automation.automation_ui import (
     get_game_ids,
     run_prediction,
     run_predictions_for_all_games,
+    run_total_day_view,
     queue_gamestate_conscious_posts,
     process_queue,
     refresh_data,
@@ -523,6 +524,10 @@ def render_manual_predictions():
                 key="pregame_fetch_odds"
             )
             
+            st.markdown("---")
+            
+            # Individual game predictions
+            st.markdown("#### Individual Game Predictions")
             if st.button(f"🚀 Generate Pregame Predictions for All {len(games)} Games", use_container_width=True):
                 # Create progress bar and status placeholder
                 progress_bar = st.progress(0)
@@ -646,6 +651,138 @@ def render_manual_predictions():
                             st.markdown("**Recent Posts in Queue:**")
                             for post in pending_posts[:5]:  # Show last 5
                                 st.markdown(f"- `{post.game_id}` → `{post.platform}` ({post.status.value})")
+                
+                except Exception as e:
+                    st.error(f"Error running predictions: {e}")
+                    logger.error(f"Error running predictions: {e}", exc_info=True)
+            
+            st.markdown("---")
+            
+            # Total day view
+            st.markdown("#### Total Day View")
+            st.info(
+                "Generate a single post with all games in a table format "
+                "(Option 3 table). This creates one consolidated post instead of "
+                "individual posts for each game."
+            )
+            
+            if st.button(f"📊 Generate Total Day View for {len(games)} Games", use_container_width=True):
+                # Create progress bar and status placeholder
+                progress_bar = st.progress(0)
+                status_placeholder = st.empty()
+                
+                def progress_callback(progress, message):
+                    """Update progress in UI."""
+                    progress_bar.progress(progress)
+                    status_placeholder.markdown(f"🔄 {message}")
+                    logger.info(f"Progress: {progress:.0%} - {message}")
+                
+                try:
+                    from src.automation.automation_ui import run_total_day_view
+                    
+                    result = run_total_day_view(
+                        date=selected_date,
+                        platforms=platforms if platforms else None,
+                        dry_run=dry_run,
+                        fetch_odds=fetch_odds,
+                        progress_callback=progress_callback,
+                    )
+                    
+                    # Clear progress indicators
+                    progress_bar.empty()
+                    status_placeholder.empty()
+                    
+                    st.markdown("### Result")
+                    
+                    # Check for error result
+                    if result.get("error"):
+                        st.error(f"Error: {result['error']}")
+                    
+                    # Show summary
+                    predictions = result.get("predictions", [])
+                    total_day_post = result.get("total_day_post", {})
+                    errors = result.get("errors", [])
+                    total_games = result.get("total_games", len(games))
+                    
+                    st.markdown("**Summary:**")
+                    st.markdown(f"- Total games: {total_games}")
+                    st.markdown(f"- Predictions generated: {len(predictions)}")
+                    st.markdown(f"- Total day post: {'✅ Generated' if total_day_post.get('success') else '❌ Failed'}")
+                    st.markdown(f"- Errors: {len(errors)}")
+                    
+                    # Success message
+                    if result.get("success") and total_day_post.get("success"):
+                        st.success(f"🎉 Total day view post generated successfully!")
+                    
+                    # Show predictions summary
+                    if predictions:
+                        st.markdown("---")
+                        st.success(f"✅ Successfully generated {len(predictions)} prediction(s)")
+                        with st.expander("View predictions summary"):
+                            for pred in predictions:
+                                game_id = pred.get('game_id', 'unknown')
+                                home = pred.get('home_name', 'Home')
+                                away = pred.get('away_name', 'Away')
+                                total = pred.get('total', 0)
+                                margin = pred.get('margin', 0)
+                                winner = home if margin > 0 else away
+                                st.markdown(f"- {game_id}: {away} @ {home} → Winner: {winner} ({total:.1f})")
+                    
+                    # Show total day post
+                    if total_day_post and total_day_post.get("content"):
+                        st.markdown("---")
+                        st.success(f"✅ Total Day View Post Generated")
+                        st.markdown(f"**Game ID:** `total_day_{selected_date.strftime('%Y%m%d')}`")
+                        st.markdown("**Post Content:**")
+                        st.code(total_day_post["content"], language="text")
+                        
+                        # Show platform results
+                        platforms = total_day_post.get("platforms", {})
+                        if platforms:
+                            st.markdown("**Platforms:**")
+                            for platform, platform_result in platforms.items():
+                                status = platform_result.get("status", "unknown")
+                                st.markdown(f"- **{platform}**: `{status}`")
+                                
+                                if status == "queued":
+                                    post_id = platform_result.get("post_id")
+                                    st.markdown(f"  - Post ID: `{post_id}`")
+                                
+                                elif status == "error":
+                                    error = platform_result.get("error", "Unknown error")
+                                    st.error(f"  - Error: {error}")
+                    
+                    # Show errors
+                    if errors:
+                        st.markdown("---")
+                        st.error(f"❌ Errors: {len(errors)}")
+                        for error in errors:
+                            st.markdown(f"- {error.get('game_id')}: {error.get('error')}")
+                    
+                    # Show message if nothing happened
+                    if not predictions and not total_day_post and not errors and not result.get("error"):
+                        st.warning("⚠️ No predictions were generated.")
+                    
+                    # Check queue to confirm posts are queued
+                    if total_day_post and total_day_post.get("content"):
+                        st.markdown("---")
+                        st.markdown("### 📋 Queue Verification")
+                        queue = get_queue()
+                        all_posts = queue.get_all_posts()
+                        pending_posts = [p for p in all_posts if p.status.value in ["pending", "posting"]]
+                        
+                        st.markdown(f"**Current Queue Status:**")
+                        st.markdown(f"- Total posts in queue: {len(all_posts)}")
+                        st.markdown(f"- Pending/posting: {len(pending_posts)}")
+                        
+                        if pending_posts:
+                            st.markdown("**Recent Posts in Queue:**")
+                            for post in pending_posts[:5]:  # Show last 5
+                                st.markdown(f"- `{post.game_id}` → `{post.platform}` ({post.status.value})")
+                
+                except Exception as e:
+                    st.error(f"Error running total day view: {e}")
+                    logger.error(f"Error running total day view: {e}", exc_info=True)
                             
                             st.markdown("---")
                             st.markdown("### 🚀 Process Queue Now")

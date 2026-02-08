@@ -480,6 +480,192 @@ def queue_gamestate_conscious_posts(
     
     return results
 
+def run_total_day_view(
+    date: dt.date = None,
+    platforms: Optional[List[str]] = None,
+    dry_run: bool = False,
+    fetch_odds: bool = True,
+    progress_callback=None,
+) -> Dict[str, Any]:
+    """Generate total day view post with all games in a single table.
+    
+    This runs predictions for all games and creates a single aggregated post
+    using the Option 3 table format (Discord full slate).
+    
+    Args:
+        date: Date to predict for (default: today)
+        platforms: Platforms to post to (None = all enabled)
+        dry_run: If True, don't actually post
+        fetch_odds: If True, fetch odds from API (default True). Set False for testing.
+        progress_callback: Optional callback(progress, message) for UI updates
+    
+    Returns:
+        Prediction results dictionary
+    """
+    from src.predict_api import predict_game
+    from src.automation.post_generator import PostGenerator
+    
+    # Initialize post generator
+    post_generator = PostGenerator(
+        include_odds=True,
+        include_confidence=True,
+        use_emojis=True,
+        hashtags=["#NBAPredictions", "#PerryPicks"],
+    )
+    
+    results = {
+        "date": date,
+        "total_games": 0,
+        "predictions": [],
+        "errors": [],
+        "total_day_post": None,
+    }
+    
+    # Get game IDs for the date
+    game_ids = get_game_ids(date)
+    
+    if not game_ids:
+        return {
+            "success": False,
+            "error": "No games found for the selected date",
+            **results,
+        }
+    
+    results["total_games"] = len(game_ids)
+    successful_predictions = []
+    
+    # Run predictions for all games (without posting)
+    for i, game_id in enumerate(game_ids, 1):
+        try:
+            # Update progress
+            progress = i / len(game_ids) * 0.8  # Use 80% of progress for predictions
+            message = f"Processing {game_id} ({i}/{len(game_ids)})..."
+            logger.info(message)
+            if progress_callback:
+                progress_callback(progress, message)
+            
+            # Run prediction
+            if progress_callback:
+                progress_callback(progress, f"Predicting {game_id}...")
+            
+            prediction = predict_game(game_id, mode="pregame", fetch_odds=fetch_odds)
+            
+            if prediction and prediction.get("status") in ("success", "warning"):
+                successful_predictions.append(prediction)
+                results["predictions"].append(prediction)
+                logger.info(f"Prediction successful for {game_id}")
+            else:
+                error_msg = prediction.get("error", "Unknown error") if isinstance(prediction, dict) else "Unknown error"
+                results["errors"].append({
+                    "game_id": game_id,
+                    "error": error_msg,
+                })
+                logger.error(f"Prediction failed for {game_id}: {error_msg}")
+        
+        except Exception as e:
+            results["errors"].append({
+                "game_id": game_id,
+                "error": str(e),
+            })
+            logger.error(f"Error processing {game_id}: {e}")
+        
+        if progress_callback:
+            status_msg = f"✓ Completed {i}/{len(game_ids)} games"
+            if len(results["errors"]) > 0:
+                status_msg += f" ({len(results['errors'])} errors)"
+            progress_callback(progress, status_msg)
+    
+    # Generate total day view post if we have predictions
+    if successful_predictions:
+        try:
+            if progress_callback:
+                progress_callback(0.9, "Generating total day view post...")
+            
+            # Create aggregated prediction dict with all games
+            aggregated_prediction = {
+                "status": "success",
+                "games": successful_predictions,
+                "model_used": "PREGAME_V3_FINAL",
+                "game_id": f"total_day_{date.strftime('%Y%m%d')}",
+                "trigger_type": "pregame",
+            }
+            
+            # Generate the post
+            post_content = post_generator.generate_pregame_post(
+                aggregated_prediction,
+                platform='discord'
+            )
+            
+            # Queue the post for all platforms
+            if progress_callback:
+                progress_callback(0.95, "Queueing total day view post...")
+            
+            orchestrator = get_orchestrator(dry_run=dry_run)
+            if orchestrator:
+                # Determine which platforms to post to
+                target_platforms = platforms or list(orchestrator.social_manager.enabled_platforms)
+                target_platforms = [p for p in target_platforms if p in orchestrator.social_manager.enabled_platforms]
+                
+                # Queue post for each platform
+                platform_results = {}
+                for platform in target_platforms:
+                    try:
+                        post_id = orchestrator.social_manager.queue.enqueue(
+                            game_id=f"total_day_{date.strftime('%Y%m%d')}",
+                            platform=platform,
+                            content=post_content,
+                            trigger_type="pregame_total_day",
+                            max_retries=3,
+                        )
+                        
+                        if post_id:
+                            platform_results[platform] = {
+                                "post_id": post_id,
+                                "status": "queued",
+                            }
+                        else:
+                            # Duplicate post
+                            platform_results[platform] = {
+                                "status": "duplicate",
+                                "reason": "Duplicate post detected",
+                            }
+                    except Exception as e:
+                        platform_results[platform] = {
+                            "status": "error",
+                            "error": str(e),
+                        }
+                
+                results["total_day_post"] = {
+                    "content": post_content,
+                    "platforms": platform_results,
+                    "success": True,
+                }
+                
+                if progress_callback:
+                    progress_callback(1.0, f"✓ Total day view post queued!")
+            else:
+                results["total_day_post"] = {
+                    "content": post_content,
+                    "error": "Orchestrator not available to queue post",
+                    "success": False,
+                }
+        
+        except Exception as e:
+            results["errors"].append({
+                "game_id": "total_day",
+                "error": f"Failed to generate total day post: {str(e)}",
+            })
+            logger.error(f"Error generating total day post: {e}")
+    else:
+        results["total_day_post"] = {
+            "error": "No successful predictions to aggregate",
+            "success": False,
+        }
+    
+    results["success"] = len(results["errors"]) == 0 and results["total_day_post"] and results["total_day_post"].get("success")
+    
+    return results
+
 def refresh_data():
     """Refresh automation data (force reload)."""
     reset_orchestrator()
