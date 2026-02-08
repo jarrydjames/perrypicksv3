@@ -10,6 +10,8 @@ from datetime import datetime
 
 import json
 
+from src.automation.prediction_formatter import format_prediction
+
 logger = logging.getLogger(__name__)
 
 class PostGenerator:
