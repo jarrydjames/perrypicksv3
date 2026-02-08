@@ -604,7 +604,13 @@ Error: Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment v
 34. **f885140** - Fix: Mode selection ignored in Automation Manager
    - 3 files changed, 208 insertions(+), 2 deletions(-)
    
-35. **(this commit)** - Add Bug #18 documentation and update stats
+35. **efe4ac1** - Update documentation for Bug #18: Mode selection ignored in Automation Manager
+   - 2 files changed, 18 insertions(+), 11 deletions(-)
+   
+36. **7a10c9d** - Fix: Add detailed logging for pregame prediction errors
+   - 2 files changed, 35 insertions(+), 9 deletions(-)
+   
+37. **(this commit)** - Add Bug #19 documentation and update stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -746,10 +752,11 @@ All fixes are documented in:
 - **High priority bugs fixed:** 2
 - **UX improvements:** 8
 - **Features added:** 1
+- **Investigations in progress:** 1 (pregame 'Unknown error')
 - **Total fixes:** 28
-- **Files modified:** 8 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py, predict_from_gameid_v3_runtime.py, predict_api.py, automation_ui.py)
-- **Documentation created:** 14
-- **Commits pushed:** 20
+- **Files modified:** 8 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py, predict_from_gameid_v3_runtime.py, predict_api.py, automation_ui.py, automation_orchestrator.py)
+- **Documentation created:** 15
+- **Commits pushed:** 21
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---

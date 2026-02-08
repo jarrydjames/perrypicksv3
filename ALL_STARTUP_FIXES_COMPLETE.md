@@ -1,5 +1,5 @@
 # 🎉 All Startup Fixes & Enhancements - COMPLETE! ✅
-**Status:** ✅ ALL TWENTY-EIGHT FIXES + ONE FEATURE + THREE ENHANCEMENTS + COMPREHENSIVE REVIEW + ALL BUGS FIXED  
+**Status:** ✅ ALL TWENTY-EIGHT FIXES + ONE FEATURE + THREE ENHANCEMENTS + COMPREHENSIVE REVIEW + ONE INVESTIGATION IN PROGRESS  
 **Date:** February 7, 2026  
 
 ---
@@ -33,6 +33,15 @@ Plus 4 major feature enhancements:
 16. 🎮 **Manual Predictions Enhancements** - Date filter + team names + bulk predictions
 17. 🎯 **Gamestate-Conscious Posting** - Queue multiple posts per game
 18. 🔧 **Toggle to Disable Odds Fetching** - Test predictions without hitting odds API
+
+## 🔍 Investigation In Progress
+
+19. 🐛 **Pregame 'Unknown Error'** - Added detailed logging to diagnose pregame prediction failures
+   - User reports: "pulling pregame 0022500755: Unknown error"
+   - Root cause unknown - predict_pregame() returning incomplete result
+   - Added extensive logging to identify issue
+   - Check logs for detailed error info after trying again
+   - See BUG_PREGAME_UNKNOWN_ERROR.md for full investigation details
 
 ---
 
@@ -779,6 +788,6 @@ The automation system will:
 
 **Author:** Perry (code-puppy)  
 **Created:** February 7, 2026  
-**Status:** ✅ ALL TWENTY-EIGHT FIXES + ONE FEATURE + THREE ENHANCEMENTS + COMPREHENSIVE REVIEW + ALL BUGS FIXED  
+**Status:** ✅ ALL TWENTY-EIGHT FIXES + ONE FEATURE + THREE ENHANCEMENTS + COMPREHENSIVE REVIEW + ONE INVESTIGATION IN PROGRESS  
 
 🐶 **Everything fixed! Predictions run, results persist, and workflow is clear! Comprehensive review complete!** 🚀
