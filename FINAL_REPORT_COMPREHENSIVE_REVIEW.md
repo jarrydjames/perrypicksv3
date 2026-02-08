@@ -550,7 +550,13 @@ Error: Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment v
 16. **d0c728a** - Fix: Discord posting was failing - missing username parameter
    - 1 file changed, 6 insertions(+), 2 deletions(-)
    
-17. **(this commit)** - Add Bug #11 documentation and update stats
+17. **703c740** - Add Bug #11 documentation: Discord posting failing - missing username parameter
+   - 3 files changed, 227 insertions(+), 19 deletions(-)
+   
+18. **24f0fb1** - Fix: fetch_nba_odds_snapshot() being called with positional arguments
+   - 2 files changed, 8 insertions(+), 2 deletions(-)
+   
+19. **(this commit)** - Add Bug #12 documentation and update stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -654,9 +660,10 @@ All fixes are documented in:
 4. 🔴 Wrong field names (created_at vs created_at_utc)
 5. 🔴 Discord posting failing (missing username parameter)
 6. 🔴 Posting errors not shown to user (silent failures)
-7. 🟠 Test Mode was confusing (default ON)
-8. 🟡 No persistent feedback (no notifications)
-9. 🟡 No workflow guidance (users didn't know what to do)
+7. 🔴 fetch_nba_odds_snapshot called with positional arguments (TypeError)
+8. 🟠 Test Mode was confusing (default ON)
+9. 🟡 No persistent feedback (no notifications)
+10. 🟡 No workflow guidance (users didn't know what to do)
 
 ### What Is Now Correct
 1. ✅ Results stay visible after generation
@@ -665,20 +672,21 @@ All fixes are documented in:
 4. ✅ All field names correct (created_at_utc, posted_at_utc)
 5. ✅ Discord posts now send successfully (username parameter fixed)
 6. ✅ Posting errors shown to users (not just logged)
-7. ✅ Test Mode is OFF by default
-8. ✅ Persistent toast notifications for all actions
-9. ✅ Clear step-by-step workflow guide
-10. ✅ Accurate progress messages with counts
-11. ✅ Better button labels and UI
+7. ✅ Odds API calls use keyword arguments (no more TypeError)
+8. ✅ Test Mode is OFF by default
+9. ✅ Persistent toast notifications for all actions
+10. ✅ Clear step-by-step workflow guide
+11. ✅ Accurate progress messages with counts
+12. ✅ Better button labels and UI
 
 ### Total Stats
-- **Critical bugs fixed:** 11
+- **Critical bugs fixed:** 12
 - **High priority bugs fixed:** 2
 - **UX improvements:** 7
-- **Total fixes:** 20
-- **Files modified:** 3 (added discord_client.py)
-- **Documentation created:** 6
-- **Commits pushed:** 11
+- **Total fixes:** 21
+- **Files modified:** 4 (added discord_client.py, predict_pregame.py, persistent_cache.py)
+- **Documentation created:** 7
+- **Commits pushed:** 12
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
