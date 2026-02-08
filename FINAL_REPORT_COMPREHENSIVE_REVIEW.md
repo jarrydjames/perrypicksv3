@@ -556,7 +556,13 @@ Error: Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment v
 18. **24f0fb1** - Fix: fetch_nba_odds_snapshot() being called with positional arguments
    - 2 files changed, 8 insertions(+), 2 deletions(-)
    
-19. **(this commit)** - Add Bug #12 documentation and update stats
+19. **d4497e6** - Add Bug #12 documentation: fetch_nba_odds_snapshot() positional arguments error
+   - 3 files changed, 217 insertions(+), 17 deletions(-)
+   
+20. **0ee2644** - Fix: Pregame post now includes team scores and winner
+   - 1 file changed, 30 insertions(+), 1 deletion(-)
+   
+21. **(this commit)** - Add Bug #13 documentation and update stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -664,6 +670,7 @@ All fixes are documented in:
 8. 🟠 Test Mode was confusing (default ON)
 9. 🟡 No persistent feedback (no notifications)
 10. 🟡 No workflow guidance (users didn't know what to do)
+11. 🟡 Pregame posts missing team scores and winner
 
 ### What Is Now Correct
 1. ✅ Results stay visible after generation
@@ -678,15 +685,16 @@ All fixes are documented in:
 10. ✅ Clear step-by-step workflow guide
 11. ✅ Accurate progress messages with counts
 12. ✅ Better button labels and UI
+13. ✅ Pregame posts show team scores and winner (better format)
 
 ### Total Stats
 - **Critical bugs fixed:** 12
 - **High priority bugs fixed:** 2
-- **UX improvements:** 7
-- **Total fixes:** 21
-- **Files modified:** 4 (added discord_client.py, predict_pregame.py, persistent_cache.py)
-- **Documentation created:** 7
-- **Commits pushed:** 12
+- **UX improvements:** 8
+- **Total fixes:** 22
+- **Files modified:** 5 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py)
+- **Documentation created:** 8
+- **Commits pushed:** 13
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
