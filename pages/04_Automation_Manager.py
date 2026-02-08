@@ -79,7 +79,7 @@ def render_sidebar():
         st.markdown("---")
         
         # Refresh button
-        if st.button("🔄 Refresh Data", use_container_width=True):
+        if st.button("🔄 Refresh Data", use_container_width=True, key="sidebar_refresh"):
             refresh_data()
             st.rerun()
         
@@ -334,6 +334,7 @@ def render_manual_predictions():
         "Game",
         options=list(game_options.keys()),
         format_func=lambda x: game_options.get(x, x),
+        key="manual_game_select",
     )
     
     # Mode selection
@@ -1405,14 +1406,14 @@ def render_game_state_monitor():
         start_col, stop_col = st.columns(2)
         
         with start_col:
-            if st.button("▶️ Start Game State Monitor", use_container_width=True, type="primary"):
+            if st.button("▶️ Start Game State Monitor", use_container_width=True, type="primary", key="gsm_start"):
                 st.success("Game State Monitor started!")
                 st.info("To run manually, open Terminal and execute:")
                 st.code("python scripts/start_game_state_monitor.py", language="bash")
                 st.warning("The service will run in the terminal window.")
         
         with stop_col:
-            st.button("⏹ Stop Service", use_container_width=True, help="Stop the running monitoring service")
+            st.button("⏹ Stop Service", use_container_width=True, key="gsm_stop", help="Stop the running monitoring service")
         
         st.markdown("---")
         
@@ -1424,12 +1425,14 @@ def render_game_state_monitor():
             min_value=10,
             max_value=300,
             step=5,
+            key="gsm_poll_interval",
             help="How often to poll NBA API for game updates (default: 30s)",
         )
         
         dry_run = st.toggle(
             "Dry Run (Test Mode)",
             value=False,
+            key="gsm_dry_run",
             help="If ON, will generate predictions but won't actually post to platforms",
         )
     
@@ -1437,7 +1440,7 @@ def render_game_state_monitor():
         st.markdown("#### 📊 Live Game Status")
         
         # Refresh button
-        if st.button("🔄 Refresh Game States", use_container_width=True):
+        if st.button("🔄 Refresh Game States", use_container_width=True, key="gsm_refresh_states"):
             st.rerun()
         
         st.markdown("---")
