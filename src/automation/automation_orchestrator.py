@@ -147,7 +147,7 @@ class AutomationOrchestrator:
                 results["predictions"].append(prediction)
                 
                 # Post to social media
-                if prediction and prediction.get("status") == "success":
+                if prediction and prediction.get("status") in ("success", "warning"):
                     if progress_callback:
                         progress_callback(progress, f"Posting {game_id} to social media...")
                     post_results = self.social_manager.post_prediction(

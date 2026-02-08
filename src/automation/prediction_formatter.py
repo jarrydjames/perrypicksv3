@@ -8,7 +8,7 @@ def format_prediction(game_id: str, pred: Dict[str, object]) -> str:
     
     Includes team names, predicted scores, winner, total, and margin.
     """
-    if pred.get("status") != "success":
+    if pred.get("status") not in ("success", "warning"):
         return f"{game_id}: prediction failed ({pred.get('error')})"
     
     # Extract prediction data
