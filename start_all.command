@@ -68,11 +68,11 @@ trap cleanup SIGINT SIGTERM
 # Banner
 function print_banner() {
     clear
-    echo -e "${PURPLE}╔══════════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${PURPLE}╔════════════════════════════════════════════════════════════╗${NC}"
     echo -e "${PURPLE}║${NC}  ${CYAN}🐶 PerryPicks v3 - All-In-One Startup${NC}                   ${PURPLE}║${NC}"
     echo -e "${PURPLE}║${NC}                                                              ${PURPLE}║${NC}"
     echo -e "${PURPLE}║${NC}  ${GREEN}Frontend UI  | Backend Services | Game Monitor${NC}        ${PURPLE}║${NC}"
-    echo -e "${PURPLE}╚══════════════════════════════════════════════════════════════╝${NC}"
+    echo -e "${PURPLE}╚════════════════════════════════════════════════════════════╝${NC}"
     echo ""
 }
 
@@ -114,7 +114,7 @@ function start_streamlit() {
     STREAMLIT_LOG="$LOG_DIR/streamlit.log"
     
     # Start Streamlit in background
-    streamlit run app_main.py \
+    streamlit run pages/04_Automation_Manager.py \
         --server.port=8501 \
         --server.headless=true \
         --server.address=localhost \
