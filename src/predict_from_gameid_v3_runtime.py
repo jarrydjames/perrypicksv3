@@ -85,6 +85,54 @@ def third_quarter_score(game):
     away = game.get("awayTeam", {}) or {}
     return sum_first3(home.get("periods")), sum_first3(away.get("periods"))
 
+def _add_odds_to_prediction(
+    result: Dict[str, Any],
+    home_name: str = None,
+    away_name: str = None,
+    fetch_odds: bool = True,
+) -> Dict[str, Any]:
+    """Add odds data to a prediction dict if odds fetching is enabled.
+    
+    Args:
+        result: Prediction dict to add odds to
+        home_name: Home team tricode (if None, extracted from result)
+        away_name: Away team tricode (if None, extracted from result)
+        fetch_odds: Whether to fetch odds
+    
+    Returns:
+        Updated prediction dict with odds added (if successful)
+    """
+    if not fetch_odds:
+        return result
+    
+    # Extract team names from result if not provided
+    if home_name is None:
+        home_name = result.get("home_name", "HOME")
+    if away_name is None:
+        away_name = result.get("away_name", "AWAY")
+    
+    try:
+        # Use persistent cache to avoid repeated API calls
+        cache = PersistentOddsCache()
+        odds_snapshot = cache.get_or_fetch(home_name, away_name)
+        
+        if odds_snapshot:
+            result.update({
+                "odds_home_ml": odds_snapshot.moneyline_home,
+                "odds_away_ml": odds_snapshot.moneyline_away,
+                "odds_total_line": odds_snapshot.total_points,
+                "odds_total_over": odds_snapshot.total_over_odds,
+                "odds_total_under": odds_snapshot.total_under_odds,
+                "odds_spread_home_line": odds_snapshot.spread_home,
+                "odds_spread_home": odds_snapshot.spread_home_odds,
+                "odds_spread_away": odds_snapshot.spread_away_odds,
+            })
+    except OddsAPIError as e:
+        logger.warning(f"Odds API error: {e}")
+        result["odds_error"] = str(e)
+    
+    return result
+
 def behavior_counts_q3(pbp) -> dict:
     """Count action types in first 3 quarters."""
     if pbp is None or len(pbp) == 0:
@@ -153,6 +201,7 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             try:
                 result = predict_halftime(gid)
                 result["model_used"] = "HALFTIME_FALLBACK_API_ERROR"
+                result = _add_odds_to_prediction(result, fetch_odds=fetch_odds)
                 return result
             except (ValueError, requests.HTTPError) as e:
                 # Halftime model also failed (likely 403)
@@ -172,6 +221,7 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             try:
                 result = predict_halftime(gid)
                 result["model_used"] = "HALFTIME_BEFORE_Q3"
+                result = _add_odds_to_prediction(result, fetch_odds=fetch_odds)
                 return result
             except (ValueError, requests.HTTPError) as e:
                 logging.error(f"Halftime model failed for {gid}: {e}")
@@ -192,6 +242,7 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             try:
                 result = predict_halftime(gid)
                 result["model_used"] = "HALFTIME_PBP_ERROR"
+                result = _add_odds_to_prediction(result, fetch_odds=fetch_odds)
                 return result
             except (ValueError, requests.HTTPError) as e:
                 logging.error(f"Halftime model failed for {gid}: {e}")
@@ -261,6 +312,7 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             try:
                 result = predict_halftime(gid)
                 result["model_used"] = "HALFTIME_FALLBACK"
+                result = _add_odds_to_prediction(result, fetch_odds=fetch_odds)
                 return result
             except (ValueError, requests.HTTPError) as e:
                 logging.error(f"Halftime model failed for {gid}: {e}")

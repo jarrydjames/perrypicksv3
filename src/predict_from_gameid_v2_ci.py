@@ -169,13 +169,17 @@ def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True) -> 
     away_name = _safe_team_name(away_team, "Away")
     status = _extract_status(game)
 
-    # Match your app’s previous rich keys
+    # Match your app's previous rich keys
     out: Dict[str, Any] = {
         "game_id": gid,
         "home_name": home_name,
         "away_name": away_name,
         "h1_home": int(h1_home),
         "h1_away": int(h1_away),
+        "pred_final_home": float(final_home_mu),
+        "pred_final_away": float(final_away_mu),
+        "total": float(final_total_mu),
+        "margin": float(final_margin_mu),
         "status": status,
         "elapsed_since_halftime_seconds": _elapsed_since_halftime_seconds(status),
         "current_home": None,
