@@ -694,6 +694,9 @@ def predict_from_game_id(
         },
         "data_freshness": freshness,
     }
+    
+    logger.info(f"Step 8: Result dict built with status={result.get('status')}, margin={result.get('margin')}, total={result.get('total')}")
+    logger.info(f"Step 8a: Result keys: {list(result.keys())}")
 
     warning_parts: list[str] = []
     if stale_data:
@@ -735,9 +738,10 @@ def predict_from_game_id(
             logger.warning(f"Odds API error: {e}")
             result["odds_error"] = str(e)
     
-    logger.info(f"Pregame prediction complete: total={pred.total_mean:.1f}, margin={pred.margin_mean:.1f}")
-    logger.info(f"Pregame result keys: {list(result.keys())}")
-    logger.info(f"Pregame result status: {result.get('status')}")
-    logger.info(f"Pregame result has error field: {'error' in result}")
+    logger.info(f"Step 9: Pregame prediction complete: total={pred.total_mean:.1f}, margin={pred.margin_mean:.1f}")
+    logger.info(f"Step 10: Pregame result keys: {list(result.keys())}")
+    logger.info(f"Step 11: Pregame result status: {result.get('status')}")
+    logger.info(f"Step 12: Pregame result has error field: {'error' in result}")
+    logger.info(f"Step 13: About to return result with status={result.get('status')}")
     
     return result
