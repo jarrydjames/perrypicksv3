@@ -784,61 +784,6 @@ def render_manual_predictions():
                 except Exception as e:
                     st.error(f"Error running total day view: {e}")
                     logger.error(f"Error running total day view: {e}", exc_info=True)
-                            
-                            st.markdown("---")
-                            st.markdown("### 🚀 Process Queue Now")
-                            st.info("💡 Posts are queued but not yet sent to platforms. Click below to send them now!")
-                            
-                            if st.button("📤 Send Posts to Platforms", use_container_width=True, key="send_posts_all_predictions"):
-                                with st.spinner("Processing queue..."):
-                                    orchestrator = get_orchestrator()
-                                    process_result = orchestrator.process_post_queue(batch_size=50)
-                                    
-                                    processed = process_result.get('processed', 0)
-                                    successful = process_result.get('successful', 0)
-                                    failed = process_result.get('failed', 0)
-                                    
-                                    st.markdown("### Process Result")
-                                    if successful > 0:
-                                        st.success(f"✅ Processed {processed} posts! ({successful} successful, {failed} failed)")
-                                    else:
-                                        st.error(f"❌ Processed {processed} posts but all failed ({failed} failures)")
-                                    st.markdown(f"- **Successful:** {successful}")
-                                    st.markdown(f"- **Failed:** {failed}")
-                                    
-                                    if process_result.get('posts'):
-                                        st.markdown("**Posts Processed:**")
-                                        for post in process_result['posts']:
-                                            post_id = post.get('post_id', 'unknown')
-                                            platform = post.get('platform', 'unknown')
-                                            status = post.get('status', 'unknown')
-                                            if status == 'posted':
-                                                st.markdown(f"✓ `{post_id}` → `{platform}`: **{status}**")
-                                            else:
-                                                error = post.get('error', 'Unknown error')
-                                                st.markdown(f"✗ `{post_id}` → `{platform}`: **{status}**")
-                                                st.markdown(f"   Error: `{error}`")
-                                        
-                                        # Show summary of errors
-                                        if failed > 0:
-                                            failed_posts = [p for p in process_result['posts'] if p.get('status') == 'failed']
-                                            with st.expander("🔍 Error Details", expanded=False):
-                                                for post in failed_posts:
-                                                    st.markdown(f"**Post:** `{post.get('post_id')}`")
-                                                    st.markdown(f"**Platform:** `{post.get('platform')}`")
-                                                    st.markdown(f"**Error:** `{post.get('error', 'Unknown error')}`")
-                
-                except Exception as e:
-                    # Clear progress indicators
-                    progress_bar.empty()
-                    status_placeholder.empty()
-                    
-                    st.markdown("### Result")
-                    st.error(f"❌ Unexpected error occurred: {str(e)}")
-                    import traceback
-                    st.code(traceback.format_exc())
-                    logger.exception("Error in generate all predictions:")
-                    st.toast("Failed to generate predictions", icon="❌")
         
         with col2:
             st.info(f"Will generate pregame predictions for all {len(games)} games on {selected_date}")
