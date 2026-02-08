@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 import pytz
 
 logger = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class DiscordWebhookClient:
@@ -23,18 +24,21 @@ class DiscordWebhookClient:
         self.backoff_seconds = float(os.getenv("DISCORD_RETRY_BACKOFF_SECONDS", "1.5"))
         self.alert_mode = os.getenv("DISCORD_ALERT_MODE", "balanced").lower()
     
-    def post_message(self, content: str, embed: Optional[Dict] = None) -> Optional[str]:
+    def post_message(self, content: str, username: str = None, embed: Optional[Dict] = None) -> Optional[str]:
         """
         Post a message to Discord via webhook.
         
         Args:
             content: Message content (markdown supported)
+            username: Override webhook username
             embed: Optional embed object for rich formatting
         
         Returns:
             message_id if successful, None otherwise
         """
         payload = {'content': content}
+        if username:
+            payload['username'] = username
         if embed:
             payload['embeds'] = [embed]
 
