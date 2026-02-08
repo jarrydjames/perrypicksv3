@@ -74,13 +74,13 @@ def _elapsed_since_halftime_seconds(status: dict) -> int:
     return 0
 
 
-def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True) -> Dict[str, Any]:
+def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True, fetch_odds: bool = True) -> Dict[str, Any]:
     """
     Cloud-safe 'v2_ci' entrypoint that RETURNS a dict the Streamlit app expects:
       - bands80: central 80% bands for 2H total/margin and final total/margin + team finals
       - normal: q10/q90 for same main metrics (kept for backward compatibility)
       - labels: human-readable notes about how bands were produced
-
+      - odds: current odds from API (if fetch_odds=True)
     NOTE: This implementation is intentionally conservative and self-contained.
     It uses your existing halftime model outputs and layers normal-based uncertainty bands.
     """
@@ -168,6 +168,32 @@ def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True) -> 
     home_name = _safe_team_name(home_team, "Home")
     away_name = _safe_team_name(away_team, "Away")
     status = _extract_status(game)
+    
+    # Fetch odds if requested (same as Q3 model)
+    odds_data = {}
+    if fetch_odds:
+        try:
+            from src.odds.odds_api import OddsAPIMarketSnapshot, OddsAPIError, fetch_nba_odds_snapshot
+            from src.odds.persistent_cache import PersistentOddsCache
+            
+            cache = PersistentOddsCache()
+            odds_snapshot = cache.get_or_fetch(home_name, away_name)
+            
+            if odds_snapshot:
+                odds_data = {
+                    "odds_home_ml": odds_snapshot.moneyline_home,
+                    "odds_away_ml": odds_snapshot.moneyline_away,
+                    "odds_total_line": odds_snapshot.total_points,
+                    "odds_total_over": odds_snapshot.total_over_odds,
+                    "odds_total_under": odds_snapshot.total_under_odds,
+                    "odds_spread_home_line": odds_snapshot.spread_home,
+                    "odds_spread_home": odds_snapshot.spread_home_odds,
+                    "odds_spread_away": odds_snapshot.spread_away_odds,
+                }
+        except Exception as e:
+            import logging
+            logging.warning(f"Odds API error for {gid}: {e}")
+            odds_data["odds_error"] = str(e)
 
     # Match your app's previous rich keys
     out: Dict[str, Any] = {
@@ -181,6 +207,10 @@ def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True) -> 
         "total": float(final_total_mu),
         "margin": float(final_margin_mu),
         "status": status,
+        "elapsed_since_halftime_seconds": _elapsed_since_halftime_seconds(status),
+        "current_home": None,
+        "current_away": None,
+        "clock_adjustment": None,
         "elapsed_since_halftime_seconds": _elapsed_since_halftime_seconds(status),
         "current_home": None,
         "current_away": None,
@@ -221,6 +251,9 @@ def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True) -> 
         # Keep original pred block too (handy for debugging)
         "pred": pred,
     }
+    
+    # Add odds data to the result (if fetched)
+    out.update(odds_data)
 
     return out
 

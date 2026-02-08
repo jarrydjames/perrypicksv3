@@ -199,9 +199,8 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             import logging
             logging.warning(f"Game not found or API error for {gid}, falling back to halftime prediction")
             try:
-                result = predict_halftime(gid)
+                result = predict_halftime(gid, fetch_odds=fetch_odds)
                 result["model_used"] = "HALFTIME_FALLBACK_API_ERROR"
-                result = _add_odds_to_prediction(result, fetch_odds=fetch_odds)
                 return result
             except (ValueError, requests.HTTPError) as e:
                 # Halftime model also failed (likely 403)
@@ -219,9 +218,8 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
         # Q3 model should be used only once Q3 has begun (period >= 3).
         if current_period < 3:
             try:
-                result = predict_halftime(gid)
+                result = predict_halftime(gid, fetch_odds=fetch_odds)
                 result["model_used"] = "HALFTIME_BEFORE_Q3"
-                result = _add_odds_to_prediction(result, fetch_odds=fetch_odds)
                 return result
             except (ValueError, requests.HTTPError) as e:
                 logging.error(f"Halftime model failed for {gid}: {e}")
@@ -240,9 +238,8 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             import logging
             logging.warning(f"PBP fetch failed for {gid}: {e}")
             try:
-                result = predict_halftime(gid)
+                result = predict_halftime(gid, fetch_odds=fetch_odds)
                 result["model_used"] = "HALFTIME_PBP_ERROR"
-                result = _add_odds_to_prediction(result, fetch_odds=fetch_odds)
                 return result
             except (ValueError, requests.HTTPError) as e:
                 logging.error(f"Halftime model failed for {gid}: {e}")
@@ -310,9 +307,8 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
         if pred is None:
             # Fallback to halftime if Q3 model not loaded
             try:
-                result = predict_halftime(gid)
+                result = predict_halftime(gid, fetch_odds=fetch_odds)
                 result["model_used"] = "HALFTIME_FALLBACK"
-                result = _add_odds_to_prediction(result, fetch_odds=fetch_odds)
                 return result
             except (ValueError, requests.HTTPError) as e:
                 logging.error(f"Halftime model failed for {gid}: {e}")
