@@ -478,6 +478,7 @@ def predict_game(
         
         elif use_model == 'q3':
             # Q3 MODEL - Use after end of Q3
+            logger.info(f"Using Q3 model for {game_input} (mode={mode})")
             from src.predict_from_gameid_v3_runtime import predict_from_game_id as predict_q3
             result = predict_q3(game_input, fetch_odds=fetch_odds)
             
@@ -487,14 +488,18 @@ def predict_game(
                 result['status'] = 'success'  # Set status explicitly
                 result['game_state'] = game_state if mode == 'auto' else 'q3_forced'
                 result['mode_requested'] = mode
+                logger.info(f"Q3 prediction successful for {game_input}: margin={result['margin']}, total={result['total']}")
             elif result and result.get('status') == 'error':
                 # Q3 model returned error, just add metadata
                 result['game_state'] = game_state if mode == 'auto' else 'q3_forced'
                 result['mode_requested'] = mode
+                logger.error(f"Q3 model returned error for {game_input}: {result.get('error')}")
             else:
                 # Q3 prediction missing required keys - this is an error
                 logger.error(f"Q3 prediction for {game_input} missing required keys (margin/total)")
                 logger.error(f"Result: {result}")
+                logger.error(f"Result keys: {list(result.keys()) if isinstance(result, dict) else 'Not a dict'}")
+                logger.error(f"Result type: {type(result)}")
                 # Return proper error structure
                 result = {
                     'status': 'error',

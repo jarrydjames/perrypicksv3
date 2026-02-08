@@ -320,7 +320,7 @@ def run_prediction(
     return orchestrator.run_predictions(
         game_ids=[game_id],
         trigger_type=trigger_type,
-        mode="auto",
+        mode=trigger_type,  # Use user's selected trigger type as prediction mode
         fetch_odds=fetch_odds,
         progress_callback=progress_callback,
     )
@@ -428,7 +428,7 @@ def run_predictions_for_all_games(
     return orchestrator.run_predictions(
         game_ids=game_ids,
         trigger_type=trigger_type,
-        mode="auto",
+        mode=trigger_type,  # Use trigger type as prediction mode (pregame, halftime, q3)
         fetch_odds=fetch_odds,
         progress_callback=progress_callback,
     )
