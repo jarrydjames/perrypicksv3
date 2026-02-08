@@ -171,17 +171,24 @@ def render_queue_table(posts: List[Any], max_rows: int = 20):
     posts = posts[:max_rows]
     
     # Convert to DataFrame
-    data = [
-        {
+    data = []
+    for post in posts:
+        # Parse created_at_utc (ISO 8601 string) and format it
+        try:
+            created_dt = datetime.fromisoformat(post.created_at_utc.replace("Z", "+00:00"))
+            created_str = created_dt.strftime("%Y-%m-%d %H:%M")
+        except (ValueError, AttributeError) as e:
+            logger.warning(f"Error parsing created_at_utc for {post.post_id}: {e}")
+            created_str = post.created_at_utc[:16] if post.created_at_utc else "Unknown"
+        
+        data.append({
             "Post ID": post.post_id[:20] + "..." if len(post.post_id) > 20 else post.post_id,
             "Game ID": post.game_id,
             "Platform": post.platform,
             "Status": post.status.value,
-            "Created": post.created_at.strftime("%Y-%m-%d %H:%M"),
+            "Created": created_str,
             "Content": post.content[:50] + "..." if len(post.content) > 50 else post.content,
-        }
-        for post in posts
-    ]
+        })
     
     df = pd.DataFrame(data)
     st.dataframe(df, use_container_width=True)
