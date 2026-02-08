@@ -574,7 +574,13 @@ Error: Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment v
 24. **0d97b61** - Feature: Add toggle to disable odds fetching for testing
    - 3 files changed, 39 insertions(+), 2 deletions(-)
    
-25. **(this commit)** - Add feature documentation and update stats
+25. **6c401a5** - Add documentation for odds fetching toggle feature
+   - 3 files changed, 273 insertions(+), 9 deletions(-)
+   
+26. **a3f811f** - Fix: Halftime predictions returning all zeros
+   - 1 file changed, 26 insertions(+), 4 deletions(-)
+   
+27. **(this commit)** - Add Bug #15 documentation and update stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -700,6 +706,7 @@ All fixes are documented in:
 12. ✅ Accurate progress messages with counts
 13. ✅ Better button labels and UI
 15. ✅ Pregame posts show team scores and winner (better format)
+16. ✅ Halftime predictions show actual scores (not all zeros)
 
 ### New Feature Added
 16. ✅ **Toggle to disable odds fetching for testing**
@@ -710,14 +717,14 @@ All fixes are documented in:
    - ON by default (existing behavior)
 
 ### Total Stats
-- **Critical bugs fixed:** 13
+- **Critical bugs fixed:** 14
 - **High priority bugs fixed:** 2
 - **UX improvements:** 8
 - **Features added:** 1
-- **Total fixes:** 23
-- **Files modified:** 6 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py, predict_from_gameid_v3_runtime.py)
-- **Documentation created:** 10
-- **Commits pushed:** 15
+- **Total fixes:** 24
+- **Files modified:** 7 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py, predict_from_gameid_v3_runtime.py, predict_api.py)
+- **Documentation created:** 11
+- **Commits pushed:** 16
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
