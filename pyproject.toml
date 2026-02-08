@@ -17,6 +17,8 @@ dependencies = [
     "scikit-optimize",
     "streamlit>=1.28.0",
     "pendulum>=3.0.0",
+    "schedule>=1.2.0",
+    "python-dotenv>=1.0.0",
 ]
 
 [build-system]
