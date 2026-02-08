@@ -60,8 +60,8 @@ def _pregame_import_gate(
         age_hours = (pd.Timestamp.now(tz="UTC") - updated_ts).total_seconds() / 3600.0
     except Exception:
         age_hours = 1e9
-
-    max_hours = float(os.getenv("PREGAME_IMPORT_MAX_AGE_HOURS", "36"))
+    
+    max_hours = float(os.getenv("PREGAME_IMPORT_MAX_AGE_HOURS", "48"))  # Increased to 48h for automation
     if age_hours > max_hours:
         return {
             "status": "error",

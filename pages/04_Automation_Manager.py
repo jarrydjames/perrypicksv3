@@ -74,13 +74,22 @@ logger = logging.getLogger(__name__)
 
 def render_sidebar():
     """Render sidebar with controls."""
-    # Minimal sidebar to test
-    with st.sidebar:
+    # Using st.empty() container to avoid duplicate key issues
+    sidebar_placeholder = st.sidebar.empty()
+    
+    with sidebar_placeholder.container():
         st.markdown("# 🤖 Automation Manager")
         st.markdown("---")
         
-        # Simple refresh button
-        if st.button("Refresh", key="min_sidebar_refresh"):
+        # Generate unique key per session to avoid duplicate issues
+        if "sidebar_key" not in st.session_state:
+            st.session_state["sidebar_key"] = 0
+        
+        unique_key = f"refresh_{st.session_state['sidebar_key']}"
+        st.session_state["sidebar_key"] += 1
+        
+        # Simple refresh button with session-based unique key
+        if st.button("Refresh", key=unique_key):
             st.rerun()
 
 
