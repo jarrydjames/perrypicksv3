@@ -598,7 +598,13 @@ Error: Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment v
 32. **06c90c0** - Fix: Q3 predictions failing - improved validation and logging
    - 2 files changed, 30 insertions(+)
    
-33. **(this commit)** - Add Bug #17 documentation and update stats
+33. **8852c74** - Add Bug #17 documentation: Q3 predictions failing with incomplete results
+   - 3 files changed, 213 insertions(+), 9 deletions(-)
+   
+34. **f885140** - Fix: Mode selection ignored in Automation Manager
+   - 3 files changed, 208 insertions(+), 2 deletions(-)
+   
+35. **(this commit)** - Add Bug #18 documentation and update stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -736,14 +742,14 @@ All fixes are documented in:
    - ON by default (existing behavior)
 
 ### Total Stats
-- **Critical bugs fixed:** 17
+- **Critical bugs fixed:** 18
 - **High priority bugs fixed:** 2
 - **UX improvements:** 8
 - **Features added:** 1
-- **Total fixes:** 27
-- **Files modified:** 7 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py, predict_from_gameid_v3_runtime.py, predict_api.py)
-- **Documentation created:** 13
-- **Commits pushed:** 19
+- **Total fixes:** 28
+- **Files modified:** 8 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py, predict_from_gameid_v3_runtime.py, predict_api.py, automation_ui.py)
+- **Documentation created:** 14
+- **Commits pushed:** 20
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
