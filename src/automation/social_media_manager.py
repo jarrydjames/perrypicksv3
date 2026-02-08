@@ -223,24 +223,40 @@ class SocialMediaManager:
             platform_result = self._post_to_platform(platform, content)
             
             if platform_result:
-                # Success
-                self.queue.mark_posted(post_id, platform_result["id"])
-                results["successful"] += 1
-                results["posts"].append({
-                    "post_id": post_id,
-                    "platform": platform,
-                    "status": "posted",
-                    "message_id": platform_result["id"],
-                })
+                # Check if it's an error result
+                if "error" in platform_result:
+                    # Posting failed with specific error
+                    error_msg = platform_result["error"]
+                    logger.error(f"Posting to {platform} failed: {error_msg}")
+                    self.queue.mark_failed(post_id, error_msg)
+                    results["failed"] += 1
+                    results["posts"].append({
+                        "post_id": post_id,
+                        "platform": platform,
+                        "status": "failed",
+                        "error": error_msg,
+                    })
+                else:
+                    # Success
+                    self.queue.mark_posted(post_id, platform_result["id"])
+                    results["successful"] += 1
+                    results["posts"].append({
+                        "post_id": post_id,
+                        "platform": platform,
+                        "status": "posted",
+                        "message_id": platform_result["id"],
+                    })
             else:
-                # Failure
-                self.queue.mark_failed(post_id, "Posting failed")
+                # Failure (None returned)
+                error_msg = "Unknown error - platform returned None"
+                logger.error(f"Posting to {platform} failed: {error_msg}")
+                self.queue.mark_failed(post_id, error_msg)
                 results["failed"] += 1
                 results["posts"].append({
                     "post_id": post_id,
                     "platform": platform,
                     "status": "failed",
-                    "error": "Posting failed",
+                    "error": error_msg,
                 })
             
             # Small delay between posts
@@ -272,14 +288,19 @@ class SocialMediaManager:
             
             elif platform == "discord":
                 if self.discord:
-                    self.discord.post_message(
-                        content=content,
-                        username="PerryPicks"
-                    )
-                    return {"id": "discord_post", "platform": "discord"}
+                    try:
+                        self.discord.post_message(
+                            content=content,
+                            username="PerryPicks"
+                        )
+                        return {"id": "discord_post", "platform": "discord"}
+                    except Exception as e:
+                        logger.error(f"Error posting to Discord: {e}")
+                        return {"error": str(e)}
                 else:
-                    logger.warning("Discord client not available")
-                    return None
+                    error_msg = "Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment variable."
+                    logger.error(error_msg)
+                    return {"error": error_msg}
             
             else:
                 logger.warning(f"Unknown platform: {platform}")

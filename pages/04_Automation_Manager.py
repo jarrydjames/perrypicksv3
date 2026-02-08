@@ -197,12 +197,27 @@ def render_dashboard():
             with st.spinner("Processing queue..."):
                 result = process_queue(max_posts=10)
                 processed = result.get('processed', 0)
-                if processed > 0 or result.get("success"):
-                    st.success(f"✅ Processed {processed} posts!")
-                    st.toast("Queue processed successfully!", icon="✅")
+                successful = result.get('successful', 0)
+                failed = result.get('failed', 0)
+                
+                if processed > 0:
+                    if successful > 0:
+                        st.success(f"✅ Processed {processed} posts! ({successful} successful, {failed} failed)")
+                        st.toast(f"Sent {successful} posts successfully!", icon="✅")
+                    else:
+                        st.error(f"❌ Processed {processed} posts but all failed ({failed} failures)")
+                        st.toast("All posts failed to send", icon="❌")
+                    
+                    # Show error details if any posts failed
+                    if failed > 0 and result.get('posts'):
+                        with st.expander("🔍 Error Details", expanded=False):
+                            for post in result['posts']:
+                                if post.get('status') == 'failed':
+                                    st.markdown(f"**Post:** `{post.get('post_id')}`")
+                                    st.markdown(f"**Platform:** `{post.get('platform')}`")
+                                    st.markdown(f"**Error:** `{post.get('error', 'Unknown error')}`")
                 else:
-                    st.error("❌ Failed to process queue")
-                    st.toast("Queue processing failed", icon="❌")
+                    st.info("ℹ️ No posts to process")
     
     with col2:
         st.info("Use the 'Queue' tab above to view the queue")
@@ -454,7 +469,10 @@ def render_manual_predictions():
                                     failed = process_result.get('failed', 0)
                                     
                                     st.markdown("### Process Result")
-                                    st.success(f"✅ Processed {processed} posts!")
+                                    if successful > 0:
+                                        st.success(f"✅ Processed {processed} posts! ({successful} successful, {failed} failed)")
+                                    else:
+                                        st.error(f"❌ Processed {processed} posts but all failed ({failed} failures)")
                                     st.markdown(f"- **Successful:** {successful}")
                                     st.markdown(f"- **Failed:** {failed}")
                                     st.toast(f"Sent {successful} posts successfully!", icon="✅")
@@ -468,7 +486,18 @@ def render_manual_predictions():
                                             if status == 'posted':
                                                 st.markdown(f"✓ `{post_id}` → `{platform}`: **{status}**")
                                             else:
+                                                error = post.get('error', 'Unknown error')
                                                 st.markdown(f"✗ `{post_id}` → `{platform}`: **{status}**")
+                                                st.markdown(f"   Error: `{error}`")
+                                        
+                                        # Show summary of errors
+                                        if failed > 0:
+                                            failed_posts = [p for p in process_result['posts'] if p.get('status') == 'failed']
+                                            with st.expander("🔍 Error Details", expanded=False):
+                                                for post in failed_posts:
+                                                    st.markdown(f"**Post:** `{post.get('post_id')}`")
+                                                    st.markdown(f"**Platform:** `{post.get('platform')}`")
+                                                    st.markdown(f"**Error:** `{post.get('error', 'Unknown error')}`")
         
         with col2:
             st.info(f"Selected: {game_options.get(selected_game_id, selected_game_id)}")
@@ -609,10 +638,17 @@ def render_manual_predictions():
                                     orchestrator = get_orchestrator()
                                     process_result = orchestrator.process_post_queue(batch_size=50)
                                     
+                                    processed = process_result.get('processed', 0)
+                                    successful = process_result.get('successful', 0)
+                                    failed = process_result.get('failed', 0)
+                                    
                                     st.markdown("### Process Result")
-                                    st.success(f"✅ Processed {process_result.get('processed', 0)} posts!")
-                                    st.markdown(f"- **Successful:** {process_result.get('successful', 0)}")
-                                    st.markdown(f"- **Failed:** {process_result.get('failed', 0)}")
+                                    if successful > 0:
+                                        st.success(f"✅ Processed {processed} posts! ({successful} successful, {failed} failed)")
+                                    else:
+                                        st.error(f"❌ Processed {processed} posts but all failed ({failed} failures)")
+                                    st.markdown(f"- **Successful:** {successful}")
+                                    st.markdown(f"- **Failed:** {failed}")
                                     
                                     if process_result.get('posts'):
                                         st.markdown("**Posts Processed:**")
@@ -623,8 +659,18 @@ def render_manual_predictions():
                                             if status == 'posted':
                                                 st.markdown(f"✓ `{post_id}` → `{platform}`: **{status}**")
                                             else:
+                                                error = post.get('error', 'Unknown error')
                                                 st.markdown(f"✗ `{post_id}` → `{platform}`: **{status}**")
-                                st.rerun()
+                                                st.markdown(f"   Error: `{error}`")
+                                        
+                                        # Show summary of errors
+                                        if failed > 0:
+                                            failed_posts = [p for p in process_result['posts'] if p.get('status') == 'failed']
+                                            with st.expander("🔍 Error Details", expanded=False):
+                                                for post in failed_posts:
+                                                    st.markdown(f"**Post:** `{post.get('post_id')}`")
+                                                    st.markdown(f"**Platform:** `{post.get('platform')}`")
+                                                    st.markdown(f"**Error:** `{post.get('error', 'Unknown error')}`")
                 
                 except Exception as e:
                     # Clear progress indicators
@@ -768,9 +814,25 @@ def render_queue_manager():
                 with st.spinner("Processing queue..."):
                     result = process_queue(max_posts=10)
                     processed = result.get('processed', 0)
+                    successful = result.get('successful', 0)
+                    failed = result.get('failed', 0)
+                    
                     if processed > 0:
-                        st.success(f"✅ Processed {processed} posts!")
-                        st.toast("Queue processed successfully!", icon="✅")
+                        if successful > 0:
+                            st.success(f"✅ Processed {processed} posts! ({successful} successful, {failed} failed)")
+                            st.toast(f"Sent {successful} posts successfully!", icon="✅")
+                        else:
+                            st.error(f"❌ Processed {processed} posts but all failed ({failed} failures)")
+                            st.toast("All posts failed to send", icon="❌")
+                        
+                        # Show error details if any posts failed
+                        if failed > 0 and result.get('posts'):
+                            with st.expander("🔍 Error Details", expanded=False):
+                                for post in result['posts']:
+                                    if post.get('status') == 'failed':
+                                        st.markdown(f"**Post:** `{post.get('post_id')}`")
+                                        st.markdown(f"**Platform:** `{post.get('platform')}`")
+                                        st.markdown(f"**Error:** `{post.get('error', 'Unknown error')}`")
                     else:
                         st.info("ℹ️ No pending posts to process")
         
