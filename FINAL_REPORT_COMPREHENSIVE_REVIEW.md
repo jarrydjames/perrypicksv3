@@ -275,6 +275,53 @@ from src.automation.prediction_formatter import format_prediction
 
 ---
 
+---
+
+### Bug #7: Wrong Field Names (created_at vs created_at_utc) 🔴 CRITICAL
+**Status:** ✅ FIXED
+**Date:** February 7, 2026 (Post-deployment fix)
+
+**The Problem:**
+Code was accessing `post.created_at` and `post.posted_at` but the actual field names in PostItem dataclass are:
+- `created_at_utc: str` (ISO 8601 string)
+- `posted_at_utc: Optional[str]` (ISO 8601 string)
+
+**Errors:**
+```
+AttributeError: 'PostItem' object has no attribute 'created_at'
+AttributeError: 'PostItem' object has no attribute 'posted_at'
+```
+
+**Additionally:**
+Even when the correct field names are used, they're ISO 8601 strings (not datetime objects), so they don't have `.strftime()` methods.
+
+**The Fix:**
+1. Changed all `post.created_at` → `post.created_at_utc`
+2. Changed all `post.posted_at` → `post.posted_at_utc`
+3. Added proper parsing of ISO 8601 timestamps:
+```python
+from datetime import datetime
+created_dt = datetime.fromisoformat(post.created_at_utc.replace("Z", "+00:00"))
+created_str = created_dt.strftime("%Y-%m-%d %H:%M")
+```
+4. Added error handling for parsing failures
+
+**Locations Fixed:**
+1. `src/automation/automation_ui.py` - render_queue_table() function
+2. `pages/04_Automation_Manager.py` - render_history() function (4 locations)
+
+**What This Fixes:**
+- ✅ No more AttributeError for wrong field names
+- ✅ Queue table displays correctly
+- ✅ History tab displays correctly
+- ✅ Properly formatted timestamps
+
+**Commits:**
+- `12bdbc4` - Fixed automation_ui.py
+- `7c9d492` - Fixed pages/04_Automation_Manager.py
+
+---
+
 ## 🚀 Deployment
 
 ### Commits Pushed
@@ -289,6 +336,20 @@ from src.automation.prediction_formatter import format_prediction
    
 4. **3e2c791** - Fix: Add missing import for format_prediction
    - 1 file changed, 2 insertions(+)
+   
+5. **12bdbc4** - Fix: AttributeError in render_queue_table - Wrong field name
+   - 1 file changed, 13 insertions(+), 6 deletions(-)
+   
+6. **7c9d492** - Fix: More AttributeError issues - Wrong field names in history tab
+   - 1 file changed, 12 insertions(+), 4 deletions(-)
+   
+7. **8f2f1e6** - Update final report with Bug #6
+   - 1 file changed, 66 insertions(+), 12 deletions(-)
+   
+8. **6dabcbc** - Update to 15 fixes
+   - 1 file changed, 3 insertions(+), 3 deletions(-)
+   
+9. **(this commit)** - Update final report with Bug #7 and updated stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -389,28 +450,30 @@ All fixes are documented in:
 1. 🔴 Results flashed and disappeared immediately (st.rerun bug)
 2. 🔴 Code crashed when counting posts (summation bug)
 3. 🔴 Missing import for format_prediction (NameError)
-4. 🟠 Test Mode was confusing (default ON)
-5. 🟡 No persistent feedback (no notifications)
-6. 🟡 No workflow guidance (users didn't know what to do)
+4. 🔴 Wrong field names (created_at vs created_at_utc)
+5. 🟠 Test Mode was confusing (default ON)
+6. 🟡 No persistent feedback (no notifications)
+7. 🟡 No workflow guidance (users didn't know what to do)
 
 ### What Is Now Correct
 1. ✅ Results stay visible after generation
 2. ✅ No crashes when counting posts
 3. ✅ All required functions imported correctly
-4. ✅ Test Mode is OFF by default
-5. ✅ Persistent toast notifications for all actions
-6. ✅ Clear step-by-step workflow guide
-7. ✅ Accurate progress messages with counts
-8. ✅ Better button labels and UI
+4. ✅ All field names correct (created_at_utc, posted_at_utc)
+5. ✅ Test Mode is OFF by default
+6. ✅ Persistent toast notifications for all actions
+7. ✅ Clear step-by-step workflow guide
+8. ✅ Accurate progress messages with counts
+9. ✅ Better button labels and UI
 
 ### Total Stats
-- **Critical bugs fixed:** 6
+- **Critical bugs fixed:** 7
 - **High priority bugs fixed:** 2
 - **UX improvements:** 7
-- **Total fixes:** 15
+- **Total fixes:** 16
 - **Files modified:** 2
 - **Documentation created:** 4
-- **Commits pushed:** 4
+- **Commits pushed:** 7
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
