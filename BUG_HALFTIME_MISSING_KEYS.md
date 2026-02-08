@@ -146,19 +146,32 @@ if missing_keys and result.get('status') != 'error':
 - ❌ raw_result might not have margin/total keys at top level
 - ❌ No validation that extraction was successful
 - ❌ No logging to debug what was happening
+- ❌ Status field not set in all error paths
+- ❌ Validation check failed even for legitimate errors
 
-**Fixed:**
+- ❌ Different models (pregame, halftime, q3) had inconsistent error handling
+
+**Fixed (Commit 68aa11e):**
 - ✅ Added default values for critical fields (game_id, home_name, away_name)
 - ✅ Added warning if margin/total are both zero (indicates extraction issue)
 - ✅ Added detailed error logging when raw_result has unexpected structure
 - ✅ Ensure 'status' is set even if result is incomplete
 - ✅ More robust fallback handling for edge cases
 
+**Fixed (Commit cd416a2 - Comprehensive Fix):**
+- ✅ All models (pregame, halftime, q3) now have consistent error handling
+- ✅ Every error path returns proper structure with all required keys
+- ✅ Status field always set (success or error)
+- ✅ Default values for all critical fields (game_id, home_name, away_name, margin, total)
+- ✅ Detailed logging for debugging
+- ✅ Validation no longer fails for legitimate errors
+
 **File Modified:**
 - `src/predict_api.py`
 
-**Commit:**
-- `68aa11e` - Fix: Halftime predictions missing margin/total keys - improved error handling
+**Commits:**
+- `68aa11e` - Fix: Halftime predictions missing margin/total keys - improved error handling (initial attempt)
+- `cd416a2` - Fix: Comprehensive error handling for all prediction models (final fix)
 
 ---
 **Author:** Perry (code-puppy)
