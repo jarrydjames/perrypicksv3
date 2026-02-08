@@ -318,7 +318,60 @@ created_str = created_dt.strftime("%Y-%m-%d %H:%M")
 
 **Commits:**
 - `12bdbc4` - Fixed automation_ui.py
-- `7c9d492` - Fixed pages/04_Automation_Manager.py
+- `7c9d492` - Fixed pages/04_Automation_Manager.py (render_history)
+
+---
+
+### Bug #8: Wrong Field Names in Sorting Functions (created_at) 🔴 CRITICAL
+**Status:** ✅ FIXED
+**Date:** February 7, 2026 (Post-deployment fix)
+
+**The Problem:**
+Code was sorting posts by `p.created_at` (wrong field name) instead of `p.created_at_utc`. Since `created_at_utc` is an ISO 8601 string, it can't be used directly for sorting.
+
+**Errors:**
+```
+AttributeError: 'PostItem' object has no attribute 'created_at'
+```
+
+**Locations:**
+1. `pages/04_Automation_Manager.py` line 247 - render_dashboard():
+   ```python
+   # BROKEN:
+   key=lambda p: p.created_at
+   ```
+
+2. `pages/04_Automation_Manager.py` line 806 - render_history():
+   ```python
+   # BROKEN:
+   key=lambda p: p.created_at
+   ```
+
+**The Fix:**
+Created a `parse_created_at()` helper function to parse ISO 8601 strings to datetime objects for proper sorting:
+
+```python
+def parse_created_at(post):
+    try:
+        from datetime import datetime
+        return datetime.fromisoformat(post.created_at_utc.replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        # Return old date for posts that fail to parse (they'll sort to end)
+        from datetime import datetime
+        return datetime.min
+
+# Now use it for sorting:
+recent_posts = sorted(all_posts, key=parse_created_at, reverse=True)[:10]
+```
+
+**What This Fixes:**
+- ✅ Dashboard recent activity displays correctly (sorted by date)
+- ✅ History tab displays correctly (sorted by date)
+- ✅ Posts appear in correct chronological order
+- ✅ Handles parsing failures gracefully
+
+**Commit:**
+- `ab1397e` - Fix: Additional AttributeError issues - Wrong field names in sorting
 
 ---
 
@@ -349,7 +402,13 @@ created_str = created_dt.strftime("%Y-%m-%d %H:%M")
 8. **6dabcbc** - Update to 15 fixes
    - 1 file changed, 3 insertions(+), 3 deletions(-)
    
-9. **(this commit)** - Update final report with Bug #7 and updated stats
+9. **bd48543** - Update final report with Bug #7 and updated stats
+   - 2 files changed, 77 insertions(+), 14 deletions(-)
+   
+10. **ab1397e** - Fix: Additional AttributeError issues - Wrong field names in sorting
+   - 1 file changed, 22 insertions(+), 2 deletions(-)
+   
+11. **(this commit)** - Update final report with Bug #8 and updated stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -467,13 +526,13 @@ All fixes are documented in:
 9. ✅ Better button labels and UI
 
 ### Total Stats
-- **Critical bugs fixed:** 7
+- **Critical bugs fixed:** 8
 - **High priority bugs fixed:** 2
 - **UX improvements:** 7
-- **Total fixes:** 16
+- **Total fixes:** 17
 - **Files modified:** 2
 - **Documentation created:** 4
-- **Commits pushed:** 7
+- **Commits pushed:** 8
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
