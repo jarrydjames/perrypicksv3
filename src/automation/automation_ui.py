@@ -666,6 +666,244 @@ def run_total_day_view(
     
     return results
 
+def run_full_day_automation(
+    date: dt.date = None,
+    platforms: Optional[List[str]] = None,
+    dry_run: bool = False,
+    fetch_odds: bool = True,
+    progress_callback=None,
+) -> Dict[str, Any]:
+    """Run complete full day automation - one click for everything.
+    
+    This creates:
+    1. Individual pregame predictions for all games
+    2. Total day summary post (Option 3 table format)
+    3. Halftime triggers for each game (game-time aware, auto-posts at halftime)
+    4. Q3 triggers for each game (game-time aware, auto-posts at Q3)
+    
+    All posts are queued automatically and will post at the appropriate times.
+    
+    Args:
+        date: Date to predict for (default: today)
+        platforms: Platforms to post to (None = all enabled)
+        dry_run: If True, don't actually post
+        fetch_odds: If True, fetch odds from API (default True). Set False for testing.
+        progress_callback: Optional callback(progress, message) for UI updates
+    
+    Returns:
+        Comprehensive results dictionary with all automation results
+    """
+    # Get game IDs for the date
+    game_ids = get_game_ids(date)
+    
+    if not game_ids:
+        return {
+            "success": False,
+            "error": "No games found for the selected date",
+        }
+    
+    results = {
+        "date": date,
+        "total_games": len(game_ids),
+        "pregame_individual": None,
+        "pregame_day_summary": None,
+        "halftime_triggers": None,
+        "q3_triggers": None,
+        "errors": [],
+    }
+    
+    # Progress stages:
+    # 0-25%: Individual pregame predictions
+    # 25-50%: Total day summary
+    # 50-75%: Halftime triggers
+    # 75-100%: Q3 triggers
+    
+    # Stage 1: Individual Pregame Predictions
+    try:
+        if progress_callback:
+            progress_callback(0.05, "Starting full day automation...")
+        
+        pregame_individual = run_predictions_for_all_games(
+            date=date,
+            trigger_type="pregame",
+            platforms=platforms,
+            dry_run=dry_run,
+            fetch_odds=fetch_odds,
+            progress_callback=lambda p, m: progress_callback(0.05 + (p * 0.20), m) if progress_callback else None,
+        )
+        
+        results["pregame_individual"] = pregame_individual
+        
+        # Collect errors
+        if pregame_individual.get("errors"):
+            results["errors"].extend(pregame_individual.get("errors", []))
+        
+        if progress_callback:
+            success_count = len(pregame_individual.get("predictions", []))
+            error_count = len(pregame_individual.get("errors", []))
+            progress_callback(0.25, f"✓ Pregame predictions: {success_count} games, {error_count} errors")
+    
+    except Exception as e:
+        results["errors"].append({
+            "stage": "pregame_individual",
+            "error": str(e),
+        })
+        logger.error(f"Error in pregame individual predictions: {e}")
+    
+    # Stage 2: Total Day Summary
+    try:
+        if progress_callback:
+            progress_callback(0.26, "Generating total day summary...")
+        
+        pregame_day_summary = run_total_day_view(
+            date=date,
+            platforms=platforms,
+            dry_run=dry_run,
+            fetch_odds=fetch_odds,
+            progress_callback=lambda p, m: progress_callback(0.26 + (p * 0.24), m) if progress_callback else None,
+        )
+        
+        results["pregame_day_summary"] = pregame_day_summary
+        
+        # Collect errors
+        if pregame_day_summary.get("errors"):
+            results["errors"].extend(pregame_day_summary.get("errors", []))
+        
+        if progress_callback:
+            success = pregame_day_summary.get("success", False)
+            progress_callback(0.50, f"✓ Total day summary: {'Success' if success else 'Failed'}")
+    
+    except Exception as e:
+        results["errors"].append({
+            "stage": "pregame_day_summary",
+            "error": str(e),
+        })
+        logger.error(f"Error in total day summary: {e}")
+    
+    # Stage 3: Halftime Triggers (game-time aware)
+    halftime_trigger_results = {
+        "total_games": len(game_ids),
+        "successful": [],
+        "errors": [],
+    }
+    
+    try:
+        if progress_callback:
+            progress_callback(0.51, "Setting up halftime triggers...")
+        
+        for i, game_id in enumerate(game_ids, 1):
+            try:
+                # Queue halftime posts for this game
+                result = run_prediction(
+                    game_id=game_id,
+                    trigger_type="halftime",
+                    platforms=platforms,
+                    dry_run=dry_run,
+                )
+                
+                if result.get("success"):
+                    halftime_trigger_results["successful"].append(game_id)
+                    logger.info(f"Halftime trigger queued: {game_id}")
+                else:
+                    error = result.get("error", "Unknown error")
+                    halftime_trigger_results["errors"].append({
+                        "game_id": game_id,
+                        "error": error,
+                    })
+                    logger.error(f"Failed to queue halftime trigger for {game_id}: {error}")
+                
+                # Update progress
+                progress = 0.51 + (i / len(game_ids) * 0.24)
+                if progress_callback:
+                    progress_callback(progress, f"Halftime trigger: {i}/{len(game_ids)} games")
+            
+            except Exception as e:
+                halftime_trigger_results["errors"].append({
+                    "game_id": game_id,
+                    "error": str(e),
+                })
+                logger.error(f"Error queueing halftime trigger for {game_id}: {e}")
+        
+        results["halftime_triggers"] = halftime_trigger_results
+        results["errors"].extend(halftime_trigger_results["errors"])
+        
+        if progress_callback:
+            success_count = len(halftime_trigger_results["successful"])
+            error_count = len(halftime_trigger_results["errors"])
+            progress_callback(0.75, f"✓ Halftime triggers: {success_count} games, {error_count} errors")
+    
+    except Exception as e:
+        results["errors"].append({
+            "stage": "halftime_triggers",
+            "error": str(e),
+        })
+        logger.error(f"Error in halftime triggers: {e}")
+    
+    # Stage 4: Q3 Triggers (game-time aware)
+    q3_trigger_results = {
+        "total_games": len(game_ids),
+        "successful": [],
+        "errors": [],
+    }
+    
+    try:
+        if progress_callback:
+            progress_callback(0.76, "Setting up Q3 triggers...")
+        
+        for i, game_id in enumerate(game_ids, 1):
+            try:
+                # Queue Q3 posts for this game
+                result = run_prediction(
+                    game_id=game_id,
+                    trigger_type="q3",
+                    platforms=platforms,
+                    dry_run=dry_run,
+                )
+                
+                if result.get("success"):
+                    q3_trigger_results["successful"].append(game_id)
+                    logger.info(f"Q3 trigger queued: {game_id}")
+                else:
+                    error = result.get("error", "Unknown error")
+                    q3_trigger_results["errors"].append({
+                        "game_id": game_id,
+                        "error": error,
+                    })
+                    logger.error(f"Failed to queue Q3 trigger for {game_id}: {error}")
+                
+                # Update progress
+                progress = 0.76 + (i / len(game_ids) * 0.24)
+                if progress_callback:
+                    progress_callback(progress, f"Q3 trigger: {i}/{len(game_ids)} games")
+            
+            except Exception as e:
+                q3_trigger_results["errors"].append({
+                    "game_id": game_id,
+                    "error": str(e),
+                })
+                logger.error(f"Error queueing Q3 trigger for {game_id}: {e}")
+        
+        results["q3_triggers"] = q3_trigger_results
+        results["errors"].extend(q3_trigger_results["errors"])
+        
+        if progress_callback:
+            success_count = len(q3_trigger_results["successful"])
+            error_count = len(q3_trigger_results["errors"])
+            progress_callback(1.0, f"✓ Q3 triggers: {success_count} games, {error_count} errors")
+    
+    except Exception as e:
+        results["errors"].append({
+            "stage": "q3_triggers",
+            "error": str(e),
+        })
+        logger.error(f"Error in Q3 triggers: {e}")
+    
+    # Calculate overall success
+    total_errors = len(results["errors"])
+    results["success"] = total_errors == 0
+    
+    return results
+
 def refresh_data():
     """Refresh automation data (force reload)."""
     reset_orchestrator()

@@ -45,6 +45,7 @@ from src.automation.automation_ui import (
     run_prediction,
     run_predictions_for_all_games,
     run_total_day_view,
+    run_full_day_automation,
     queue_gamestate_conscious_posts,
     process_queue,
     refresh_data,
@@ -336,7 +337,7 @@ def render_manual_predictions():
     st.markdown("### Prediction Mode")
     mode = st.radio(
         "Mode",
-        ["Single Game Prediction", "Generate All Pregame Predictions", "Queue Gamestate-Conscious Posts"],
+        ["Single Game Prediction", "Generate All Pregame Predictions", "Full Day Automation", "Queue Gamestate-Conscious Posts"],
         help="Choose how to generate predictions",
         horizontal=True,
     )
@@ -841,6 +842,213 @@ def render_manual_predictions():
         
         with col2:
             st.info(f"Will generate pregame predictions for all {len(games)} games on {selected_date}")
+    
+    elif mode == "Full Day Automation":
+        st.markdown("### 🚀 Full Day Automation")
+        st.success(
+            "**ONE CLICK FOR EVERYTHING!**\n\n"
+            "This will create:\n"
+            "✅ Individual pregame predictions for all games\n"
+            "✅ Total day summary post (Option 3 table)\n"
+            "✅ Halftime triggers for each game (auto-posts at halftime)\n"
+            "✅ Q3 triggers for each game (auto-posts at Q3)\n\n"
+            "All posts are queued automatically and will post at the appropriate times!"
+        )
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            # Toggle for fetching odds
+            fetch_odds = st.toggle(
+                "📊 Fetch Odds from API",
+                value=True,
+                help="If OFF, predictions will be generated without odds data. Useful for testing.",
+                key="full_day_fetch_odds"
+            )
+            
+            if st.button(f"🎮 Run Full Day Automation for {len(games)} Games", use_container_width=True, type="primary"):
+                # Create progress bar and status placeholder
+                progress_bar = st.progress(0)
+                status_placeholder = st.empty()
+                
+                def progress_callback(progress, message):
+                    """Update progress in UI."""
+                    progress_bar.progress(progress)
+                    status_placeholder.markdown(f"🔄 {message}")
+                    logger.info(f"Progress: {progress:.0%} - {message}")
+                
+                try:
+                    from src.automation.automation_ui import run_full_day_automation
+                    
+                    result = run_full_day_automation(
+                        date=selected_date,
+                        platforms=platforms if platforms else None,
+                        dry_run=dry_run,
+                        fetch_odds=fetch_odds,
+                        progress_callback=progress_callback,
+                    )
+                    
+                    # Clear progress indicators
+                    progress_bar.empty()
+                    status_placeholder.empty()
+                    
+                    st.markdown("### Result")
+                    
+                    # Overall success
+                    if result.get("success"):
+                        st.success(f"🎉 Full day automation completed successfully!")
+                    else:
+                        st.warning("⚠️ Full day automation completed with errors")
+                    
+                    # Show summary
+                    st.markdown("---")
+                    st.markdown("### 📊 Summary")
+                    
+                    total_games = result.get("total_games", 0)
+                    total_errors = len(result.get("errors", []))
+                    
+                    st.markdown(f"**Total Games:** {total_games}")
+                    st.markdown(f"**Total Errors:** {total_errors}")
+                    
+                    # Pregame Individual
+                    pregame_individual = result.get("pregame_individual", {})
+                    st.markdown("---")
+                    st.markdown("### 1️⃣ Individual Pregame Predictions")
+                    if pregame_individual:
+                        predictions_count = len(pregame_individual.get("predictions", []))
+                        posted_count = len(pregame_individual.get("posted", []))
+                        errors_count = len(pregame_individual.get("errors", []))
+                        
+                        st.markdown(f"- Predictions: {predictions_count}")
+                        st.markdown(f"- Posts queued: {posted_count}")
+                        st.markdown(f"- Errors: {errors_count}")
+                        
+                        if posted_count > 0:
+                            st.success(f"✅ {posted_count} individual pregame posts queued")
+                    else:
+                        st.error("❌ Failed to generate individual pregame predictions")
+                    
+                    # Pregame Day Summary
+                    pregame_day_summary = result.get("pregame_day_summary", {})
+                    st.markdown("---")
+                    st.markdown("### 2️⃣ Total Day Summary")
+                    if pregame_day_summary:
+                        success = pregame_day_summary.get("success", False)
+                        total_day_post = pregame_day_summary.get("total_day_post", {})
+                        
+                        if success and total_day_post.get("success"):
+                            st.success("✅ Total day summary post queued")
+                            
+                            with st.expander("View total day summary content"):
+                                st.code(total_day_post.get("content", ""), language="text")
+                        else:
+                            st.error("❌ Failed to generate total day summary")
+                    else:
+                        st.error("❌ Failed to generate total day summary")
+                    
+                    # Halftime Triggers
+                    halftime_triggers = result.get("halftime_triggers", {})
+                    st.markdown("---")
+                    st.markdown("### 3️⃣ Halftime Triggers")
+                    if halftime_triggers:
+                        successful = len(halftime_triggers.get("successful", []))
+                        errors = len(halftime_triggers.get("errors", []))
+                        
+                        st.markdown(f"- Successful: {successful}/{halftime_triggers.get('total_games', 0)}")
+                        st.markdown(f"- Errors: {errors}")
+                        
+                        if successful > 0:
+                            st.success(f"✅ {successful} halftime triggers queued (will auto-post at halftime)")
+                        
+                        if errors > 0:
+                            st.warning(f"⚠️ {errors} games failed to queue halftime triggers")
+                            with st.expander("View halftime trigger errors"):
+                                for error in halftime_triggers.get("errors", []):
+                                    st.markdown(f"- `{error.get('game_id')}`: {error.get('error')}")
+                    else:
+                        st.error("❌ Failed to set up halftime triggers")
+                    
+                    # Q3 Triggers
+                    q3_triggers = result.get("q3_triggers", {})
+                    st.markdown("---")
+                    st.markdown("### 4️⃣ Q3 Triggers")
+                    if q3_triggers:
+                        successful = len(q3_triggers.get("successful", []))
+                        errors = len(q3_triggers.get("errors", []))
+                        
+                        st.markdown(f"- Successful: {successful}/{q3_triggers.get('total_games', 0)}")
+                        st.markdown(f"- Errors: {errors}")
+                        
+                        if successful > 0:
+                            st.success(f"✅ {successful} Q3 triggers queued (will auto-post at Q3)")
+                        
+                        if errors > 0:
+                            st.warning(f"⚠️ {errors} games failed to queue Q3 triggers")
+                            with st.expander("View Q3 trigger errors"):
+                                for error in q3_triggers.get("errors", []):
+                                    st.markdown(f"- `{error.get('game_id')}`: {error.get('error')}")
+                    else:
+                        st.error("❌ Failed to set up Q3 triggers")
+                    
+                    # Overall errors
+                    if total_errors > 0:
+                        st.markdown("---")
+                        st.error(f"### ⚠️ Overall Errors ({total_errors})")
+                        with st.expander("View all errors"):
+                            for i, error in enumerate(result.get("errors", []), 1):
+                                stage = error.get("stage", "unknown")
+                                game_id = error.get("game_id", "unknown")
+                                error_msg = error.get("error", "unknown")
+                                st.markdown(f"{i}. **{stage}** - `{game_id}`: {error_msg}")
+                    
+                    # Check queue
+                    st.markdown("---")
+                    st.markdown("### 📋 Queue Verification")
+                    queue = get_queue()
+                    all_posts = queue.get_all_posts()
+                    pending_posts = [p for p in all_posts if p.status.value in ["pending", "posting"]]
+                    
+                    st.markdown(f"**Current Queue Status:**")
+                    st.markdown(f"- Total posts in queue: {len(all_posts)}")
+                    st.markdown(f"- Pending/posting: {len(pending_posts)}")
+                    
+                    if pending_posts:
+                        st.markdown("**Posts by Trigger Type:**")
+                        pregame_count = len([p for p in pending_posts if 'pregame' in p.trigger_type])
+                        halftime_count = len([p for p in pending_posts if 'halftime' in p.trigger_type])
+                        q3_count = len([p for p in pending_posts if 'q3' in p.trigger_type])
+                        
+                        st.markdown(f"- Pregame: {pregame_count}")
+                        st.markdown(f"- Halftime: {halftime_count}")
+                        st.markdown(f"- Q3: {q3_count}")
+                        
+                        st.markdown("**Recent Posts in Queue:**")
+                        for post in pending_posts[:10]:  # Show last 10
+                            st.markdown(f"- `{post.game_id}` → `{post.platform}` ({post.trigger_type})")
+                
+                except Exception as e:
+                    # Clear progress indicators
+                    progress_bar.empty()
+                    status_placeholder.empty()
+                    
+                    st.markdown("### Result")
+                    st.error(f"❌ Unexpected error occurred: {str(e)}")
+                    import traceback
+                    st.code(traceback.format_exc())
+                    logger.exception("Error in full day automation:")
+                    st.toast("Failed to run full day automation", icon="❌")
+        
+        with col2:
+            st.success(
+                f"**Ready to automate {len(games)} games on {selected_date}!**\n\n"
+                f"Click the button to set up all posts automatically.\n\n"
+                f"What happens:\n"
+                f"1. {len(games)} individual pregame posts\n"
+                f"2. 1 total day summary post\n"
+                f"3. {len(games)} halftime triggers\n"
+                f"4. {len(games)} Q3 triggers\n\n"
+                f"Total: {1 + len(games) * 3} posts queued"
+            )
     
     elif mode == "Queue Gamestate-Conscious Posts":
         st.markdown("### Gamestate-Conscious Posting")
