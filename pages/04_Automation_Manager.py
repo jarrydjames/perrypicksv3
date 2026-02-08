@@ -1473,4 +1473,3 @@ export GAME_STATE_DRY_RUN=false""",
 
 if __name__ == "__main__":
     main()
-    main()
