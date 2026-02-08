@@ -114,7 +114,7 @@ function start_streamlit() {
     STREAMLIT_LOG="$LOG_DIR/streamlit.log"
     
     # Start Streamlit in background
-    streamlit run app.py \
+    streamlit run app_main.py \
         --server.port=8501 \
         --server.headless=true \
         --server.address=localhost \
