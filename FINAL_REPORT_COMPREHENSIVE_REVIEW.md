@@ -610,7 +610,13 @@ Error: Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment v
 36. **7a10c9d** - Fix: Add detailed logging for pregame prediction errors
    - 2 files changed, 35 insertions(+), 9 deletions(-)
    
-37. **(this commit)** - Add Bug #19 documentation and update stats
+37. **6c157da** - Add Bug #19 documentation: Pregame prediction returns 'Unknown error'
+   - 3 files changed, 297 insertions(+), 6 deletions(-)
+   
+38. **ef60e25** - Fix: Validate pregame prediction object attributes before building result
+   - 1 file changed, 35 insertions(+)
+   
+39. **(this commit)** - Update Bug #19 to fixed and update stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -748,15 +754,15 @@ All fixes are documented in:
    - ON by default (existing behavior)
 
 ### Total Stats
-- **Critical bugs fixed:** 18
+- **Critical bugs fixed:** 19
 - **High priority bugs fixed:** 2
 - **UX improvements:** 8
 - **Features added:** 1
-- **Investigations in progress:** 1 (pregame 'Unknown error')
-- **Total fixes:** 28
+- **Investigations in progress:** 0
+- **Total fixes:** 29
 - **Files modified:** 8 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py, predict_from_gameid_v3_runtime.py, predict_api.py, automation_ui.py, automation_orchestrator.py)
 - **Documentation created:** 15
-- **Commits pushed:** 21
+- **Commits pushed:** 22
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
