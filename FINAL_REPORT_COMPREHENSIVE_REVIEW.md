@@ -562,7 +562,13 @@ Error: Discord webhook URL not configured. Set DISCORD_WEBHOOK_URL environment v
 20. **0ee2644** - Fix: Pregame post now includes team scores and winner
    - 1 file changed, 30 insertions(+), 1 deletion(-)
    
-21. **(this commit)** - Add Bug #13 documentation and update stats
+21. **debcbb7** - Add Bug #13 documentation: Pregame post missing team scores and winner
+   - 3 files changed, 205 insertions(+), 9 deletions(-)
+   
+22. **34bd0c6** - Fix: OddsAPIMarketSnapshot attribute names were wrong
+   - 2 files changed, 8 insertions(+), 8 deletions(-)
+   
+23. **(this commit)** - Add Bug #14 documentation and update stats
 
 ### Streamlit Cloud Deployment
 - ✅ All changes pushed to GitHub
@@ -667,10 +673,11 @@ All fixes are documented in:
 5. 🔴 Discord posting failing (missing username parameter)
 6. 🔴 Posting errors not shown to user (silent failures)
 7. 🔴 fetch_nba_odds_snapshot called with positional arguments (TypeError)
-8. 🟠 Test Mode was confusing (default ON)
-9. 🟡 No persistent feedback (no notifications)
-10. 🟡 No workflow guidance (users didn't know what to do)
-11. 🟡 Pregame posts missing team scores and winner
+8. 🔴 OddsAPIMarketSnapshot wrong attribute names (AttributeError)
+9. 🟠 Test Mode was confusing (default ON)
+10. 🟡 No persistent feedback (no notifications)
+11. 🟡 No workflow guidance (users didn't know what to do)
+12. 🟡 Pregame posts missing team scores and winner
 
 ### What Is Now Correct
 1. ✅ Results stay visible after generation
@@ -680,21 +687,22 @@ All fixes are documented in:
 5. ✅ Discord posts now send successfully (username parameter fixed)
 6. ✅ Posting errors shown to users (not just logged)
 7. ✅ Odds API calls use keyword arguments (no more TypeError)
-8. ✅ Test Mode is OFF by default
-9. ✅ Persistent toast notifications for all actions
-10. ✅ Clear step-by-step workflow guide
-11. ✅ Accurate progress messages with counts
-12. ✅ Better button labels and UI
-13. ✅ Pregame posts show team scores and winner (better format)
+8. ✅ OddsAPIMarketSnapshot attributes correct (no more AttributeError)
+9. ✅ Test Mode is OFF by default
+10. ✅ Persistent toast notifications for all actions
+11. ✅ Clear step-by-step workflow guide
+12. ✅ Accurate progress messages with counts
+13. ✅ Better button labels and UI
+14. ✅ Pregame posts show team scores and winner (better format)
 
 ### Total Stats
-- **Critical bugs fixed:** 12
+- **Critical bugs fixed:** 13
 - **High priority bugs fixed:** 2
 - **UX improvements:** 8
-- **Total fixes:** 22
-- **Files modified:** 5 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py)
-- **Documentation created:** 8
-- **Commits pushed:** 13
+- **Total fixes:** 23
+- **Files modified:** 6 (added discord_client.py, predict_pregame.py, persistent_cache.py, prediction_formatter.py, predict_from_gameid_v3_runtime.py)
+- **Documentation created:** 9
+- **Commits pushed:** 14
 - **Status:** ✅ All fixes deployed to GitHub
 
 ---
