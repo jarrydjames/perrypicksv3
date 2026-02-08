@@ -132,6 +132,7 @@ class PostQueue:
         content: str,
         trigger_type: str = "pregame",
         max_retries: int = 3,
+        allow_duplicates: bool = False,
     ) -> Optional[str]:
         """
         Enqueue a post.
@@ -142,14 +143,18 @@ class PostQueue:
             content: Post content
             trigger_type: Trigger type
             max_retries: Maximum retry attempts
+            allow_duplicates: If True, bypass duplicate detection
             
         Returns:
-            Post ID if enqueued, None if duplicate
+            Post ID if enqueued, None if duplicate (unless allow_duplicates=True)
         """
-        # Check duplicate
-        if self._is_duplicate(game_id, trigger_type, platform):
+        # Check duplicate (unless override enabled)
+        if not allow_duplicates and self._is_duplicate(game_id, trigger_type, platform):
             logger.info(f"Skipping duplicate post: {game_id} {trigger_type} {platform}")
             return None
+        
+        if allow_duplicates:
+            logger.info(f"Allowing duplicate post (override enabled): {game_id} {trigger_type} {platform}")
         
         # Generate post ID
         post_id = self._generate_post_id(game_id, trigger_type, platform, content)

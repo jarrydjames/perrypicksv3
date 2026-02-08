@@ -298,6 +298,7 @@ def run_prediction(
     platforms: Optional[List[str]] = None,
     dry_run: bool = False,
     fetch_odds: bool = True,
+    allow_duplicates: bool = False,
     progress_callback=None,
 ) -> Dict[str, Any]:
     """Run prediction for a single game.
@@ -308,6 +309,7 @@ def run_prediction(
         platforms: Platforms to post to (None = all enabled)
         dry_run: If True, don't actually post
         fetch_odds: If True, fetch odds from API (default True). Set False for testing.
+        allow_duplicates: If True, bypass duplicate detection
         progress_callback: Optional callback(progress, message) for UI updates
     
     Returns:
@@ -322,6 +324,7 @@ def run_prediction(
         trigger_type=trigger_type,
         mode=trigger_type,  # Use user's selected trigger type as prediction mode
         fetch_odds=fetch_odds,
+        allow_duplicates=allow_duplicates,
         progress_callback=progress_callback,
     )
 
@@ -397,6 +400,7 @@ def run_predictions_for_all_games(
     platforms: Optional[List[str]] = None,
     dry_run: bool = False,
     fetch_odds: bool = True,
+    allow_duplicates: bool = False,
     progress_callback=None,
 ) -> Dict[str, Any]:
     """Run predictions for all games on a specific date.
@@ -407,6 +411,7 @@ def run_predictions_for_all_games(
         platforms: Platforms to post to (None = all enabled)
         dry_run: If True, don't actually post
         fetch_odds: If True, fetch odds from API (default True). Set False for testing.
+        allow_duplicates: If True, bypass duplicate detection
         progress_callback: Optional callback(progress, message) for UI updates
     
     Returns:
@@ -430,6 +435,7 @@ def run_predictions_for_all_games(
         trigger_type=trigger_type,
         mode=trigger_type,  # Use trigger type as prediction mode (pregame, halftime, q3)
         fetch_odds=fetch_odds,
+        allow_duplicates=allow_duplicates,
         progress_callback=progress_callback,
     )
 
@@ -437,6 +443,7 @@ def queue_gamestate_conscious_posts(
     game_id: str,
     platforms: Optional[List[str]] = None,
     dry_run: bool = False,
+    allow_duplicates: bool = False,
 ) -> Dict[str, Any]:
     """Queue posts that will trigger at different game states.
     
@@ -449,6 +456,7 @@ def queue_gamestate_conscious_posts(
         game_id: Game ID to queue posts for
         platforms: Platforms to post to (None = all enabled)
         dry_run: If True, don't actually post
+        allow_duplicates: If True, bypass duplicate detection
     
     Returns:
         Dictionary with results for each trigger type
@@ -468,6 +476,7 @@ def queue_gamestate_conscious_posts(
             trigger_type=trigger_type,
             platforms=platforms,
             dry_run=dry_run,
+            allow_duplicates=allow_duplicates,
         )
         
         if result.get("success"):

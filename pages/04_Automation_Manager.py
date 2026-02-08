@@ -319,6 +319,13 @@ def render_manual_predictions():
     # Dry run toggle
     dry_run = st.checkbox("🧪 Test Mode (don't actually post)", value=False)
     
+    # Allow duplicates toggle
+    allow_duplicates = st.checkbox(
+        "♻️ Allow Duplicate Posts",
+        value=False,
+        help="If checked, bypass duplicate detection and allow posting the same prediction multiple times within the 24-hour window.\n\n⚠️ Use with caution! This may result in posting the same content multiple times.",
+    )
+    
     # Submit
     st.markdown("---")
     
@@ -341,6 +348,7 @@ def render_manual_predictions():
                         platforms=platforms if platforms else None,
                         dry_run=dry_run,
                         fetch_odds=fetch_odds,
+                        allow_duplicates=allow_duplicates,
                     )
                     
                     st.markdown("### Result")
@@ -501,6 +509,7 @@ def render_manual_predictions():
                         platforms=platforms if platforms else None,
                         dry_run=dry_run,
                         fetch_odds=fetch_odds,
+                        allow_duplicates=allow_duplicates,
                         progress_callback=progress_callback,
                     )
                     

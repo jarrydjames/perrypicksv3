@@ -85,6 +85,7 @@ class AutomationOrchestrator:
         trigger_type: str = "pregame",
         mode: str = "auto",
         fetch_odds: bool = True,
+        allow_duplicates: bool = False,
         progress_callback=None,
     ) -> Dict[str, Any]:
         """
@@ -154,6 +155,7 @@ class AutomationOrchestrator:
                         prediction,
                         trigger_type=trigger_type,
                         platforms=self.platforms,
+                        allow_duplicates=allow_duplicates,
                     )
                     logger.info(f"Post results for {game_id}: {post_results}")
                     results["posted"].append(post_results)

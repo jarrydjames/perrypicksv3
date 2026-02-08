@@ -96,6 +96,7 @@ class SocialMediaManager:
         prediction: Dict[str, Any],
         trigger_type: str = "pregame",
         platforms: Optional[List[str]] = None,
+        allow_duplicates: bool = False,
     ) -> Dict[str, Any]:
         """
         Post prediction to all enabled platforms.
@@ -104,6 +105,7 @@ class SocialMediaManager:
             prediction: Prediction dictionary from predict_game()
             trigger_type: Trigger type (pregame, halftime, q3)
             platforms: List of platforms to post (None = all enabled)
+            allow_duplicates: If True, bypass duplicate detection
             
         Returns:
             Results dictionary with platform-specific results
@@ -155,6 +157,7 @@ class SocialMediaManager:
                     content=content,
                     trigger_type=trigger_type,
                     max_retries=3,
+                    allow_duplicates=allow_duplicates,
                 )
                 
                 if post_id:
