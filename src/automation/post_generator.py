@@ -180,17 +180,31 @@ class PostGenerator:
         q3_cum_home = prediction.get("home_score", 0)  # Q3 cumulative = current score
         q3_cum_away = prediction.get("away_score", 0)  # Q3 cumulative = current score
         
-        # Get predicted margin and total
-        margin = prediction.get("margin", 0)
-        total = prediction.get("total", 0)
+        # Use quarter progression heuristic (NOT model predictions!)
+        # Q3 model was trained incorrectly - it predicts impossible low finals
+        # Use documented approach: Q4 ≈ Q3_cumulative × 0.32
+        # See: README_MODELS.md and run_q3_predictions.py
+        q3_cumulative_total = q3_cum_home + q3_cum_away
+        q4_estimate_total = q3_cumulative_total * 0.32
         
-        # Calculate projected final scores
-        if isinstance(margin, (int, float)) and isinstance(total, (int, float)):
-            pred_final_home = (total + margin) / 2
-            pred_final_away = (total - margin) / 2
-        else:
-            pred_final_home = q3_cum_home
-            pred_final_away = q3_cum_away
+        # Base Q4 for each team (half of estimate)
+        q4_home_base = q4_estimate_total / 2
+        q4_away_base = q4_estimate_total / 2
+        
+        # Adjust based on Q3 margin (momentum carries forward slightly)
+        q3_margin = q3_cum_home - q3_cum_away
+        margin_adjustment = q3_margin * 0.2
+        
+        q4_home = q4_home_base + margin_adjustment
+        q4_away = q4_away_base - margin_adjustment
+        
+        # Ensure reasonable bounds (typical NBA quarter: 20-35 per team)
+        q4_home = max(20, min(35, q4_home))
+        q4_away = max(20, min(35, q4_away))
+        
+        # Project final scores (Q3 cumulative + estimated Q4)
+        pred_final_home = q3_cum_home + q4_home
+        pred_final_away = q3_cum_away + q4_away
         
         if platform == "twitter":
             emoji = "⚡" if self.use_emojis else "[Q3]"
