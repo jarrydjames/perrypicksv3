@@ -29,8 +29,7 @@ st.set_page_config(
     page_title="Automation Manager | PerryPicks v3",
     page_icon="🤖",
     layout="wide",
-    initial_sidebar_state="expanded",
-)
+    initial_sidebar_state="expanded")
 
 # Initialize session state
 from src.automation.automation_ui import (
@@ -56,8 +55,7 @@ from src.automation.automation_ui import (
     filter_posts_by_status,
     filter_posts_by_platform,
     filter_posts_by_game,
-    SESSION_STATE_PLATFORMS,
-)
+    SESSION_STATE_PLATFORMS)
 
 from src.automation.game_state_monitor import GameStateMonitor, GameState
 from src.automation.game_state_service import GameStateService
@@ -74,22 +72,12 @@ logger = logging.getLogger(__name__)
 
 def render_sidebar():
     """Render sidebar with controls."""
-    # Using st.empty() container to avoid duplicate key issues
-    sidebar_placeholder = st.sidebar.empty()
-    
-    with sidebar_placeholder.container():
+    with st.sidebar:
         st.markdown("# 🤖 Automation Manager")
         st.markdown("---")
         
-        # Generate unique key per session to avoid duplicate issues
-        if "sidebar_key" not in st.session_state:
-            st.session_state["sidebar_key"] = 0
-        
-        unique_key = f"refresh_{st.session_state['sidebar_key']}"
-        st.session_state["sidebar_key"] += 1
-        
-        # Simple refresh button with session-based unique key
-        if st.button("Refresh", key=unique_key):
+        # Simple refresh button (no custom key)
+        if st.button("Refresh"):
             st.rerun()
 
 
@@ -107,13 +95,11 @@ def render_dashboard():
         
         selected_date = st.date_input(
             "Date",
-            value=st.session_state["selected_dashboard_date"],
-            key="dashboard_date_input",
-        )
+            value=st.session_state["selected_dashboard_date"])
         st.session_state["selected_dashboard_date"] = selected_date
     
     with col2:
-        if st.button("🔄 Go to Today", key="goto_today"):
+        if st.button("🔄 Go to Today"):
             st.session_state["selected_dashboard_date"] = datetime.now().date()
             st.rerun()
     
@@ -153,8 +139,7 @@ def render_dashboard():
     enabled_platforms = stats.get("enabled_platforms", [])
     render_platform_status(
         platforms=["twitter", "bluesky", "discord"],
-        enabled_platforms=set(enabled_platforms),
-    )
+        enabled_platforms=set(enabled_platforms))
     
     st.markdown("---")
     
@@ -163,7 +148,7 @@ def render_dashboard():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🔄 Process Queue", use_container_width=True, key="dashboard_process_queue"):
+        if st.button("🔄 Process Queue", use_container_width=True):
             with st.spinner("Processing queue..."):
                 result = process_queue(max_posts=10)
                 processed = result.get('processed', 0)
@@ -240,9 +225,7 @@ def render_dashboard():
     
     recent_posts = sorted(
         all_posts,
-        key=parse_created_at,
-        reverse=True,
-    )[:10]
+        reverse=True)[:10]
     
     if recent_posts:
         render_queue_table(recent_posts, max_rows=10)
@@ -266,9 +249,7 @@ def render_manual_predictions():
         
         selected_date = st.date_input(
             "Date",
-            value=st.session_state["selected_manual_date"],
-            key="manual_date_input",
-        )
+            value=st.session_state["selected_manual_date"])
         st.session_state["selected_manual_date"] = selected_date
     
     with col2:
@@ -298,8 +279,7 @@ def render_manual_predictions():
     selected_game_id = st.selectbox(
         "Game",
         options=list(game_options.keys()),
-        format_func=lambda x: game_options.get(x, x),
-    )
+        format_func=lambda x: game_options.get(x, x))
     
     # Mode selection
     st.markdown("### Prediction Mode")
@@ -307,8 +287,7 @@ def render_manual_predictions():
         "Mode",
         ["Single Game Prediction", "Generate All Pregame Predictions", "Full Day Automation", "Queue Gamestate-Conscious Posts"],
         help="Choose how to generate predictions",
-        horizontal=True,
-    )
+        horizontal=True)
     
     # Trigger type (for single game mode)
     st.markdown("### Trigger Type")
@@ -316,8 +295,7 @@ def render_manual_predictions():
         "Trigger Type",
         ["pregame", "halftime", "q3"],
         help="When to trigger the prediction (only for single game mode)",
-        disabled=(mode != "Single Game Prediction"),
-    )
+        disabled=(mode != "Single Game Prediction"))
     
     # Platform selection
     st.markdown("### Platforms")
@@ -325,8 +303,7 @@ def render_manual_predictions():
         "Select Platforms",
         ["twitter", "bluesky", "discord"],
         default=["discord"],
-        help="Leave empty to post to all enabled platforms",
-    )
+        help="Leave empty to post to all enabled platforms")
     
     # Dry run toggle
     dry_run = st.checkbox("🧪 Test Mode (don't actually post)", value=False)
@@ -342,9 +319,7 @@ def render_manual_predictions():
             fetch_odds = st.toggle(
                 "📊 Fetch Odds from API",
                 value=True,
-                help="If OFF, predictions will be generated without odds data. Useful for testing.",
-                key="single_game_fetch_odds"
-            )
+                help="If OFF, predictions will be generated without odds data. Useful for testing.")
             
             if st.button("🚀 Run Prediction", use_container_width=True):
                 with st.spinner(f"Running {trigger_type} prediction for {selected_game_id}..."):
@@ -353,8 +328,7 @@ def render_manual_predictions():
                         trigger_type=trigger_type,
                         platforms=platforms if platforms else None,
                         dry_run=dry_run,
-                        fetch_odds=fetch_odds,
-                    )
+                        fetch_odds=fetch_odds)
                     
                     st.markdown("### Result")
                     
@@ -438,7 +412,7 @@ def render_manual_predictions():
                             st.markdown("### 🚀 Process Queue Now")
                             st.info("💡 Posts are queued but not yet sent to platforms. Click below to send them now!")
                             
-                            if st.button("📤 Send Posts to Platforms", use_container_width=True, key="send_posts_single"):
+                            if st.button("📤 Send Posts to Platforms", use_container_width=True):
                                 with st.spinner("Processing queue..."):
                                     orchestrator = get_orchestrator()
                                     process_result = orchestrator.process_post_queue(batch_size=50)
@@ -489,9 +463,7 @@ def render_manual_predictions():
             fetch_odds = st.toggle(
                 "📊 Fetch Odds from API",
                 value=True,
-                help="If OFF, predictions will be generated without odds data. Useful for testing.",
-                key="pregame_fetch_odds"
-            )
+                help="If OFF, predictions will be generated without odds data. Useful for testing.")
             
             st.markdown("---")
             
@@ -515,8 +487,7 @@ def render_manual_predictions():
                         platforms=platforms if platforms else None,
                         dry_run=dry_run,
                         fetch_odds=fetch_odds,
-                        progress_callback=progress_callback,
-                    )
+                        progress_callback=progress_callback)
                     
                     # Clear progress indicators
                     progress_bar.empty()
@@ -654,8 +625,7 @@ def render_manual_predictions():
                         platforms=platforms if platforms else None,
                         dry_run=dry_run,
                         fetch_odds=fetch_odds,
-                        progress_callback=progress_callback,
-                    )
+                        progress_callback=progress_callback)
                     
                     # Clear progress indicators
                     progress_bar.empty()
@@ -775,9 +745,7 @@ def render_manual_predictions():
             fetch_odds = st.toggle(
                 "📊 Fetch Odds from API",
                 value=True,
-                help="If OFF, predictions will be generated without odds data. Useful for testing.",
-                key="full_day_fetch_odds"
-            )
+                help="If OFF, predictions will be generated without odds data. Useful for testing.")
             
             if st.button(f"🎮 Run Full Day Automation for {len(games)} Games", use_container_width=True, type="primary"):
                 # Create progress bar and status placeholder
@@ -798,8 +766,7 @@ def render_manual_predictions():
                         platforms=platforms if platforms else None,
                         dry_run=dry_run,
                         fetch_odds=fetch_odds,
-                        progress_callback=progress_callback,
-                    )
+                        progress_callback=progress_callback)
                     
                     # Clear progress indicators
                     progress_bar.empty()
@@ -980,8 +947,7 @@ def render_manual_predictions():
                     results = queue_gamestate_conscious_posts(
                         game_id=selected_game_id,
                         platforms=platforms if platforms else None,
-                        dry_run=dry_run,
-                    )
+                        dry_run=dry_run)
                     
                     st.markdown("### Results")
                     
@@ -1044,16 +1010,14 @@ def render_queue_manager():
         status_filter = st.multiselect(
             "Status",
             ["pending", "posting", "posted", "failed", "retrying"],
-            default=["pending", "posting"],
-        )
+            default=["pending", "posting"])
     
     with col2:
         platforms = list({p.platform for p in all_posts})
         platform_filter = st.selectbox(
             "Platform",
             [None] + platforms,
-            format_func=lambda x: "All" if x is None else x,
-        )
+            format_func=lambda x: "All" if x is None else x)
     
     with col3:
         game_id_filter = st.text_input("Game ID", placeholder="Search by game ID...")
@@ -1086,7 +1050,7 @@ def render_queue_manager():
         col1, col2 = st.columns(2)
         
         with col1:
-            if st.button("🔄 Process Queue", use_container_width=True, key="queue_tab_process_queue"):
+            if st.button("🔄 Process Queue", use_container_width=True):
                 with st.spinner("Processing queue..."):
                     result = process_queue(max_posts=10)
                     processed = result.get('processed', 0)
@@ -1114,7 +1078,7 @@ def render_queue_manager():
         
         with col2:
             # Clear queue with confirmation
-            if st.button("🗑️ Clear Queue", use_container_width=True, key="clear_queue_btn"):
+            if st.button("🗑️ Clear Queue", use_container_width=True):
                 st.session_state["show_clear_queue_confirm"] = True
                 st.rerun()
             
@@ -1166,9 +1130,7 @@ def render_history():
     
     posted_posts = sorted(
         posted_posts,
-        key=parse_created_at,
-        reverse=True,
-    )
+        reverse=True)
     
     st.markdown(f"**Total Posted: {len(posted_posts)} posts**")
     st.markdown("---")
@@ -1296,8 +1258,7 @@ def render_logs():
     st.markdown("### Enable Verbose Logging")
     st.code(
         "python scripts/automation/social_poster.py --schedule --verbose",
-        language="bash",
-    )
+        language="bash")
 
 
 def main():
@@ -1389,14 +1350,12 @@ def render_game_state_monitor():
             min_value=10,
             max_value=300,
             step=5,
-            help="How often to poll NBA API for game updates (default: 30s)",
-        )
+            help="How often to poll NBA API for game updates (default: 30s)")
         
         dry_run = st.toggle(
             "Dry Run (Test Mode)",
             value=False,
-            help="If ON, will generate predictions but won't actually post to platforms",
-        )
+            help="If ON, will generate predictions but won't actually post to platforms")
     
     with col2:
         st.markdown("#### 📊 Live Game Status")
