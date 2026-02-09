@@ -132,6 +132,11 @@ function start_streamlit() {
         echo -e "${GREEN}✓ Streamlit started (PID: $STREAMLIT_PID)${NC}"
         echo -e "${CYAN}  URL: http://localhost:8501${NC}"
         echo -e "${CYAN}  Log: $STREAMLIT_LOG${NC}"
+        
+        # Open Streamlit in browser
+        echo -e "${YELLOW}  Opening Streamlit in browser...${NC}"
+        open "http://localhost:8501"
+        echo -e "${GREEN}✓ Browser opened${NC}"
     else
         echo -e "${RED}✗ Streamlit failed to start${NC}"
         echo -e "${YELLOW}Check log: $STREAMLIT_LOG${NC}"
