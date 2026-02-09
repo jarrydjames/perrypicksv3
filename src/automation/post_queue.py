@@ -109,6 +109,9 @@ class PostQueue:
         Returns:
             True if duplicate, False otherwise
         """
+        # Get current date
+        current_date = pendulum.now().strftime("%Y%m%d")
+        
         # Check posted history
         if game_id in self.posted_history:
             if trigger_type in self.posted_history[game_id]:
@@ -117,6 +120,27 @@ class PostQueue:
                 age_hours = (pendulum.now() - post_time).total_hours()
                 
                 if age_hours < self.dedupe_window_hours:
+                    # Check if post was from a different date
+                    # If so, allow reposting (for pregame predictions on new days)
+                    post_date = post_time.strftime("%Y%m%d")
+                    if post_date != current_date:
+                        logger.info(
+                            f"Allowing repost (different date): {game_id} {trigger_type} {platform} "
+                            f"(posted on {post_date}, now {current_date})"
+                        )
+                        return False
+                    
+                    # Same date, within dedupe window
+                    # For pregame, allow multiple posts per day (user may want to regenerate)
+                    # For live predictions (halftime/Q3), block duplicates to prevent spam
+                    if trigger_type == "pregame":
+                        logger.info(
+                            f"Allowing pregame repost (same day): {game_id} {trigger_type} {platform} "
+                            f"({age_hours:.1f}h ago)"
+                        )
+                        return False
+                    
+                    # Live in-game predictions - block as duplicate
                     logger.warning(
                         f"Duplicate post detected: {game_id} {trigger_type} {platform} "
                         f"({age_hours:.1f}h ago)"
