@@ -62,6 +62,8 @@ from src.automation.automation_ui import (
     get_queue_processor_status,
     start_queue_processor,
     stop_queue_processor,
+    start_game_state_monitor,
+    stop_automation,
     render_automation_status,
     render_queue_processor_status,
 )
@@ -176,9 +178,18 @@ def render_dashboard():
         else:
             st.caption("Thread: Inactive")
         
-        # Add quick link to Game State tab
-        if st.button("Go to Game State Settings", key="dashboard_game_state_btn"):
-            st.info("👆 Go to the 'Game State' tab to control game monitoring")
+        # Add quick toggle
+        if st.button("🔘 Toggle Game Monitoring", key="dashboard_toggle_game_monitor"):
+            if automation_status.get("running"):
+                # Stop it
+                stop_automation()
+                st.success("Game monitoring stopped")
+                st.rerun()
+            else:
+                # Start it
+                start_game_state_monitor(poll_interval=30)
+                st.success("Game monitoring started")
+                st.rerun()
     
     with col2:
         st.markdown("#### 📨 Queue Processing")

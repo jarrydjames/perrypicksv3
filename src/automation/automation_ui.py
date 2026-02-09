@@ -1551,6 +1551,123 @@ def get_automation_status() -> Dict[str, Any]:
     }
 
 
+def start_game_state_monitor(
+    poll_interval_seconds: int = 30,
+) -> Dict[str, Any]:
+    """Start game state monitor in background thread.
+    
+    This is a simpler function that starts just the game state monitor
+    for dashboard toggle control, without the full automation workflow.
+    
+    Args:
+        poll_interval_seconds: How often to poll for game updates
+    
+    Returns:
+        Status dictionary with success/failure result
+    """
+    global _automation_thread, _automation_stop_event, _automation_monitor
+    
+    result = {
+        "success": False,
+        "message": "",
+        "running": False,
+    }
+    
+    try:
+        # Check if already running
+        if _automation_thread and _automation_thread.is_alive():
+            result["message"] = "Game state monitor is already running"
+            result["running"] = True
+            logger.warning("Game state monitor is already running")
+            return result
+        
+        logger.info("Starting game state monitor...")
+        
+        # Import required classes
+        from src.automation.game_state_monitor import GameStateMonitor
+        
+        # Initialize monitor
+        monitor = GameStateMonitor(poll_interval_seconds=poll_interval_seconds)
+        
+        # Store monitor globally so we can stop it later
+        _automation_monitor = monitor
+        
+        # Start monitoring in background thread
+        def monitor_loop():
+            """Background monitoring loop."""
+            try:
+                logger.info("Starting game state monitoring loop...")
+                st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
+                    "status": "running",
+                    "message": "Monitoring games for halftime/Q3 triggers...",
+                    "last_update": datetime.now().isoformat(),
+                }
+                
+                # Run monitoring loop
+                monitor.start()
+            
+            except Exception as e:
+                logger.error(f"Error in game state monitoring loop: {e}")
+                st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
+                    "status": "error",
+                    "message": str(e),
+                    "last_update": datetime.now().isoformat(),
+                }
+                import traceback
+                traceback.print_exc()
+            finally:
+                st.session_state[SESSION_STATE_AUTOMATION_RUNNING] = False
+                logger.info("Game state monitoring loop stopped")
+        
+        # Start monitoring in background thread
+        
+        # Stop any existing thread
+        if _automation_thread and _automation_thread.is_alive():
+            logger.info("Stopping existing automation thread...")
+            if _automation_monitor is not None:
+                logger.info(f"Stopping monitor (running={_automation_monitor.running})...")
+                _automation_monitor.stop()
+            _automation_thread.join(timeout=5)
+        
+        # Create stop event
+        _automation_stop_event = threading.Event()
+        
+        # Start new thread
+        _automation_thread = threading.Thread(
+            target=monitor_loop,
+            daemon=True,
+            name="GameStateMonitor"
+        )
+        _automation_thread.start()
+        
+        # Update session state
+        st.session_state[SESSION_STATE_AUTOMATION_RUNNING] = True
+        
+        # Update status
+        st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
+            "status": "running",
+            "message": f"Game state monitor started. Polling every {poll_interval_seconds}s.",
+            "last_update": datetime.now().isoformat(),
+        }
+        
+        result["success"] = True
+        result["message"] = f"Game state monitor started successfully (polling every {poll_interval_seconds}s)"
+        result["running"] = True
+        result["thread_alive"] = _automation_thread.is_alive()
+        result["thread_name"] = _automation_thread.name
+        
+        logger.info(f"Game state monitor started successfully")
+        logger.info(f"Monitoring thread started: {_automation_thread.name}")
+    
+    except Exception as e:
+        result["message"] = f"Error starting game state monitor: {e}"
+        logger.error(f"Error starting game state monitor: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    return result
+
+
 def force_evaluate_triggers(
     platforms: Optional[List[str]] = None,
     dry_run: bool = False,
