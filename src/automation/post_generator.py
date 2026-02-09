@@ -276,8 +276,8 @@ class PostGenerator:
         date_str = datetime.now().strftime('%Y-%m-%d')
         
         post = f'📊 **NBA PREGAME PREDICTIONS - {date_str}**\n\n'
-        post += '| # | Away → Home | 🏆 Winner | 📈 Prob | 🎯 Total | ➕ Margin |\n'
-        post += '|---|-------------|------------|---------|-----------|-----------|\n'
+        post += '| # | Away → Home | 🏆 Winner | 📈 Prob | 🏀 Score | 🎯 Total | ➕ Margin |\n'
+        post += '|---|-------------|------------|---------|----------|-----------|-----------|\n'
         
         for i, game in enumerate(games, 1):
             away = game.get('away_name', 'AWAY')
@@ -286,12 +286,20 @@ class PostGenerator:
             margin = game.get('margin', 0)
             home_win_prob = game.get('home_win_prob', 0.5)
             
+            # Calculate individual team scores from total and margin
+            # margin = home_score - away_score
+            # total = home_score + away_score
+            # home_score = (total + margin) / 2
+            # away_score = (total - margin) / 2
+            home_score = (total + margin) / 2
+            away_score = (total - margin) / 2
+            
             winner = home if margin > 0 else away
             win_pct = home_win_prob * 100 if margin > 0 else (1 - home_win_prob) * 100
             
             post += (
                 f'| {i} | {away} → {home} | **{winner}** | {win_pct:.1f}% | '
-                f'{total:.1f} | {margin:+.1f} |\n'
+                f'{away_score:.1f}-{home_score:.1f} | {total:.1f} | {margin:+.1f} |\n'
             )
         
         post += f'\nModel: {model} | Games: {len(games)} | Confidence: High\n\n'

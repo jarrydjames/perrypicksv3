@@ -108,7 +108,73 @@ def fetch_json(url: str, max_retries: int = 5) -> dict:
             raise
 
 def fetch_box(gid: str) -> dict:
-    return fetch_json(CDN_BOX.format(gid=gid))["game"]
+    """Fetch game box score from NBA.com CDN.
+    
+    Falls back to scoreboard endpoint if boxscore endpoint is blocked.
+    
+    Args:
+        gid: Game ID
+        
+    Returns:
+        Game data dict
+    """
+    try:
+        # Try boxscore endpoint first (has more detailed data)
+        return fetch_json(CDN_BOX.format(gid=gid))["game"]
+    except requests.HTTPError as e:
+        if e.response.status_code == 403:
+            # Boxscore endpoint is blocked, try scoreboard fallback
+            import logging
+            logging.warning(f"Boxscore endpoint blocked for {gid}, using scoreboard fallback")
+            return fetch_box_from_scoreboard(gid)
+        # For other errors, re-raise
+        raise
+
+def fetch_box_from_scoreboard(gid: str) -> dict:
+    """Fetch minimal game data from scoreboard endpoint.
+    
+    Used as fallback when boxscore endpoint is blocked.
+    
+    Args:
+        gid: Game ID
+        
+    Returns:
+        Game data dict with compatible structure
+    """
+    import logging
+    
+    # Try today's scoreboard first
+    scoreboard_urls = [
+        "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_00.json",
+        "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_01.json",
+        "https://cdn.nba.com/static/json/liveData/scoreboard/todaysScoreboard_02.json",
+    ]
+    
+    for url in scoreboard_urls:
+        try:
+            data = fetch_json(url)
+            games = data.get("scoreboard", {}).get("games", [])
+            
+            # Find the game by ID
+            for game in games:
+                if game.get("gameId") == gid:
+                    # Transform scoreboard data to boxscore-like structure
+                    return _transform_scoreboard_to_boxscore(game)
+        except Exception as e:
+            logging.debug(f"Failed to fetch from {url}: {e}")
+            continue
+    
+    # If we get here, game not found in any scoreboard
+    raise ValueError(f"Game {gid} not found in any scoreboard endpoint")
+
+def _transform_scoreboard_to_boxscore(game: dict) -> dict:
+    """Transform scoreboard data to boxscore-like structure.
+    
+    Maps scoreboard fields to match the structure expected by first_half_score.
+    """
+    # The scoreboard data already has the structure we need for first_half_score
+    # It has homeTeam.periods and awayTeam.periods with per-period scores
+    return game
 
 def fetch_pbp_df(gid: str) -> pd.DataFrame:
     data = fetch_json(CDN_PBP.format(gid=gid))
