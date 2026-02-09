@@ -57,6 +57,13 @@ from src.automation.automation_ui import (
     filter_posts_by_platform,
     filter_posts_by_game,
     SESSION_STATE_PLATFORMS,
+    # Automation status functions
+    get_automation_status,
+    get_queue_processor_status,
+    start_queue_processor,
+    stop_queue_processor,
+    render_automation_status,
+    render_queue_processor_status,
 )
 
 from src.automation.game_state_monitor import GameStateMonitor, GameState
@@ -144,6 +151,70 @@ def render_dashboard():
         platforms=["twitter", "bluesky", "discord"],
         enabled_platforms=set(enabled_platforms),
     )
+    
+    st.markdown("---")
+    
+    # Service Status (NEW)
+    st.markdown("### 🚦 Service Status")
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### 🎮 Game Monitoring")
+        
+        # Get automation status
+        automation_status = get_automation_status()
+        
+        # Status indicator
+        if automation_status.get("running"):
+            st.success("🟢 **LIVE**")
+        else:
+            st.warning("🔴 **STOPPED**")
+        
+        # Thread status
+        if automation_status.get("thread_alive"):
+            st.caption("Thread: Running")
+        else:
+            st.caption("Thread: Inactive")
+        
+        # Add quick link to Game State tab
+        if st.button("Go to Game State Settings", key="dashboard_game_state_btn"):
+            st.info("👆 Go to the 'Game State' tab to control game monitoring")
+    
+    with col2:
+        st.markdown("#### 📨 Queue Processing")
+        
+        # Get queue processor status
+        queue_status = get_queue_processor_status()
+        
+        # Status indicator
+        if queue_status.get("running"):
+            st.success("🟢 **LIVE**")
+        else:
+            st.warning("🔴 **STOPPED**")
+        
+        # Thread status
+        if queue_status.get("thread_alive"):
+            st.caption("Thread: Running")
+        else:
+            st.caption("Thread: Inactive")
+        
+        # Stats
+        stats = queue_status.get("stats", {})
+        processed = stats.get("processed", 0)
+        st.caption(f"Posts processed: {processed}")
+        
+        # Add quick toggle
+        if st.button("🔘 Toggle Queue Processing", key="dashboard_toggle_queue"):
+            if queue_status.get("running"):
+                # Stop it
+                stop_queue_processor()
+                st.success("Queue processing stopped")
+                st.rerun()
+            else:
+                # Start it
+                start_queue_processor(poll_interval=15, batch_size=10)
+                st.success("Queue processing started")
+                st.rerun()
     
     st.markdown("---")
     
@@ -1353,102 +1424,245 @@ def render_game_state_monitor():
     
     st.markdown("---")
     
-    # Service controls
+    # Status Flags for both services
+    st.markdown("### 🚦 Service Status")
+    
     col1, col2 = st.columns(2)
     
     with col1:
-        st.markdown("#### 🎛️ Service Controls")
+        # Game Monitoring Status
+        st.markdown("#### 🎮 Game Monitoring")
         
-        # Start/Stop buttons
-        st.markdown("**Start Service:**")
-        start_col, stop_col = st.columns(2)
+        # Get automation status
+        automation_status = get_automation_status()
         
-        with start_col:
-            if st.button("▶️ Start Game State Monitor", use_container_width=True, type="primary"):
-                st.success("Game State Monitor started!")
-                st.info("To run manually, open Terminal and execute:")
-                st.code("python scripts/start_game_state_monitor.py", language="bash")
-                st.warning("The service will run in the terminal window.")
+        # Status indicator
+        if automation_status.get("running"):
+            st.success("🟢 **LIVE** - Game State Monitor is active")
+        else:
+            st.warning("🔴 **STOPPED** - Game State Monitor is inactive")
         
-        with stop_col:
-            st.button("⏹ Stop Service", use_container_width=True, help="Stop the running monitoring service")
+        # Thread status
+        if automation_status.get("thread_alive"):
+            st.caption(f"Thread: {automation_status.get('thread_name', 'N/A')}")
+        else:
+            st.caption("Thread: Not running")
         
-        st.markdown("---")
-        
-        # Configuration
-        st.markdown("**Configuration:**")
-        poll_interval = st.number_input(
-            "Poll Interval (seconds)",
-            value=30,
-            min_value=10,
-            max_value=300,
-            step=5,
-            help="How often to poll NBA API for game updates (default: 30s)",
-        )
-        
-        dry_run = st.toggle(
-            "Dry Run (Test Mode)",
-            value=False,
-            help="If ON, will generate predictions but won't actually post to platforms",
-        )
+        # Last update
+        if "status" in automation_status:
+            status_data = automation_status["status"]
+            if "last_update" in status_data and status_data["last_update"]:
+                from datetime import datetime
+                try:
+                    last_update = datetime.fromisoformat(status_data["last_update"])
+                    time_ago = (datetime.now() - last_update).total_seconds()
+                    if time_ago < 60:
+                        time_str = f"{int(time_ago)}s ago"
+                    elif time_ago < 3600:
+                        time_str = f"{int(time_ago // 60)}m ago"
+                    else:
+                        time_str = f"{int(time_ago // 3600)}h ago"
+                    st.caption(f"Last activity: {time_str}")
+                except:
+                    pass
     
     with col2:
-        st.markdown("#### 📊 Live Game Status")
+        # Queue Processing Status
+        st.markdown("#### 📨 Queue Processing")
         
-        # Refresh button
-        if st.button("🔄 Refresh Game States", use_container_width=True):
+        # Get queue processor status
+        queue_status = get_queue_processor_status()
+        
+        # Status indicator
+        if queue_status.get("running"):
+            st.success("🟢 **LIVE** - Queue Processor is active")
+        else:
+            st.warning("🔴 **STOPPED** - Queue Processor is inactive")
+        
+        # Thread status
+        if queue_status.get("thread_alive"):
+            st.caption(f"Thread: {queue_status.get('thread_name', 'N/A')}")
+        else:
+            st.caption("Thread: Not running")
+        
+        # Stats
+        stats = queue_status.get("stats", {})
+        processed = stats.get("processed", 0)
+        st.caption(f"Posts processed: {processed}")
+        
+        if "last_processed_at" in stats and stats["last_processed_at"]:
+            from datetime import datetime
+            try:
+                last_processed = datetime.fromisoformat(stats["last_processed_at"])
+                time_ago = (datetime.now() - last_processed).total_seconds()
+                if time_ago < 60:
+                    time_str = f"{int(time_ago)}s ago"
+                elif time_ago < 3600:
+                    time_str = f"{int(time_ago // 60)}m ago"
+                else:
+                    time_str = f"{int(time_ago // 3600)}h ago"
+                st.caption(f"Last processed: {time_str}")
+            except:
+                pass
+    
+    st.markdown("---")
+    
+    # Automated Queue Processing Toggle
+    st.markdown("### 🎛️ Automated Queue Processing")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        # Toggle switch
+        st.markdown("#### ⚡ Queue Processor Control")
+        
+        # Get current status
+        queue_status = get_queue_processor_status()
+        is_running = queue_status.get("running", False)
+        
+        # Toggle switch
+        auto_queue = st.toggle(
+            "🤖 Enable Automated Queue Processing",
+            value=is_running,
+            key="auto_queue_toggle",
+            help="When enabled, queue processor runs continuously in the background",
+        )
+        
+        # Check if state changed and take action
+        if "auto_queue_enabled_prev" not in st.session_state:
+            st.session_state["auto_queue_enabled_prev"] = is_running
+        
+        if auto_queue != st.session_state["auto_queue_enabled_prev"]:
+            # State changed, update
+            st.session_state["auto_queue_enabled_prev"] = auto_queue
+            
+            # Take action
+            if auto_queue:
+                # Enable
+                with st.spinner("Starting queue processor..."):
+                    result = start_queue_processor(
+                        poll_interval=st.session_state.get("queue_poll_interval", 15),
+                        batch_size=st.session_state.get("queue_batch_size", 10),
+                    )
+                    
+                    if result.get("success"):
+                        st.success(result.get("message"))
+                        st.rerun()
+                    else:
+                        st.error(result.get("message"))
+                        st.session_state["auto_queue_enabled_prev"] = False
+            else:
+                # Disable
+                with st.spinner("Stopping queue processor..."):
+                    result = stop_queue_processor()
+                    
+                    if result.get("success"):
+                        st.success(result.get("message"))
+                        st.rerun()
+                    else:
+                        st.error(result.get("message"))
+                        st.session_state["auto_queue_enabled_prev"] = True
+        
+        # Show config if enabled
+        if auto_queue:
+            st.success("✅ Automated queue processing is **ENABLED**")
+            st.caption("Queue will be processed every 15 seconds automatically")
+        else:
+            st.warning("⏸️  Automated queue processing is **DISABLED**")
+            st.caption("Queue processing is manual - use 'Process Queue' button")
+    
+    with col2:
+        # Configuration
+        st.markdown("#### ⚙️ Configuration")
+        
+        poll_interval = st.number_input(
+            "Poll Interval (seconds)",
+            value=15,
+            min_value=5,
+            max_value=300,
+            step=5,
+            key="queue_poll_interval",
+            help="How often to check queue for pending posts (default: 15s)",
+        )
+        
+        batch_size = st.number_input(
+            "Batch Size",
+            value=10,
+            min_value=1,
+            max_value=100,
+            step=1,
+            key="queue_batch_size",
+            help="Maximum posts to process per poll (default: 10)",
+        )
+        
+        # Apply configuration button
+        if st.button("⚙️ Apply Configuration", use_container_width=True):
+            # Apply configuration (in production, this would save to config)
+            st.success("Configuration applied!")
             st.rerun()
-        
-        st.markdown("---")
-        
-        # Show current game states
-        st.markdown("**Active Games:**")
-        
-        # Try to get game states from monitoring service
-        try:
-            # Try to read from a shared state file or database
-            # For now, show a placeholder
-            st.info(
-                """ℹ️ **Note**: Game states are monitored by the background service.\n"
-                "This tab shows controls. The actual game monitoring happens "
-                "in the background service started from the terminal."""
-            )
-            
-            # Show how to start manually
-            st.markdown("---")
-            st.markdown("### 🚀 Start Service Manually")
-            
-            st.markdown("**macOS (Double-Click):**")
-            st.code("scripts/start_game_state_monitor.command", language="bash")
-            st.info("Double-click the `.command` file to start in a new Terminal window.")
-            
-            st.markdown("**macOS/Linux (Terminal):**")
-            st.code("bash scripts/start_game_state_monitor.sh", language="bash")
-            st.info("Run from terminal to start the monitoring service.")
-            
-            st.markdown("**Python (Cross-Platform):**")
-            st.code("python scripts/start_game_state_monitor.py", language="bash")
-            st.info("Works on macOS, Windows, and Linux.")
-            
-            st.markdown("---")
-            st.markdown("### ⚙️ Configuration")
-            
-            st.markdown("You can configure the service with environment variables:")
-            
-            st.code(
-                """# Poll interval (default: 30s)
-export GAME_STATE_POLL_INTERVAL=30
-
-# Platforms to post to (default: all enabled)
-export GAME_STATE_PLATFORMS=discord,twitter,bluesky
-
-# Dry run mode - don't actually post (default: false)
-export GAME_STATE_DRY_RUN=false""",
-                language="bash"
-            )
-        
-        except Exception as e:
-            st.error(f"Error getting game states: {e}")
+    
+    st.markdown("---")
+    
+    # Manual controls
+    st.markdown("### 🎛️ Manual Controls")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        # Start Queue Processor
+        if st.button("▶️ Start Queue Processor", use_container_width=True, type="primary"):
+            with st.spinner("Starting queue processor..."):
+                result = start_queue_processor(
+                    poll_interval=st.session_state.get("queue_poll_interval", 15),
+                    batch_size=st.session_state.get("queue_batch_size", 10),
+                )
+                
+                if result.get("success"):
+                    st.success(result.get("message"))
+                    st.rerun()
+                else:
+                    st.error(result.get("message"))
+    
+    with col2:
+        # Stop Queue Processor
+        if st.button("⏹️ Stop Queue Processor", use_container_width=True):
+            with st.spinner("Stopping queue processor..."):
+                result = stop_queue_processor()
+                
+                if result.get("success"):
+                    st.success(result.get("message"))
+                    st.rerun()
+                else:
+                    st.error(result.get("message"))
+    
+    with col3:
+        # Process Queue Now (one-off)
+        if st.button("⚡ Process Queue Now", use_container_width=True):
+            with st.spinner("Processing queue..."):
+                result = process_queue(max_posts=50)
+                
+                processed = result.get("processed_predictions", 0)
+                successful = result.get("successful", 0)
+                
+                if processed > 0 or successful > 0:
+                    st.success(f"✓ Processed {processed} post(s)")
+                else:
+                    st.info("No pending posts to process")
+    
+    st.markdown("---")
+    
+    # Detailed status
+    st.markdown("### 📊 Detailed Status")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        st.markdown("#### Game Monitor Details")
+        render_automation_status()
+    
+    with col2:
+        st.markdown("#### Queue Processor Details")
+        render_queue_processor_status()
     
     st.markdown("---")
     
