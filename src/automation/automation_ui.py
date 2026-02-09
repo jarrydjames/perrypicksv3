@@ -492,7 +492,7 @@ def render_automation_status():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("⏹️  Stop Automation", disabled=not status["running"]):
+        if st.button("⏹️  Stop Automation", disabled=not status["running"], key="auto_stop"):
             result = stop_automation()
             if result["success"]:
                 st.success(result["message"])
@@ -501,11 +501,11 @@ def render_automation_status():
                 st.error(result["message"])
     
     with col2:
-        if st.button("🔄 Refresh Status"):
+        if st.button("🔄 Refresh Status", key="auto_refresh"):
             st.rerun()
     
     with col3:
-        if st.button("🚀 Force Evaluate"):
+        if st.button("🚀 Force Evaluate", key="auto_force_eval"):
             with st.spinner("Evaluating triggers..."):
                 result = force_evaluate_triggers(
                     platforms=["twitter"],
@@ -600,7 +600,7 @@ def render_queue_processor_status():
     
     with col1:
         if status.get("running"):
-            if st.button("⏹️  Stop Queue Processor"):
+            if st.button("⏹️  Stop Queue Processor", key="qp_stop"):
                 result = stop_queue_processor()
                 if result["success"]:
                     st.success(result["message"])
@@ -608,7 +608,7 @@ def render_queue_processor_status():
                 else:
                     st.error(result["message"])
         else:
-            if st.button("▶️  Start Queue Processor"):
+            if st.button("▶️  Start Queue Processor", key="qp_start"):
                 result = start_queue_processor(
                     poll_interval=15,
                     batch_size=10,
@@ -620,7 +620,7 @@ def render_queue_processor_status():
                     st.error(result["message"])
     
     with col2:
-        if st.button("🔄 Refresh Status"):
+        if st.button("🔄 Refresh Status", key="qp_refresh"):
             st.rerun()
     
     with col3:

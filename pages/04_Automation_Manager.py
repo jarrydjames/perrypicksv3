@@ -223,7 +223,7 @@ def render_dashboard():
     col1, col2, col3 = st.columns(3)
     
     with col1:
-        if st.button("🔄 Process Dashboard Queue", use_container_width=True):
+        if st.button("🔄 Process Dashboard Queue", use_container_width=True, key="dashboard_process_queue"):
             with st.spinner("Processing queue..."):
                 result = process_queue(max_posts=10)
                 processed = result.get('processed', 0)
@@ -1596,7 +1596,7 @@ def render_game_state_monitor():
         )
         
         # Apply configuration button
-        if st.button("⚙️ Apply Configuration", use_container_width=True):
+        if st.button("⚙️ Apply Configuration", use_container_width=True, key="manual_apply_config"):
             # Apply configuration (in production, this would save to config)
             st.success("Configuration applied!")
             st.rerun()
@@ -1610,7 +1610,7 @@ def render_game_state_monitor():
     
     with col1:
         # Start Queue Processor
-        if st.button("▶️ Start Queue Processor", use_container_width=True, type="primary"):
+        if st.button("▶️ Start Queue Processor", use_container_width=True, type="primary", key="manual_start_queue"):
             with st.spinner("Starting queue processor..."):
                 result = start_queue_processor(
                     poll_interval=st.session_state.get("queue_poll_interval", 15),
@@ -1625,7 +1625,7 @@ def render_game_state_monitor():
     
     with col2:
         # Stop Queue Processor
-        if st.button("⏹️ Stop Queue Processor", use_container_width=True):
+        if st.button("⏹️ Stop Queue Processor", use_container_width=True, key="manual_stop_queue"):
             with st.spinner("Stopping queue processor..."):
                 result = stop_queue_processor()
                 
@@ -1637,7 +1637,7 @@ def render_game_state_monitor():
     
     with col3:
         # Process Queue Now (one-off)
-        if st.button("⚡ Process Queue Now", use_container_width=True):
+        if st.button("⚡ Process Queue Now", use_container_width=True, key="manual_process_now"):
             with st.spinner("Processing queue..."):
                 result = process_queue(max_posts=50)
                 
