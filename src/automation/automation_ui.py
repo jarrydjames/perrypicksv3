@@ -12,6 +12,8 @@ import streamlit as st
 import pandas as pd
 import datetime as dt
 import pandas as pd
+import threading
+import time
 from core.storage import GameStorage
 from core.env import load_environment
 from src.data.game_data import fetch_game_by_id
@@ -25,10 +27,17 @@ from src.automation.post_queue import PostStatus
 
 logger = logging.getLogger(__name__)
 
+# Global variables to track running automation
+_automation_thread = None
+_automation_stop_event = None
+_automation_monitor = None  # Keep reference to monitor for stopping
+
 # Session state keys
 SESSION_STATE_ORCHESTRATOR = "automation_orchestrator"
 SESSION_STATE_PLATFORMS = "automation_platforms"
 SESSION_STATE_SCHEDULE = "automation_schedule"
+SESSION_STATE_AUTOMATION_RUNNING = "automation_running"
+SESSION_STATE_AUTOMATION_STATUS = "automation_status"
 
 
 def init_session_state():
@@ -42,6 +51,14 @@ def init_session_state():
         st.session_state[SESSION_STATE_SCHEDULE] = {
             "enabled": False,
             "poll_interval": 15,
+        }
+    if SESSION_STATE_AUTOMATION_RUNNING not in st.session_state:
+        st.session_state[SESSION_STATE_AUTOMATION_RUNNING] = False
+    if SESSION_STATE_AUTOMATION_STATUS not in st.session_state:
+        st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
+            "status": "idle",
+            "message": "",
+            "last_update": None,
         }
 
 
@@ -414,6 +431,116 @@ def get_statistics() -> Dict[str, Any]:
         }
 
 
+def render_automation_status():
+    """Render automation status and controls.
+    
+    Shows current automation status and provides buttons to start/stop monitoring.
+    """
+    st.subheader("🤖 Automation Status")
+    
+    # Get status
+    status = get_automation_status()
+    
+    # Status card
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if status["running"]:
+            st.success("✅ Running")
+        else:
+            st.warning("⏸️  Stopped")
+    
+    with col2:
+        if status["thread_alive"]:
+            st.success(f"🧵 {status['thread_name']}")
+        else:
+            st.info("🧵 No thread")
+    
+    with col3:
+        status_text = status["status"].get("status", "unknown")
+        if status_text == "running":
+            st.info(f"📊 Monitoring")
+        elif status_text == "stopped":
+            st.info(f"⏹️  Idle")
+        elif status_text == "error":
+            st.error(f"❌ Error")
+        else:
+            st.info(f"ℹ️  {status_text}")
+    
+    # Details
+    status_data = status["status"]
+    if status_data:
+        if status_data.get("message"):
+            st.info(f"📝 {status_data['message']}")
+        
+        if status_data.get("last_update"):
+            try:
+                last_update = datetime.fromisoformat(status_data["last_update"])
+                time_ago = datetime.now() - last_update
+                time_str = format_timedelta(time_ago)
+                st.caption(f"🕐 Last update: {time_str} ago")
+            except:
+                pass
+    
+    # Controls
+    st.subheader("Controls")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if st.button("⏹️  Stop Automation", disabled=not status["running"]):
+            result = stop_automation()
+            if result["success"]:
+                st.success(result["message"])
+                st.rerun()
+            else:
+                st.error(result["message"])
+    
+    with col2:
+        if st.button("🔄 Refresh Status"):
+            st.rerun()
+    
+    with col3:
+        if st.button("🚀 Force Evaluate"):
+            with st.spinner("Evaluating triggers..."):
+                result = force_evaluate_triggers(
+                    platforms=["twitter"],
+                    dry_run=True,
+                )
+                
+                if result["success"]:
+                    st.success(f"✓ Evaluated {result['games_evaluated']} games")
+                    if result["triggers_fired"]:
+                        st.info(f"⚡ Fired {len(result['triggers_fired'])} triggers")
+                    if result["errors"]:
+                        st.warning(f"⚠️  {len(result['errors'])} errors")
+                else:
+                    st.error("Failed to evaluate triggers")
+
+
+def format_timedelta(td: timedelta) -> str:
+    """Format timedelta as human-readable string.
+    
+    Args:
+        td: timedelta to format
+        
+    Returns:
+        Formatted string (e.g., "5m 30s")
+    """
+    seconds = int(td.total_seconds())
+    
+    if seconds < 60:
+        return f"{seconds}s"
+    elif seconds < 3600:
+        minutes = seconds // 60
+        secs = seconds % 60
+        return f"{minutes}m {secs}s"
+    else:
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        return f"{hours}h {minutes}m"
+
+
 def get_platforms() -> set:
     """Get enabled platforms."""
     orchestrator = get_orchestrator()
@@ -751,6 +878,8 @@ def run_full_day_automation(
     Returns:
         Comprehensive results dictionary with all automation results
     """
+    global _automation_monitor  # Declare global for assignment
+    
     # Get game IDs for the date
     game_ids = get_game_ids(date)
     
@@ -1067,32 +1196,109 @@ def run_full_day_automation(
         })
         logger.error(f"Error in Q3 triggers: {e}")
     
-    # Stage 5: Start Background Monitoring (if enabled)
+    # Stage 5: Start Full Background Monitoring with Trigger Engine (if enabled)
+    global _automation_monitor
+    
     if enable_background_monitoring:
         try:
             if progress_callback:
-                progress_callback(1.0, "Starting background monitoring...")
+                progress_callback(1.0, "Starting full background monitoring...")
             
-            # Initialize game state monitor
+            # Import required classes
             from src.automation.game_state_monitor import GameStateMonitor
+            from src.automation.trigger_engine import TriggerEngine
+            from src.automation.auto_queue_processor import AutoQueueProcessor
             
+            # Initialize monitor
             monitor = GameStateMonitor(poll_interval_seconds=30)
+            # Note: Don't assign to _automation_monitor here to avoid scope issues
+            # The monitor is captured by closure in monitor_loop()
+            
+            # Initialize queue processor
+            queue_processor = AutoQueueProcessor(
+                social_manager=None,  # Will use orchestrator's social manager
+            )
+            
+            # Initialize trigger engine
+            trigger_engine = TriggerEngine(
+                game_state_monitor=monitor,
+                queue_processor=queue_processor,
+                storage=GameStorage(),
+            )
+            
+            # Store monitor globally so we can stop it later
+            # (Must do this before defining monitor_loop to avoid scope issues)
+            _automation_monitor = monitor
             
             # Initialize game states for all games
             for game_id in game_ids:
                 monitor.update_game_state(game_id)
             
-            # Store monitor reference for access (optional)
+            # Start monitoring in background thread
+            def monitor_loop():
+                """Background monitoring loop."""
+                try:
+                    logger.info("Starting monitoring loop...")
+                    st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
+                        "status": "running",
+                        "message": "Monitoring games for halftime/Q3 triggers...",
+                        "last_update": datetime.now().isoformat(),
+                    }
+                    
+                    # Run monitoring loop
+                    monitor.start()
+                
+                except Exception as e:
+                    logger.error(f"Error in monitoring loop: {e}")
+                    st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
+                        "status": "error",
+                        "message": str(e),
+                        "last_update": datetime.now().isoformat(),
+                    }
+                    import traceback
+                    traceback.print_exc()
+                finally:
+                    st.session_state[SESSION_STATE_AUTOMATION_RUNNING] = False
+                    logger.info("Monitoring loop stopped")
+            
+            # Start monitoring in background thread
+            global _automation_thread, _automation_stop_event  # Note: monitor is captured by closure, not global
+            
+            # Stop any existing thread
+            if _automation_thread and _automation_thread.is_alive():
+                logger.info("Stopping existing automation thread...")
+                if _automation_monitor is not None:
+                    logger.info(f"Stopping monitor (running={_automation_monitor.running})...")
+                    _automation_monitor.stop()
+                _automation_thread.join(timeout=5)
+            
+            # Create stop event
+            _automation_stop_event = threading.Event()
+            
+            # Start new thread
+            _automation_thread = threading.Thread(
+                target=monitor_loop,
+                daemon=True,
+                name="AutomationMonitor"
+            )
+            _automation_thread.start()
+            
+            # Update session state
+            st.session_state[SESSION_STATE_AUTOMATION_RUNNING] = True
+            
+            # Return monitoring status
             results["background_monitoring"] = {
-                "status": "started",
+                "status": "running",
                 "games_monitored": len(monitor.game_states),
                 "poll_interval": 30,
-                "message": "Background monitoring is running. Game states are being tracked. Use trigger_engine to generate predictions based on game state.",
-                "note": "Note: Background monitoring is active. To auto-generate posts, use the TriggerEngine to register callbacks for halftime/Q3 triggers.",
+                "thread_name": _automation_thread.name,
+                "thread_alive": _automation_thread.is_alive(),
+                "message": "Full background monitoring is running! Games are being monitored for halftime/Q3 triggers. Predictions will be auto-generated and queued when triggers fire.",
             }
             
-            logger.info(f"Background monitoring started for {len(game_ids)} games")
-            logger.info(f"Note: Full trigger engine integration requires additional setup.")
+            logger.info(f"Full background monitoring started for {len(game_ids)} games")
+            logger.info(f"Monitoring thread started: {_automation_thread.name}")
+        
         except Exception as e:
             results["errors"].append({
                 "stage": "background_monitoring",
@@ -1102,13 +1308,163 @@ def run_full_day_automation(
             import traceback
             traceback.print_exc()
     
-    return results
+    # Finalize results
     total_errors = len(results["errors"])
     results["success"] = total_errors == 0
     
     return results
 
-def refresh_data():
+
+def stop_automation() -> Dict[str, Any]:
+    """Stop running background automation.
+    
+    Returns:
+        Status dictionary
+    """
+    global _automation_thread, _automation_stop_event, _automation_monitor
+    
+    result = {
+        "success": False,
+        "message": "",
+        "thread_stopped": False,
+    }
+    
+    try:
+        if _automation_thread and _automation_thread.is_alive():
+            logger.info("Stopping automation thread...")
+            
+            # Try to stop monitor via session state
+            if SESSION_STATE_AUTOMATION_STATUS in st.session_state:
+                st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
+                    "status": "stopping",
+                    "message": "Stopping monitoring...",
+                    "last_update": datetime.now().isoformat(),
+                }
+            
+            # Stop monitor
+            if _automation_monitor is not None:
+                logger.info(f"Stopping game state monitor (running={_automation_monitor.running})...")
+                _automation_monitor.stop()
+            
+            # Set stop event
+            if _automation_stop_event:
+                _automation_stop_event.set()
+            
+            # Wait for thread to stop (timeout 10s - thread may be sleeping)
+            _automation_thread.join(timeout=10)
+            
+            if _automation_thread.is_alive():
+                result["thread_stopped"] = False
+                result["message"] = "Thread still running (may be waiting on sleep)"
+                logger.warning("Automation thread still running - monitor may be sleeping")
+            else:
+                result["thread_stopped"] = True
+                result["message"] = "Automation stopped successfully"
+                logger.info("Automation thread stopped")
+            
+            # Update session state
+            st.session_state[SESSION_STATE_AUTOMATION_RUNNING] = False
+            st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
+                "status": "stopped",
+                "message": "Monitoring stopped",
+                "last_update": datetime.now().isoformat(),
+            }
+        else:
+            result["message"] = "No automation thread running"
+            logger.info("No automation thread running")
+        
+        result["success"] = True
+    
+    except Exception as e:
+        result["message"] = f"Error stopping automation: {e}"
+        logger.error(f"Error stopping automation: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    return result
+
+
+def get_automation_status() -> Dict[str, Any]:
+    """Get current automation status.
+    
+    Returns:
+        Status dictionary with running state and details
+    """
+    global _automation_thread
+    
+    return {
+        "running": st.session_state.get(SESSION_STATE_AUTOMATION_RUNNING, False),
+        "thread_alive": _automation_thread.is_alive() if _automation_thread else False,
+        "thread_name": _automation_thread.name if _automation_thread else None,
+        "status": st.session_state.get(SESSION_STATE_AUTOMATION_STATUS, {}),
+    }
+
+
+def force_evaluate_triggers(
+    platforms: Optional[List[str]] = None,
+    dry_run: bool = False,
+) -> Dict[str, Any]:
+    """Force evaluation of triggers for all monitored games.
+    
+    Useful for manual trigger testing or catching up.
+    
+    Args:
+        platforms: Platforms to post to
+        dry_run: If True, don't actually post
+        
+    Returns:
+        Evaluation results
+    """
+    from src.automation.trigger_engine import TriggerEngine
+    from src.automation.game_state_monitor import GameStateMonitor
+    from src.automation.auto_queue_processor import AutoQueueProcessor
+    
+    result = {
+        "success": False,
+        "games_evaluated": 0,
+        "triggers_fired": [],
+        "errors": [],
+    }
+    
+    try:
+        # Create temporary monitor
+        monitor = GameStateMonitor(poll_interval_seconds=30)
+        
+        # Get today's games
+        from core.storage import GameStorage
+        storage = GameStorage()
+        games = storage.load_games()
+        
+        # Evaluate all games
+        game_ids = list(games.keys()) if games else []
+        
+        for game_id in game_ids:
+            try:
+                # Update game state
+                monitor.update_game_state(game_id)
+            except Exception as e:
+                result["errors"].append({
+                    "game_id": game_id,
+                    "error": f"Failed to update game state: {e}",
+                })
+        
+        result["games_evaluated"] = len(game_ids)
+        result["success"] = True
+        
+        logger.info(f"Force evaluation complete: {len(game_ids)} games")
+    
+    except Exception as e:
+        result["errors"].append({
+            "error": f"Force evaluation failed: {e}",
+        })
+        logger.error(f"Error in force evaluation: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    return result
+
+
+def refresh_data(): 
     """Refresh automation data (force reload)."""
     reset_orchestrator()
     
