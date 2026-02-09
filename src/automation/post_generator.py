@@ -82,6 +82,10 @@ class PostGenerator:
         pred_final_home = prediction.get('pred_final_home', 0)
         pred_final_away = prediction.get('pred_final_away', 0)
         
+        # Check if this is a retroactive prediction
+        trigger_type = prediction.get('trigger_type', 'halftime')
+        is_retroactive = 'retroactive' in trigger_type
+        
         # Calculate final stats and generate bets
         final_total = pred_final_home + pred_final_away
         final_margin = pred_final_home - pred_final_away
@@ -90,8 +94,9 @@ class PostGenerator:
         
         if platform == 'twitter':
             emoji = '🔥' if self.use_emojis else '[2H]'
+            retroactive_marker = '📜 ' if is_retroactive else ''
             post = (
-                f'{emoji} HALFTIME UPDATE\n\n'
+                f'{emoji}{retroactive_marker}HALFTIME UPDATE\n\n'
                 f'{away_team} @ {home_team}\n\n'
                 f'Halftime: {away_team} {h1_away} - {h1_home} {home_team}\n\n'
                 f'Projected Final: {away_team} {pred_final_away:.1f} - {pred_final_home:.1f} {home_team}\n\n'
@@ -99,8 +104,9 @@ class PostGenerator:
             )
             post += self._format_bets_section(bets, platform)
         else:
+            retroactive_marker = '📜 ' if is_retroactive else ''
             post = (
-                f'🔥 HALFTIME UPDATE: {away_team} @ {home_team}\n\n'
+                f'🔥 {retroactive_marker}HALFTIME UPDATE: {away_team} @ {home_team}\n\n'
                 f'Halftime: {away_team} {h1_away} - {h1_home} {home_team}\n\n'
                 f'Projected Final: {away_team} {pred_final_away:.1f} - {pred_final_home:.1f} {home_team}\n\n'
                 f'Winner: {winner} | Margin: {final_margin:+.1f} | Total: {final_total:.1f}\n\n'
@@ -124,6 +130,10 @@ class PostGenerator:
         away_team = prediction.get('away_name', 'Away')
         q3_cum_home = prediction.get('home_score', 0)
         q3_cum_away = prediction.get('away_score', 0)
+        
+        # Check if this is a retroactive prediction
+        trigger_type = prediction.get('trigger_type', 'q3')
+        is_retroactive = 'retroactive' in trigger_type
         
         # Use quarter progression heuristic
         q3_cumulative_total = q3_cum_home + q3_cum_away
@@ -152,18 +162,20 @@ class PostGenerator:
         
         if platform == 'twitter':
             emoji = '⚡' if self.use_emojis else '[Q3]'
+            retroactive_marker = '📜 ' if is_retroactive else ''
             post = (
-                f'{emoji} Q3 UPDATE\n\n'
+                f'{emoji}{retroactive_marker}Q3 UPDATE\n\n'
                 f'{away_team} @ {home_team}\n\n'
-                f'Q3 Score: {away_team} {q3_cum_away:.1f} - {q3_cum_home:.1f} {home_team}\n\n'
+                f'Q3 Score: {away_team} {q3_cum_away} - {q3_cum_home} {home_team}\n\n'
                 f'Projected Final: {away_team} {pred_final_away:.1f} - {pred_final_home:.1f} {home_team}\n\n'
                 f'Winner: {winner} | Margin: {final_margin:+.1f} | Total: {final_total:.1f}\n\n'
             )
             post += self._format_bets_section(bets, platform)
         else:
+            retroactive_marker = '📜 ' if is_retroactive else ''
             post = (
-                f'⚡ Q3 UPDATE: {away_team} @ {home_team}\n\n'
-                f'Q3 Score: {away_team} {q3_cum_away:.1f} - {q3_cum_home:.1f} {home_team}\n\n'
+                f'⚡ {retroactive_marker}Q3 UPDATE: {away_team} @ {home_team}\n\n'
+                f'Q3 Score: {away_team} {q3_cum_away} - {q3_cum_home} {home_team}\n\n'
                 f'Projected Final: {away_team} {pred_final_away:.1f} - {pred_final_home:.1f} {home_team}\n\n'
                 f'Winner: {winner} | Margin: {final_margin:+.1f} | Total: {final_total:.1f}\n\n'
             )

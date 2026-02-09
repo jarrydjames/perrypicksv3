@@ -134,6 +134,10 @@ class AutomationOrchestrator:
                 logger.info(f"Running prediction for {game_id} with mode={mode}, trigger_type={trigger_type}")
                 prediction = predict_game(game_id, mode=mode, fetch_odds=fetch_odds)
                 
+                # Add trigger_type to prediction result for post_generator
+                if isinstance(prediction, dict):
+                    prediction['trigger_type'] = trigger_type
+                
                 # Log detailed prediction result
                 logger.info(f"Prediction result for {game_id}:")
                 logger.info(f"  Type: {type(prediction)}")
@@ -141,6 +145,7 @@ class AutomationOrchestrator:
                     logger.info(f"  Keys: {list(prediction.keys())}")
                     logger.info(f"  Status: {prediction.get('status', 'missing')}")
                     logger.info(f"  Model used: {prediction.get('model_used', 'missing')}")
+                    logger.info(f"  Trigger type: {prediction.get('trigger_type', 'missing')}")
                     logger.info(f"  Error: {prediction.get('error', 'none')}")
                 else:
                     logger.warning(f"Prediction is not a dict: {prediction}")
