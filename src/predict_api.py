@@ -589,8 +589,29 @@ def predict_game(
         return result
         
     except Exception as e:
-        # Re-raise with context for easier debugging
+        # Return proper error dict instead of re-raising
+        # This provides better error messages to callers (automation orchestrator, etc.)
         import traceback
-        logger.error(f"Prediction failed: {repr(e)}")
+        logger.error(f"Prediction failed for {game_input}: {repr(e)}")
         logger.error(f"Traceback: {traceback.format_exc()}")
-        raise
+        
+        # Extract error message from exception
+        error_msg = str(e)
+        if '403' in error_msg:
+            error_msg = 'NBA.com API returned 403 Forbidden - rate limiting or access issue'
+        elif '429' in error_msg:
+            error_msg = 'NBA.com API returned 429 Too Many Requests - rate limiting'
+        elif 'timeout' in error_msg.lower():
+            error_msg = 'NBA.com API timeout - service slow or unresponsive'
+        
+        # Return error dict with useful information
+        return {
+            'status': 'error',
+            'error': error_msg,
+            'game_id': game_input,
+            'model_used': 'ERROR',
+            'home_name': home_team or 'Unknown',
+            'away_name': away_team or 'Unknown',
+            'margin': 0,
+            'total': 0,
+        }

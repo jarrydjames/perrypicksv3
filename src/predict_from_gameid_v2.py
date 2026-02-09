@@ -1,11 +1,19 @@
 import sys
 import re
+import os
 import requests
 import pandas as pd
 import joblib
+import time
+from pathlib import Path
 
 CDN_PBP = "https://cdn.nba.com/static/json/liveData/playbyplay/playbyplay_{gid}.json"
 CDN_BOX = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_{gid}.json"
+
+# Cache settings
+CACHE_DIR = Path(".cache/nba_cdn")
+CACHE_DIR.mkdir(parents=True, exist_ok=True)
+CACHE_TTL_SECONDS = 300  # 5 minutes
 
 def extract_game_id(arg: str) -> str:
     m = re.search(r"(00\d{8,10})", arg)
@@ -21,12 +29,48 @@ NBA_HEADERS = {
     "Referer": "https://www.nba.com/",
 }
 
-def fetch_json(url: str, max_retries: int = 3) -> dict:
-    """Fetch JSON from NBA.com CDN with proper headers and retry logic.
+def _get_cache_path(url: str) -> Path:
+    """Get cache file path for a URL."""
+    # Use URL hash as filename
+    import hashlib
+    url_hash = hashlib.md5(url.encode()).hexdigest()
+    return CACHE_DIR / f"{url_hash}.json"
+
+def _load_from_cache(cache_path: Path) -> dict:
+    """Load data from cache if not expired."""
+    if not cache_path.exists():
+        return None
+    
+    # Check if expired
+    cache_age = time.time() - cache_path.stat().st_mtime
+    if cache_age > CACHE_TTL_SECONDS:
+        return None
+    
+    # Load from cache
+    import json
+    try:
+        with open(cache_path, 'r') as f:
+            return json.load(f)
+    except Exception:
+        # Cache file corrupted, ignore
+        return None
+
+def _save_to_cache(cache_path: Path, data: dict) -> None:
+    """Save data to cache."""
+    import json
+    try:
+        with open(cache_path, 'w') as f:
+            json.dump(data, f)
+    except Exception:
+        # Failed to write to cache, ignore
+        pass
+
+def fetch_json(url: str, max_retries: int = 5) -> dict:
+    """Fetch JSON from NBA.com CDN with proper headers, retry logic, and caching.
     
     Args:
         url: URL to fetch
-        max_retries: Number of retries on 403/429 errors
+        max_retries: Number of retries on 403/429 errors (default 5)
         
     Returns:
         JSON response as dict
@@ -34,19 +78,30 @@ def fetch_json(url: str, max_retries: int = 3) -> dict:
     Raises:
         requests.HTTPError: If all retries fail
     """
-    import time
+    import logging
     
+    # Check cache first
+    cache_path = _get_cache_path(url)
+    cached_data = _load_from_cache(cache_path)
+    if cached_data is not None:
+        logging.debug(f"Using cached data for {url}")
+        return cached_data
+    
+    # Fetch from CDN with retry logic
     for attempt in range(max_retries):
         try:
             r = requests.get(url, timeout=25, headers=NBA_HEADERS)
             r.raise_for_status()
-            return r.json()
+            data = r.json()
+            # Save to cache
+            _save_to_cache(cache_path, data)
+            return data
         except requests.HTTPError as e:
             # Retry on rate limiting (429) or forbidden (403) errors
             if e.response.status_code in (403, 429) and attempt < max_retries - 1:
-                wait_time = 2 ** attempt  # Exponential backoff: 1s, 2s, 4s
-                import logging
-                logging.warning(f"NBA.com API returned {e.response.status_code}, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})")
+                # Longer backoff for CDN endpoint: 2s, 4s, 8s, 16s
+                wait_time = 2 ** (attempt + 1)
+                logging.warning(f"NBA.com CDN API returned {e.response.status_code}, retrying in {wait_time}s (attempt {attempt + 1}/{max_retries})")
                 time.sleep(wait_time)
                 continue
             # For other errors or final retry, re-raise
