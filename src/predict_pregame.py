@@ -47,6 +47,46 @@ def get_team_id(tricode: str) -> Optional[int]:
     return TEAM_IDS.get(tricode.upper())
 
 
+# Tricode to full team name mapping for odds API
+TRICODE_TO_FULL_NAME = {
+    'ATL': 'Atlanta Hawks',
+    'BOS': 'Boston Celtics',
+    'BKN': 'Brooklyn Nets',
+    'CHA': 'Charlotte Hornets',
+    'CHI': 'Chicago Bulls',
+    'CLE': 'Cleveland Cavaliers',
+    'DAL': 'Dallas Mavericks',
+    'DEN': 'Denver Nuggets',
+    'DET': 'Detroit Pistons',
+    'GSW': 'Golden State Warriors',
+    'HOU': 'Houston Rockets',
+    'IND': 'Indiana Pacers',
+    'LAC': 'LA Clippers',
+    'LAL': 'Los Angeles Lakers',
+    'MEM': 'Memphis Grizzlies',
+    'MIA': 'Miami Heat',
+    'MIL': 'Milwaukee Bucks',
+    'MIN': 'Minnesota Timberwolves',
+    'NOP': 'New Orleans Pelicans',
+    'NYK': 'New York Knicks',
+    'OKC': 'Oklahoma City Thunder',
+    'ORL': 'Orlando Magic',
+    'PHI': 'Philadelphia 76ers',
+    'PHX': 'Phoenix Suns',
+    'POR': 'Portland Trail Blazers',
+    'SAC': 'Sacramento Kings',
+    'SAS': 'San Antonio Spurs',
+    'TOR': 'Toronto Raptors',
+    'UTA': 'Utah Jazz',
+    'WAS': 'Washington Wizards',
+}
+
+
+def get_full_team_name(tricode: str) -> Optional[str]:
+    """Get full team name from tricode for odds API."""
+    return TRICODE_TO_FULL_NAME.get(tricode.upper())
+
+
 def infer_season_from_game_id(game_id: str) -> Optional[str]:
     """Infer NBA season string (e.g. 2025-26) from game_id prefix 002YYxxxxx."""
     gid = str(game_id)
@@ -718,9 +758,20 @@ def predict_from_game_id(
     if fetch_odds:
         try:
             from src.odds.odds_api import fetch_nba_odds_snapshot, OddsAPIError
+            
+            # Convert tricodes to full team names for odds API
+            home_name_full = get_full_team_name(home_team)
+            away_name_full = get_full_team_name(away_team)
+            
+            # Log what we're using for odds lookup
+            if home_name_full and away_name_full:
+                logger.info(f"Fetching odds for {away_name_full} @ {home_name_full}")
+            else:
+                logger.warning(f"Could not map team tricodes to full names: {away_team} @ {home_team}")
+            
             odds_snapshot = fetch_nba_odds_snapshot(
-                home_name=home_team,
-                away_name=away_team
+                home_name=home_name_full or home_team,
+                away_name=away_name_full or away_team
             )
             
             if odds_snapshot:

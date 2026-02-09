@@ -903,10 +903,14 @@ def run_total_day_view(
                 
                 # Queue post for each platform
                 platform_results = {}
+                # Add timestamp to make post_id unique (prevents duplicate detection on re-runs)
+                from datetime import datetime
+                timestamp = int(datetime.now().timestamp())
+                
                 for platform in target_platforms:
                     try:
                         post_id = orchestrator.social_manager.queue.enqueue(
-                            game_id=f"total_day_{date.strftime('%Y%m%d')}",
+                            game_id=f"total_day_{date.strftime('%Y%m%d')}_{timestamp}",
                             platform=platform,
                             content=post_content,
                             trigger_type="pregame_total_day",

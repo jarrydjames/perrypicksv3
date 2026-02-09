@@ -138,8 +138,15 @@ class AutoQueueProcessor:
             if self.social_manager:
                 return self.social_manager.process_queue(max_posts=max_posts)
             else:
-                logger.warning("No social manager available")
-                return {"success": False, "error": "No social manager"}
+                # No social manager - skip processing but don't fail
+                # This allows queue processor to continue and retry when manager becomes available
+                logger.warning("No social manager available - skipping queue processing (will retry)")
+                return {
+                    "success": True,  # Return success to avoid continuous error logging
+                    "error": None,
+                    "processed_predictions": 0,
+                    "skipped": "No social manager available",
+                }
         
         except Exception as e:
             logger.error(f"Error processing pending posts: {e}")

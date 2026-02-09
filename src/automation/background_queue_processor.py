@@ -96,10 +96,18 @@ class BackgroundQueueProcessor:
                 
                 if processed > 0:
                     logger.info(f"Processed {processed} posts from queue")
+                elif result.get("skipped"):
+                    # Processing skipped (e.g., no social manager) - not an error
+                    logger.info(f"Queue processing skipped: {result.get('skipped')}")
             else:
                 error = result.get("error", "Unknown error")
-                logger.warning(f"Failed to process queue: {error}")
-                self.stats["failed"] += 1
+                # Only log as error if it's not a "no social manager" skip
+                if error and "no social manager" not in str(error).lower():
+                    logger.warning(f"Failed to process queue: {error}")
+                    self.stats["failed"] += 1
+                else:
+                    # Skipped due to missing social manager - don't count as failure
+                    logger.debug(f"Queue processing skipped (no social manager)")
             
             return result
         
