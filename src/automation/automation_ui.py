@@ -12,8 +12,9 @@ import streamlit as st
 import pandas as pd
 import datetime as dt
 import pandas as pd
-
 from core.storage import GameStorage
+from core.env import load_environment
+from src.data.game_data import fetch_game_by_id
 from core.env import load_environment
 from src.automation import (
     PostQueue,
@@ -794,52 +795,80 @@ def run_full_day_automation(
         "total_games": len(game_ids),
         "successful": [],
         "errors": [],
+        "skipped_not_started": [],
+        "skipped_not_halftime": [],
+        "skipped_completed": [],  # Games already finished
     }
     
     try:
         if progress_callback:
-            progress_callback(0.51, "Setting up halftime triggers...")
+            progress_callback(0.51, "Evaluating halftime triggers...")
         
         for i, game_id in enumerate(game_ids, 1):
             try:
-                # Queue halftime posts for this game
-                result = run_prediction(
-                    game_id=game_id,
-                    trigger_type="halftime",
-                    platforms=platforms,
-                    dry_run=dry_run,
-                )
+                # Check game state before attempting prediction
+                game_data = fetch_game_by_id(game_id)
                 
-                if result.get("success"):
-                    halftime_trigger_results["successful"].append(game_id)
-                    logger.info(f"Halftime trigger queued: {game_id}")
+                if not game_data:
+                    # Game not found - might be in future
+                    halftime_trigger_results["skipped_not_started"].append(game_id)
+                    logger.info(f"Halftime trigger skipped (game not found): {game_id}")
                 else:
-                    error = result.get("error", "Unknown error")
-                    halftime_trigger_results["errors"].append({
-                        "game_id": game_id,
-                        "error": error,
-                    })
-                    logger.error(f"Failed to queue halftime trigger for {game_id}: {error}")
+                    game_status = game_data.get("gameStatus")
+                    period = game_data.get("period", 0)
+                    
+                    # gameStatus: 0=not started, 1=Q1, 2=Q2, 3=Q3, 4=Q4, 5=OT, 6=Final
+                    # Skip if game already completed
+                    if game_status >= 6:  # Final
+                        halftime_trigger_results["skipped_completed"].append(game_id)
+                        logger.info(f"Halftime trigger skipped (game already completed): {game_id}")
+                    elif game_status < 2 or (game_status == 2 and period < 3):
+                        # Game not at halftime yet - skip for now
+                        halftime_trigger_results["skipped_not_started"].append(game_id)
+                        logger.info(f"Halftime trigger skipped (not at halftime yet): {game_id} (status={game_status}, period={period})")
+                    else:
+                        # Game is at halftime or past - generate prediction
+                        result = run_prediction(
+                            game_id=game_id,
+                            trigger_type="halftime",
+                            platforms=platforms,
+                            dry_run=dry_run,
+                        )
+                        
+                        if result.get("success"):
+                            halftime_trigger_results["successful"].append(game_id)
+                            logger.info(f"Halftime prediction generated: {game_id}")
+                        else:
+                            error = result.get("error", "Unknown error")
+                            halftime_trigger_results["errors"].append({
+                                "game_id": game_id,
+                                "error": error,
+                            })
+                            logger.error(f"Failed to generate halftime prediction for {game_id}: {error}")
                 
                 # Update progress
                 progress = 0.51 + (i / len(game_ids) * 0.24)
                 if progress_callback:
-                    progress_callback(progress, f"Halftime trigger: {i}/{len(game_ids)} games")
+                    progress_callback(progress, f"Halftime: {i}/{len(game_ids)} games")
             
             except Exception as e:
                 halftime_trigger_results["errors"].append({
                     "game_id": game_id,
                     "error": str(e),
                 })
-                logger.error(f"Error queueing halftime trigger for {game_id}: {e}")
+                logger.error(f"Error in halftime trigger for {game_id}: {e}")
         
         results["halftime_triggers"] = halftime_trigger_results
         results["errors"].extend(halftime_trigger_results["errors"])
         
         if progress_callback:
             success_count = len(halftime_trigger_results["successful"])
+            skipped_count = (len(halftime_trigger_results["skipped_not_started"]) + 
+                           len(halftime_trigger_results["skipped_not_halftime"]) +
+                           len(halftime_trigger_results["skipped_completed"]))
             error_count = len(halftime_trigger_results["errors"])
-            progress_callback(0.75, f"✓ Halftime triggers: {success_count} games, {error_count} errors")
+            status_msg = f"✓ Halftime: {success_count} generated, {skipped_count} skipped, {error_count} errors"
+            progress_callback(0.75, status_msg)
     
     except Exception as e:
         results["errors"].append({
@@ -853,52 +882,80 @@ def run_full_day_automation(
         "total_games": len(game_ids),
         "successful": [],
         "errors": [],
+        "skipped_not_started": [],
+        "skipped_not_q3": [],
+        "skipped_completed": [],  # Games already finished
     }
     
     try:
         if progress_callback:
-            progress_callback(0.76, "Setting up Q3 triggers...")
+            progress_callback(0.76, "Evaluating Q3 triggers...")
         
         for i, game_id in enumerate(game_ids, 1):
             try:
-                # Queue Q3 posts for this game
-                result = run_prediction(
-                    game_id=game_id,
-                    trigger_type="q3",
-                    platforms=platforms,
-                    dry_run=dry_run,
-                )
+                # Check game state before attempting prediction
+                game_data = fetch_game_by_id(game_id)
                 
-                if result.get("success"):
-                    q3_trigger_results["successful"].append(game_id)
-                    logger.info(f"Q3 trigger queued: {game_id}")
+                if not game_data:
+                    # Game not found - might be in future
+                    q3_trigger_results["skipped_not_started"].append(game_id)
+                    logger.info(f"Q3 trigger skipped (game not found): {game_id}")
                 else:
-                    error = result.get("error", "Unknown error")
-                    q3_trigger_results["errors"].append({
-                        "game_id": game_id,
-                        "error": error,
-                    })
-                    logger.error(f"Failed to queue Q3 trigger for {game_id}: {error}")
+                    game_status = game_data.get("gameStatus")
+                    period = game_data.get("period", 0)
+                    
+                    # gameStatus: 0=not started, 1=Q1, 2=Q2, 3=Q3, 4=Q4, 5=OT, 6=Final
+                    # Skip if game already completed
+                    if game_status >= 6:  # Final
+                        q3_trigger_results["skipped_completed"].append(game_id)
+                        logger.info(f"Q3 trigger skipped (game already completed): {game_id}")
+                    elif game_status < 3 or (game_status == 3 and period < 4):
+                        # Game not at Q3 yet - skip for now
+                        q3_trigger_results["skipped_not_started"].append(game_id)
+                        logger.info(f"Q3 trigger skipped (not at Q3 yet): {game_id} (status={game_status}, period={period})")
+                    else:
+                        # Game is at Q3 or past - generate prediction
+                        result = run_prediction(
+                            game_id=game_id,
+                            trigger_type="q3",
+                            platforms=platforms,
+                            dry_run=dry_run,
+                        )
+                        
+                        if result.get("success"):
+                            q3_trigger_results["successful"].append(game_id)
+                            logger.info(f"Q3 prediction generated: {game_id}")
+                        else:
+                            error = result.get("error", "Unknown error")
+                            q3_trigger_results["errors"].append({
+                                "game_id": game_id,
+                                "error": error,
+                            })
+                            logger.error(f"Failed to generate Q3 prediction for {game_id}: {error}")
                 
                 # Update progress
                 progress = 0.76 + (i / len(game_ids) * 0.24)
                 if progress_callback:
-                    progress_callback(progress, f"Q3 trigger: {i}/{len(game_ids)} games")
+                    progress_callback(progress, f"Q3: {i}/{len(game_ids)} games")
             
             except Exception as e:
                 q3_trigger_results["errors"].append({
                     "game_id": game_id,
                     "error": str(e),
                 })
-                logger.error(f"Error queueing Q3 trigger for {game_id}: {e}")
+                logger.error(f"Error in Q3 trigger for {game_id}: {e}")
         
         results["q3_triggers"] = q3_trigger_results
         results["errors"].extend(q3_trigger_results["errors"])
         
         if progress_callback:
             success_count = len(q3_trigger_results["successful"])
+            skipped_count = (len(q3_trigger_results["skipped_not_started"]) + 
+                           len(q3_trigger_results["skipped_not_q3"]) +
+                           len(q3_trigger_results["skipped_completed"]))
             error_count = len(q3_trigger_results["errors"])
-            progress_callback(1.0, f"✓ Q3 triggers: {success_count} games, {error_count} errors")
+            status_msg = f"✓ Q3: {success_count} generated, {skipped_count} skipped, {error_count} errors"
+            progress_callback(1.0, status_msg)
     
     except Exception as e:
         results["errors"].append({
