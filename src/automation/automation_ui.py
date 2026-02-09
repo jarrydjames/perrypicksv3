@@ -1036,7 +1036,7 @@ def run_full_day_automation(
             trigger_type="pregame",
             platforms=platforms,
             dry_run=dry_run,
-            fetch_odds=fetch_odds,
+            fetch_odds=False,  # Don't fetch odds for pregame (save API calls)
             progress_callback=lambda p, m: progress_callback(0.05 + (p * 0.20), m) if progress_callback else None,
         )
         
@@ -1067,7 +1067,7 @@ def run_full_day_automation(
             date=date,
             platforms=platforms,
             dry_run=dry_run,
-            fetch_odds=fetch_odds,
+            fetch_odds=False,  # Don't fetch odds for pregame total day view (save API calls)
             progress_callback=lambda p, m: progress_callback(0.26 + (p * 0.24), m) if progress_callback else None,
         )
         
@@ -1125,6 +1125,7 @@ def run_full_day_automation(
                                 trigger_type="halftime_retroactive",
                                 platforms=platforms,
                                 dry_run=dry_run,
+                                fetch_odds=True,  # Fetch odds for retroactive halftime predictions
                                 allow_duplicates=True,  # Allow duplicates for retroactive posts
                             )
                             
@@ -1153,6 +1154,7 @@ def run_full_day_automation(
                             trigger_type="halftime",
                             platforms=platforms,
                             dry_run=dry_run,
+                            fetch_odds=True,  # Fetch odds for halftime predictions
                         )
                         
                         if result.get("success"):
@@ -1239,6 +1241,7 @@ def run_full_day_automation(
                                 trigger_type="q3_retroactive",
                                 platforms=platforms,
                                 dry_run=dry_run,
+                                fetch_odds=True,  # Fetch odds for retroactive Q3 predictions
                                 allow_duplicates=True,  # Allow duplicates for retroactive posts
                             )
                             
@@ -1267,6 +1270,7 @@ def run_full_day_automation(
                             trigger_type="q3",
                             platforms=platforms,
                             dry_run=dry_run,
+                            fetch_odds=True,  # Fetch odds for Q3 predictions
                         )
                         
                         if result.get("success"):
