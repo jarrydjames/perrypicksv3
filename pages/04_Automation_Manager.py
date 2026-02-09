@@ -187,7 +187,7 @@ def render_dashboard():
                 st.rerun()
             else:
                 # Start it
-                start_game_state_monitor(poll_interval=30)
+                start_game_state_monitor(poll_interval_seconds=30)
                 st.success("Game monitoring started")
                 st.rerun()
     
