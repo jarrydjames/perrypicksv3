@@ -31,6 +31,8 @@ logger = logging.getLogger(__name__)
 _automation_thread = None
 _automation_stop_event = None
 _automation_monitor = None  # Keep reference to monitor for stopping
+_queue_processor = None  # Background queue processor
+_queue_processor_thread = None  # Queue processor thread
 
 # Session state keys
 SESSION_STATE_ORCHESTRATOR = "automation_orchestrator"
@@ -38,6 +40,8 @@ SESSION_STATE_PLATFORMS = "automation_platforms"
 SESSION_STATE_SCHEDULE = "automation_schedule"
 SESSION_STATE_AUTOMATION_RUNNING = "automation_running"
 SESSION_STATE_AUTOMATION_STATUS = "automation_status"
+SESSION_STATE_QUEUE_PROCESSOR_RUNNING = "queue_processor_running"
+SESSION_STATE_QUEUE_PROCESSOR_STATUS = "queue_processor_status"
 
 
 def init_session_state():
@@ -516,6 +520,118 @@ def render_automation_status():
                         st.warning(f"⚠️  {len(result['errors'])} errors")
                 else:
                     st.error("Failed to evaluate triggers")
+
+
+def render_queue_processor_status():
+    """Render queue processor status and controls.
+    
+    Shows queue processor status, statistics, and controls.
+    """
+    st.subheader("📨 Queue Processor")
+    
+    # Get status
+    status = get_queue_processor_status()
+    
+    # Status card
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if status.get("running"):
+            st.success("✅ Running")
+        else:
+            st.warning("⏸️  Stopped")
+    
+    with col2:
+        if status.get("thread_alive"):
+            st.success(f"🧵 {status.get('thread_name')}")
+        else:
+            st.info("🧵 No thread")
+    
+    with col3:
+        poll_interval = status.get("poll_interval", 0)
+        batch_size = status.get("batch_size", 0)
+        st.info(f"⏱️  {poll_interval}s / {batch_size} posts")
+    
+    # Queue statistics
+    queue_stats = status.get("queue", {})
+    col1, col2, col3, col4 = st.columns(4)
+    
+    with col1:
+        st.metric("Total", queue_stats.get("total", 0))
+    
+    with col2:
+        st.metric("Pending", queue_stats.get("pending", 0), delta_color="normal")
+    
+    with col3:
+        st.metric("Posted", queue_stats.get("posted", 0), delta_color="normal")
+    
+    with col4:
+        st.metric("Failed", queue_stats.get("failed", 0), delta_color="inverse")
+    
+    # Processor statistics
+    processor_stats = status.get("stats", {})
+    
+    if processor_stats:
+        st.subheader("📊 Processor Stats")
+        
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            st.metric("Processed", processor_stats.get("processed", 0))
+        
+        with col2:
+            st.metric("Failed Batches", processor_stats.get("failed", 0), delta_color="inverse")
+        
+        with col3:
+            last_processed = processor_stats.get("last_processed_at", "Never")
+            if last_processed != "Never":
+                try:
+                    dt = datetime.fromisoformat(last_processed)
+                    time_ago = datetime.now() - dt
+                    last_processed = format_timedelta(time_ago) + " ago"
+                except:
+                    pass
+            st.caption(f"Last processed: {last_processed}")
+    
+    # Controls
+    st.subheader("Controls")
+    
+    col1, col2, col3 = st.columns(3)
+    
+    with col1:
+        if status.get("running"):
+            if st.button("⏹️  Stop Queue Processor"):
+                result = stop_queue_processor()
+                if result["success"]:
+                    st.success(result["message"])
+                    st.rerun()
+                else:
+                    st.error(result["message"])
+        else:
+            if st.button("▶️  Start Queue Processor"):
+                result = start_queue_processor(
+                    poll_interval=15,
+                    batch_size=10,
+                )
+                if result["success"]:
+                    st.success(result["message"])
+                    st.rerun()
+                else:
+                    st.error(result["message"])
+    
+    with col2:
+        if st.button("🔄 Refresh Status"):
+            st.rerun()
+    
+    with col3:
+        if st.button("⚡ Process Now"):
+            with st.spinner("Processing queue..."):
+                result = process_queue_now(max_posts=50)
+                
+                if result["success"]:
+                    st.success(f"✓ Processed {result['processed']} posts")
+                else:
+                    st.error(f"Failed: {result.get('error', 'Unknown error')}")
 
 
 def format_timedelta(td: timedelta) -> str:
@@ -1298,6 +1414,33 @@ def run_full_day_automation(
             
             logger.info(f"Full background monitoring started for {len(game_ids)} games")
             logger.info(f"Monitoring thread started: {_automation_thread.name}")
+            
+            # Stage 6: Start Background Queue Processor
+            if progress_callback:
+                progress_callback(1.0, "Starting background queue processor...")
+            
+            logger.info("Starting background queue processor...")
+            
+            # Start queue processor
+            queue_processor_result = start_queue_processor(
+                poll_interval=15,
+                batch_size=10,
+            )
+            
+            if queue_processor_result.get("success"):
+                results["queue_processor"] = {
+                    "status": "running",
+                    "message": queue_processor_result.get("message"),
+                    "poll_interval": 15,
+                    "batch_size": 10,
+                }
+                logger.info("Background queue processor started")
+            else:
+                results["errors"].append({
+                    "stage": "queue_processor",
+                    "error": queue_processor_result.get("message", "Unknown error"),
+                })
+                logger.error("Failed to start background queue processor")
         
         except Exception as e:
             results["errors"].append({
@@ -1340,6 +1483,14 @@ def stop_automation() -> Dict[str, Any]:
                     "message": "Stopping monitoring...",
                     "last_update": datetime.now().isoformat(),
                 }
+            
+            # Stop queue processor first
+            logger.info("Stopping queue processor...")
+            queue_result = stop_queue_processor()
+            if queue_result.get("success"):
+                logger.info("Queue processor stopped")
+            else:
+                logger.warning(f"Queue processor did not stop: {queue_result.get('message')}")
             
             # Stop monitor
             if _automation_monitor is not None:
@@ -1458,6 +1609,209 @@ def force_evaluate_triggers(
             "error": f"Force evaluation failed: {e}",
         })
         logger.error(f"Error in force evaluation: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    return result
+
+
+def start_queue_processor(
+    poll_interval: int = 15,
+    batch_size: int = 10,
+) -> Dict[str, Any]:
+    """Start background queue processor.
+    
+    Args:
+        poll_interval: Seconds between queue polls
+        batch_size: Max posts to process per poll
+        
+    Returns:
+        Status dictionary
+    """
+    global _queue_processor, _queue_processor_thread
+    
+    result = {
+        "success": False,
+        "message": "",
+        "running": False,
+    }
+    
+    try:
+        # Check if already running
+        if _queue_processor and _queue_processor.running:
+            result["message"] = "Queue processor already running"
+            result["running"] = True
+            return result
+        
+        # Import here to avoid circular imports
+        from src.automation.background_queue_processor import BackgroundQueueProcessor
+        from src.automation.social_media_manager import SocialMediaManager
+        
+        # Get social manager
+        social_manager = None
+        orchestrator = get_orchestrator()
+        if orchestrator and orchestrator.social_manager:
+            social_manager = orchestrator.social_manager
+        
+        # Initialize queue processor
+        _queue_processor = BackgroundQueueProcessor(
+            poll_interval=poll_interval,
+            batch_size=batch_size,
+            social_manager=social_manager,
+        )
+        
+        # Start queue processor
+        success = _queue_processor.start()
+        
+        if success:
+            # Update session state
+            st.session_state[SESSION_STATE_QUEUE_PROCESSOR_RUNNING] = True
+            st.session_state[SESSION_STATE_QUEUE_PROCESSOR_STATUS] = {
+                "status": "running",
+                "message": "Queue processor is running",
+                "last_update": datetime.now().isoformat(),
+            }
+            
+            result["success"] = True
+            result["message"] = "Queue processor started successfully"
+            result["running"] = True
+            
+            logger.info("Background Queue Processor started")
+        else:
+            result["message"] = "Failed to start queue processor"
+            result["running"] = False
+            logger.error("Failed to start Background Queue Processor")
+    
+    except Exception as e:
+        result["message"] = f"Error starting queue processor: {e}"
+        result["running"] = False
+        logger.error(f"Error in start_queue_processor: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    return result
+
+
+def stop_queue_processor() -> Dict[str, Any]:
+    """Stop background queue processor.
+    
+    Returns:
+        Status dictionary
+    """
+    global _queue_processor
+    
+    result = {
+        "success": False,
+        "message": "",
+        "stopped": False,
+    }
+    
+    try:
+        if not _queue_processor or not _queue_processor.running:
+            result["message"] = "Queue processor not running"
+            result["stopped"] = True
+            return result
+        
+        # Stop queue processor
+        stopped = _queue_processor.stop(timeout=10)
+        
+        if stopped:
+            # Update session state
+            st.session_state[SESSION_STATE_QUEUE_PROCESSOR_RUNNING] = False
+            st.session_state[SESSION_STATE_QUEUE_PROCESSOR_STATUS] = {
+                "status": "stopped",
+                "message": "Queue processor stopped",
+                "last_update": datetime.now().isoformat(),
+            }
+            
+            result["success"] = True
+            result["message"] = "Queue processor stopped successfully"
+            result["stopped"] = True
+            
+            logger.info("Background Queue Processor stopped")
+        else:
+            result["message"] = "Queue processor did not stop gracefully"
+            result["stopped"] = False
+            logger.warning("Queue processor did not stop gracefully")
+    
+    except Exception as e:
+        result["message"] = f"Error stopping queue processor: {e}"
+        result["stopped"] = False
+        logger.error(f"Error in stop_queue_processor: {e}")
+        import traceback
+        traceback.print_exc()
+    
+    return result
+
+
+def get_queue_processor_status() -> Dict[str, Any]:
+    """Get queue processor status.
+    
+    Returns:
+        Status dictionary
+    """
+    global _queue_processor
+    
+    if not _queue_processor:
+        return {
+            "running": False,
+            "initialized": False,
+            "status": st.session_state.get(SESSION_STATE_QUEUE_PROCESSOR_STATUS, {}),
+        }
+    
+    # Get detailed status
+    status = _queue_processor.get_status()
+    
+    return {
+        "running": status.get("running", False),
+        "thread_alive": status.get("thread_alive", False),
+        "thread_name": status.get("thread_name"),
+        "poll_interval": status.get("poll_interval"),
+        "batch_size": status.get("batch_size"),
+        "stats": status.get("stats", {}),
+        "queue": status.get("queue", {}),
+        "status": st.session_state.get(SESSION_STATE_QUEUE_PROCESSOR_STATUS, {}),
+    }
+
+
+def process_queue_now(max_posts: int = None) -> Dict[str, Any]:
+    """Process queue immediately (one-off).
+    
+    Args:
+        max_posts: Max posts to process
+        
+    Returns:
+        Processing results
+    """
+    global _queue_processor
+    
+    result = {
+        "success": False,
+        "processed": 0,
+        "error": None,
+    }
+    
+    try:
+        if not _queue_processor:
+            result["error"] = "Queue processor not initialized"
+            return result
+        
+        # Process queue
+        status = _queue_processor.process_now(max_posts=max_posts)
+        
+        if status.get("success"):
+            processed = status.get("processed_predictions", 0)
+            result["success"] = True
+            result["processed"] = processed
+            
+            logger.info(f"Queue processed: {processed} posts")
+        else:
+            result["error"] = status.get("error", "Unknown error")
+            logger.error(f"Failed to process queue: {result['error']}")
+    
+    except Exception as e:
+        result["error"] = str(e)
+        logger.error(f"Error processing queue: {e}")
         import traceback
         traceback.print_exc()
     
