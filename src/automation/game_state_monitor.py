@@ -109,17 +109,32 @@ class GameStateMonitor:
                 # Calculate scores from periods
                 home_score, away_score = self._calculate_scores(game_data)
                 
+                # Detect halftime BEFORE normalizing status
+                # Halftime = after Q2 ends, before Q3 starts
+                # Check: Game has 2 periods with scores, not yet in Q3
+                home_periods = len(game_data.get("homeTeam", {}).get("periods", []))
+                away_periods = len(game_data.get("awayTeam", {}).get("periods", []))
+                
+                is_halftime = (
+                    home_periods >= 2 and      # Q2 completed
+                    away_periods >= 2 and      # Q2 completed
+                    period <= 2 and            # Not in Q3 yet
+                    game_status in (1, 2)     # Game is live (Q1 or Q2)
+                )
+                
                 # Normalize status
-                if game_status == 3:  # Final
+                if is_halftime:
+                    status = "halftime"
+                elif game_status >= 6:  # Final (gameStatus 6 = Final, per automation_ui.py)
                     status = "finished"
                 elif period > 0:
                     status = "live"
                 else:
                     status = "scheduled"
                 
-                # Detect halftime
-                if period == 2 and time_remaining == "0:00":
-                    status = "halftime"
+                # Log for debugging
+                if is_halftime:
+                    logger.info(f"HALFTIME DETECTED: {game_id} (periods: {home_periods}/{away_periods}, gameStatus: {game_status})")
                 
                 # Create game state
                 game_state = GameState(
