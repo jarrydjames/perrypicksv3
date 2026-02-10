@@ -387,7 +387,6 @@ def render_dashboard():
             for game_id, state in monitored_states.items():
                 # Calculate seconds since last refresh
                 try:
-                    from datetime import datetime
                     last_update = datetime.fromisoformat(state.get("last_updated", ""))
                     seconds_ago = (datetime.now() - last_update).total_seconds()
                     refresh_times[game_id] = int(seconds_ago)
@@ -447,11 +446,9 @@ def render_dashboard():
     # Parse created_at_utc for sorting (ISO 8601 string)
     def parse_created_at(post):
         try:
-            from datetime import datetime
             return datetime.fromisoformat(post.created_at_utc.replace("Z", "+00:00"))
         except (ValueError, AttributeError):
             # Return old date for posts that fail to parse (they'll sort to end)
-            from datetime import datetime
             return datetime.min
     
     recent_posts = sorted(
@@ -1380,11 +1377,9 @@ def render_history():
     # Parse created_at_utc for sorting (ISO 8601 string)
     def parse_created_at(post):
         try:
-            from datetime import datetime
             return datetime.fromisoformat(post.created_at_utc.replace("Z", "+00:00"))
         except (ValueError, AttributeError):
             # Return old date for posts that fail to parse (they'll sort to end)
-            from datetime import datetime
             return datetime.min
     
     posted_posts = sorted(
@@ -1400,7 +1395,6 @@ def render_history():
     for i, post in enumerate(posted_posts[:50]):
         # Format created_at_utc for display
         try:
-            from datetime import datetime
             created_dt = datetime.fromisoformat(post.created_at_utc.replace("Z", "+00:00"))
             created_str = created_dt.strftime('%Y-%m-%d %H:%M')
         except (ValueError, AttributeError):
@@ -1610,7 +1604,6 @@ def render_game_state_monitor():
         if "status" in automation_status:
             status_data = automation_status["status"]
             if "last_update" in status_data and status_data["last_update"]:
-                from datetime import datetime
                 try:
                     last_update = datetime.fromisoformat(status_data["last_update"])
                     time_ago = (datetime.now() - last_update).total_seconds()
@@ -1649,7 +1642,6 @@ def render_game_state_monitor():
         st.caption(f"Posts processed: {processed}")
         
         if "last_processed_at" in stats and stats["last_processed_at"]:
-            from datetime import datetime
             try:
                 last_processed = datetime.fromisoformat(stats["last_processed_at"])
                 time_ago = (datetime.now() - last_processed).total_seconds()
