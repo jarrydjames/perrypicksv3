@@ -247,6 +247,10 @@ def render_dashboard():
         else:
             st.caption("Thread: Inactive")
         
+        # Debug info
+        with st.expander("🔍 Debug Info"):
+            st.json(automation_status)
+        
         # Add quick toggle
         if st.button("🔘 Toggle Game Monitoring", key="dashboard_toggle_game_monitor"):
             if automation_status.get("running"):
