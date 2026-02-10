@@ -1626,6 +1626,75 @@ def get_monitored_games() -> Dict[str, Any]:
         return {}
 
 
+def test_game_state_service_import() -> Dict[str, Any]:
+    """Test GameStateService import and initialization.
+    
+    This is a diagnostic function to help troubleshoot startup issues.
+    
+    Returns:
+        Dictionary with test results
+    """
+    result = {
+        "success": False,
+        "message": "",
+        "steps": [],
+    }
+    
+    # Step 1: Import test
+    try:
+        from src.automation.game_state_service import GameStateService
+        result["steps"].append({"step": "import", "status": "success"})
+    except Exception as e:
+        result["steps"].append({"step": "import", "status": "error", "error": str(e)})
+        result["message"] = f"Import failed: {e}"
+        result["success"] = False
+        return result
+    
+    # Step 2: Instantiation test
+    try:
+        service = GameStateService(
+            poll_interval_seconds=30,
+            platforms=None,
+            dry_run=True,  # Use dry run for testing
+        )
+        result["steps"].append({"step": "instantiate", "status": "success"})
+    except Exception as e:
+        result["steps"].append({"step": "instantiate", "status": "error", "error": str(e)})
+        result["message"] = f"Instantiation failed: {e}"
+        result["success"] = False
+        return result
+    
+    # Step 3: Attributes check
+    try:
+        has_monitor = hasattr(service, 'game_monitor')
+        has_trigger = hasattr(service, 'trigger_engine')
+        has_queue = hasattr(service, 'queue_processor')
+        result["steps"].append({
+            "step": "attributes",
+            "status": "success",
+            "has_game_monitor": has_monitor,
+            "has_trigger_engine": has_trigger,
+            "has_queue_processor": has_queue,
+        })
+    except Exception as e:
+        result["steps"].append({"step": "attributes", "status": "error", "error": str(e)})
+        result["message"] = f"Attributes check failed: {e}"
+        result["success"] = False
+        return result
+    
+    # Cleanup - don't actually start the service
+    try:
+        if hasattr(service, 'stop'):
+            service.stop()
+        result["steps"].append({"step": "cleanup", "status": "success"})
+    except Exception as e:
+        result["steps"].append({"step": "cleanup", "status": "warning", "error": str(e)})
+    
+    result["success"] = True
+    result["message"] = "GameStateService is ready to use"
+    return result
+
+
 def start_game_state_monitor(
     poll_interval_seconds: int = 30,
 ) -> Dict[str, Any]:
@@ -1740,6 +1809,15 @@ def start_game_state_monitor(
             )
             _automation_thread.start()
             logger.info(f"Successfully started background thread: {_automation_thread.name}")
+            
+            # Small delay to ensure thread has started before we continue
+            import time
+            time.sleep(0.1)
+            
+            # Verify thread is alive
+            if not _automation_thread.is_alive():
+                raise RuntimeError("Thread failed to start or died immediately")
+            
         except Exception as e:
             result["message"] = f"Failed to start background thread: {e}"
             logger.error(f"Failed to start background thread: {e}")

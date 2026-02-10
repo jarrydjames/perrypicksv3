@@ -62,6 +62,7 @@ from src.automation.automation_ui import (
     get_automation_status,
     get_queue_processor_status,
     get_monitored_games,
+    test_game_state_service_import,
     start_queue_processor,
     stop_queue_processor,
     start_game_state_monitor,
@@ -251,6 +252,34 @@ def render_dashboard():
         # Debug info
         with st.expander("🔍 Debug Info"):
             st.json(automation_status)
+        
+        # Diagnostic button
+        if st.button("🧪 Test GameStateService", key="test_gamestate_service"):
+            with st.spinner("Testing GameStateService import and initialization..."):
+                result = test_game_state_service_import()
+                
+                st.markdown("### Test Results")
+                
+                if result.get("success"):
+                    st.success(f"✅ {result.get('message')}")
+                else:
+                    st.error(f"❌ {result.get('message')}")
+                
+                st.markdown("### Test Steps")
+                for step in result.get("steps", []):
+                    step_name = step.get("step")
+                    status = step.get("status")
+                    
+                    if status == "success":
+                        st.success(f"✅ {step_name}")
+                    elif status == "error":
+                        st.error(f"❌ {step_name}: {step.get('error')}")
+                    elif status == "warning":
+                        st.warning(f"⚠️ {step_name}: {step.get('error')}")
+                    
+                    # Show attributes details
+                    if step_name == "attributes":
+                        st.json(step)
         
         # Add quick toggle
         if st.button("🔘 Toggle Game Monitoring", key="dashboard_toggle_game_monitor"):
