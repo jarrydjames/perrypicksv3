@@ -158,6 +158,10 @@ def render_dashboard():
     
     # Service Status (NEW)
     st.markdown("### 🚦 Service Status")
+    st.info(
+        "**Single Point of Control** - Use these toggles to start/stop game monitoring and queue processing services. "
+        "No other controls exist in other tabs."
+    )
     col1, col2 = st.columns(2)
     
     with col1:
@@ -222,10 +226,41 @@ def render_dashboard():
                 st.success("Queue processing stopped")
                 st.rerun()
             else:
-                # Start it
-                start_queue_processor(poll_interval=15, batch_size=10)
+                # Start it with current configuration
+                poll_interval = st.session_state.get("queue_poll_interval", 15)
+                batch_size = st.session_state.get("queue_batch_size", 10)
+                start_queue_processor(poll_interval=poll_interval, batch_size=batch_size)
                 st.success("Queue processing started")
                 st.rerun()
+    
+    st.markdown("---")
+    
+    # Queue Configuration
+    st.markdown("### ⚙️ Queue Configuration")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        poll_interval = st.number_input(
+            "Poll Interval (seconds)",
+            value=st.session_state.get("queue_poll_interval", 15),
+            min_value=5,
+            max_value=300,
+            step=5,
+            key="queue_poll_interval",
+            help="How often to check queue for pending posts (default: 15s)",
+        )
+    
+    with col2:
+        batch_size = st.number_input(
+            "Batch Size",
+            value=st.session_state.get("queue_batch_size", 10),
+            min_value=1,
+            max_value=100,
+            step=1,
+            key="queue_batch_size",
+            help="Maximum posts to process per poll (default: 10)",
+        )
     
     st.markdown("---")
     
@@ -1520,147 +1555,24 @@ def render_game_state_monitor():
     
     st.markdown("---")
     
-    # Automated Queue Processing Toggle
-    st.markdown("### 🎛️ Automated Queue Processing")
+    # One-off queue processing
+    st.markdown("### ⚡ Manual Queue Processing")
+    st.info(
+        "**Use the Dashboard tab** to start/stop game monitoring and queue processing services. "
+        "Use the button below to manually process the queue now (one-time action)."
+    )
     
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Toggle switch
-        st.markdown("#### ⚡ Queue Processor Control")
-        
-        # Get current status
-        queue_status = get_queue_processor_status()
-        is_running = queue_status.get("running", False)
-        
-        # Toggle switch
-        auto_queue = st.toggle(
-            "🤖 Enable Automated Queue Processing",
-            value=is_running,
-            key="auto_queue_toggle",
-            help="When enabled, queue processor runs continuously in the background",
-        )
-        
-        # Check if state changed and take action
-        if "auto_queue_enabled_prev" not in st.session_state:
-            st.session_state["auto_queue_enabled_prev"] = is_running
-        
-        if auto_queue != st.session_state["auto_queue_enabled_prev"]:
-            # State changed, update
-            st.session_state["auto_queue_enabled_prev"] = auto_queue
+    if st.button("🔄 Process Queue Now", use_container_width=True, key="game_state_process_now"):
+        with st.spinner("Processing queue..."):
+            result = process_queue(max_posts=50)
             
-            # Take action
-            if auto_queue:
-                # Enable
-                with st.spinner("Starting queue processor..."):
-                    result = start_queue_processor(
-                        poll_interval=st.session_state.get("queue_poll_interval", 15),
-                        batch_size=st.session_state.get("queue_batch_size", 10),
-                    )
-                    
-                    if result.get("success"):
-                        st.success(result.get("message"))
-                        st.rerun()
-                    else:
-                        st.error(result.get("message"))
-                        st.session_state["auto_queue_enabled_prev"] = False
+            processed = result.get('processed', 0)
+            successful = result.get('successful', 0)
+            
+            if processed > 0:
+                st.success(f"✅ Processed {processed} post(s)! ({successful} successful)")
             else:
-                # Disable
-                with st.spinner("Stopping queue processor..."):
-                    result = stop_queue_processor()
-                    
-                    if result.get("success"):
-                        st.success(result.get("message"))
-                        st.rerun()
-                    else:
-                        st.error(result.get("message"))
-                        st.session_state["auto_queue_enabled_prev"] = True
-        
-        # Show config if enabled
-        if auto_queue:
-            st.success("✅ Automated queue processing is **ENABLED**")
-            st.caption("Queue will be processed every 15 seconds automatically")
-        else:
-            st.warning("⏸️  Automated queue processing is **DISABLED**")
-            st.caption("Queue processing is manual - use 'Process Queue' button")
-    
-    with col2:
-        # Configuration
-        st.markdown("#### ⚙️ Configuration")
-        
-        poll_interval = st.number_input(
-            "Poll Interval (seconds)",
-            value=15,
-            min_value=5,
-            max_value=300,
-            step=5,
-            key="queue_poll_interval",
-            help="How often to check queue for pending posts (default: 15s)",
-        )
-        
-        batch_size = st.number_input(
-            "Batch Size",
-            value=10,
-            min_value=1,
-            max_value=100,
-            step=1,
-            key="queue_batch_size",
-            help="Maximum posts to process per poll (default: 10)",
-        )
-        
-        # Apply configuration button
-        if st.button("⚙️ Apply Configuration", use_container_width=True, key="manual_apply_config"):
-            # Apply configuration (in production, this would save to config)
-            st.success("Configuration applied!")
-            st.rerun()
-    
-    st.markdown("---")
-    
-    # Manual controls
-    st.markdown("### 🎛️ Manual Controls")
-    
-    col1, col2, col3 = st.columns(3)
-    
-    with col1:
-        # Start Queue Processor
-        if st.button("▶️ Start Queue Processor", use_container_width=True, type="primary", key="manual_start_queue"):
-            with st.spinner("Starting queue processor..."):
-                result = start_queue_processor(
-                    poll_interval=st.session_state.get("queue_poll_interval", 15),
-                    batch_size=st.session_state.get("queue_batch_size", 10),
-                )
-                
-                if result.get("success"):
-                    st.success(result.get("message"))
-                    st.rerun()
-                else:
-                    st.error(result.get("message"))
-    
-    with col2:
-        # Stop Queue Processor
-        if st.button("⏹️ Stop Queue Processor", use_container_width=True, key="manual_stop_queue"):
-            with st.spinner("Stopping queue processor..."):
-                result = stop_queue_processor()
-                
-                if result.get("success"):
-                    st.success(result.get("message"))
-                    st.rerun()
-                else:
-                    st.error(result.get("message"))
-    
-    with col3:
-        # Process Queue Now (one-off)
-        if st.button("⚡ Process Queue Now", use_container_width=True, key="manual_process_now"):
-            with st.spinner("Processing queue..."):
-                result = process_queue(max_posts=50)
-                
-                processed = result.get("processed_predictions", 0)
-                successful = result.get("successful", 0)
-                
-                if processed > 0 or successful > 0:
-                    st.success(f"✓ Processed {processed} post(s)")
-                else:
-                    st.info("No pending posts to process")
+                st.info("ℹ️ No pending posts to process")
     
     st.markdown("---")
     
@@ -1682,12 +1594,16 @@ def render_game_state_monitor():
     # Instructions
     with st.expander("📖 How It Works", expanded=False):
         st.markdown(
-            """**Game State Monitoring Flow:**\n\n"
+            """**Service Control:**\n\n"
+            "• Use the **Dashboard tab** to start/stop game monitoring and queue processing services\n"
+            "• Each service has its own toggle button for independent control\n"
+            "• Configure queue processing settings (poll interval, batch size) in Dashboard\n\n\n"
+            "**Game State Monitoring Flow:**\n\n"
             "1. **Service starts** - Polls NBA API every 30 seconds\n"
             "2. **Game tracking** - Monitors period and time for all active games\n"
             "3. **Halftime trigger** - When game reaches end of Q2, generates halftime prediction\n"
             "4. **Q3 trigger** - When game reaches 5 minutes left in Q3, generates Q3 prediction\n"
-            "5. **Auto-process** - Automatically processes queue to post to Discord\n"
+            "5. **Queue processor** - Polls queue periodically and posts to platforms\n"
             "6. **Repeat** - Continues monitoring until games finish or service stops\n\n\n"
             "**Trigger Logic:**\n"
             "• **Halftime**: period=2 AND time_remaining=0:00\n"
