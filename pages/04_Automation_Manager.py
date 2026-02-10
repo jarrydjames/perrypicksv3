@@ -874,6 +874,7 @@ def render_manual_predictions():
                         platforms=platforms if platforms else None,
                         dry_run=dry_run,
                         fetch_odds=fetch_odds,
+                        allow_duplicates=allow_duplicates,
                         progress_callback=progress_callback,
                     )
                     
@@ -1057,6 +1058,7 @@ def render_manual_predictions():
                         game_id=selected_game_id,
                         platforms=platforms if platforms else None,
                         dry_run=dry_run,
+                        allow_duplicates=allow_duplicates,
                     )
                     
                     st.markdown("### Results")

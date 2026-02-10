@@ -971,6 +971,7 @@ def run_full_day_automation(
     dry_run: bool = False,
     fetch_odds: bool = True,
     allow_retroactive: bool = False,
+    allow_duplicates: bool = False,
     enable_background_monitoring: bool = False,
     rate_limit_delay: float = 1.0,
     progress_callback=None,
@@ -991,10 +992,11 @@ def run_full_day_automation(
         dry_run: If True, don't actually post
         fetch_odds: If True, fetch odds from API (default True). Set False for testing.
         allow_retroactive: If True, generate halftime/Q3 predictions for completed games
+        allow_duplicates: If True, bypass duplicate detection (can be combined with allow_retroactive)
         enable_background_monitoring: If True, start background monitoring for real-time triggers
         rate_limit_delay: Seconds to wait between API calls (default 1.0s)
         progress_callback: Optional callback(progress, message) for UI updates
-    
+    """
     Returns:
         Comprehensive results dictionary with all automation results
     """
@@ -1037,6 +1039,7 @@ def run_full_day_automation(
             platforms=platforms,
             dry_run=dry_run,
             fetch_odds=False,  # Don't fetch odds for pregame (save API calls)
+            allow_duplicates=allow_duplicates,
             progress_callback=lambda p, m: progress_callback(0.05 + (p * 0.20), m) if progress_callback else None,
         )
         
@@ -1116,10 +1119,10 @@ def run_full_day_automation(
                     period = game_data.get("period", 0)
                     
                     # gameStatus: 0=not started, 1=Q1, 2=Q2, 3=Q3, 4=Q4, 5=OT, 6=Final
-                    # Skip if game already completed (unless retroactive is enabled)
+                    # Skip if game already completed (unless retroactive is enabled or duplicates allowed)
                     if game_status >= 6:  # Final
-                        if allow_retroactive:
-                            # Retroactive mode - generate prediction anyway
+                        if allow_retroactive or allow_duplicates:
+                            # Retroactive mode or duplicate override - generate prediction anyway
                             result = run_prediction(
                                 game_id=game_id,
                                 trigger_type="halftime_retroactive",
@@ -1232,10 +1235,10 @@ def run_full_day_automation(
                     period = game_data.get("period", 0)
                     
                     # gameStatus: 0=not started, 1=Q1, 2=Q2, 3=Q3, 4=Q4, 5=OT, 6=Final
-                    # Skip if game already completed (unless retroactive is enabled)
+                    # Skip if game already completed (unless retroactive is enabled or duplicates allowed)
                     if game_status >= 6:  # Final
-                        if allow_retroactive:
-                            # Retroactive mode - generate prediction anyway
+                        if allow_retroactive or allow_duplicates:
+                            # Retroactive mode or duplicate override - generate prediction anyway
                             result = run_prediction(
                                 game_id=game_id,
                                 trigger_type="q3_retroactive",

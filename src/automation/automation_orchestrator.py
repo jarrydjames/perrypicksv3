@@ -120,8 +120,8 @@ class AutomationOrchestrator:
                 if progress_callback:
                     progress_callback(progress, message)
                 
-                # Check if already processed
-                if self._is_prediction_processed(game_id, trigger_type):
+                # Check if already processed (unless allow_duplicates is True)
+                if not allow_duplicates and self._is_prediction_processed(game_id, trigger_type):
                     logger.info(f"Skipping already processed: {game_id} {trigger_type}")
                     results["skipped"] += 1
                     if progress_callback:
