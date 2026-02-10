@@ -307,30 +307,14 @@ class GameStateMonitor:
         
         return state.status == "halftime"
     
-    def is_q3_five_minutes_left(self, game_id: str) -> bool:
-        """Check if game has 5 minutes left in Q3.
-        
-        Args:
-            game_id: Game ID to check
-            
-        Returns:
-            True if 5 minutes left in Q3
-        """
+    def is_q3_trigger(self, game_id: str) -> bool:
+        """Check if game has reached the Q3 trigger point."""
         state = self.get_game_state(game_id)
         if not state:
             return False
-        
-        # Check if in Q3 with ~5 minutes left
-        if state.period == 3:
-            # Parse time remaining (e.g., "5:32", "5:00", "4:58")
-            try:
-                time_parts = state.time_remaining.split(":")
-                if len(time_parts) >= 2:
-                    minutes = int(time_parts[0])
-                    seconds = int(time_parts[1])
-                    # Check if around 5 minutes (allow 30s window)
-                    return 4 * 60 + 30 <= (minutes * 60 + seconds) <= 5 * 60 + 30
-            except (ValueError, IndexError):
-                pass
-        
-        return False
+
+        return state.period >= 3 and state.status in ("live", "halftime")
+
+    def is_q3_five_minutes_left(self, game_id: str) -> bool:
+        """Backward-compatible alias for Q3 trigger detection."""
+        return self.is_q3_trigger(game_id)

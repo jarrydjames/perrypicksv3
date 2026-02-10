@@ -204,6 +204,8 @@ class SocialMediaManager:
                 "successful": 0,
                 "failed": 0,
                 "message": "No pending posts",
+                "success": True,
+                "posts": [],
             }
         
         results = {
@@ -264,7 +266,8 @@ class SocialMediaManager:
             
             # Small delay between posts
             time.sleep(2)
-        
+
+        results["success"] = results["failed"] == 0
         return results
     
     def _post_to_platform(
