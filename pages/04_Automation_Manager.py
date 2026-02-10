@@ -162,6 +162,70 @@ def render_dashboard():
         "**Single Point of Control** - Use these toggles to start/stop game monitoring and queue processing services. "
         "No other controls exist in other tabs."
     )
+    
+    # Master Toggle for both services
+    st.markdown("### 🎛️ Master Control")
+    automation_status = get_automation_status()
+    queue_status = get_queue_processor_status()
+    
+    game_monitoring_running = automation_status.get("running", False)
+    queue_processing_running = queue_status.get("running", False)
+    both_running = game_monitoring_running and queue_processing_running
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        if st.button("🚀 Start All Services", use_container_width=True, disabled=both_running):
+            with st.spinner("Starting all services..."):
+                results = []
+                
+                # Start game monitoring
+                if not game_monitoring_running:
+                    result = start_game_state_monitor(poll_interval_seconds=30)
+                    results.append(("Game Monitoring", result))
+                
+                # Start queue processing
+                if not queue_processing_running:
+                    poll_interval = st.session_state.get("queue_poll_interval", 15)
+                    batch_size = st.session_state.get("queue_batch_size", 10)
+                    result = start_queue_processor(poll_interval=poll_interval, batch_size=batch_size)
+                    results.append(("Queue Processing", result))
+                
+                # Show results
+                for service, result in results:
+                    if result.get("success"):
+                        st.success(f"✅ {service}: {result.get('message', 'Started')}")
+                    else:
+                        st.error(f"❌ {service}: {result.get('message', 'Failed to start')}")
+                
+                st.rerun()
+    
+    with col2:
+        if st.button("🛑 Stop All Services", use_container_width=True, disabled=not both_running):
+            with st.spinner("Stopping all services..."):
+                results = []
+                
+                # Stop game monitoring
+                if game_monitoring_running:
+                    result = stop_automation()
+                    results.append(("Game Monitoring", result))
+                
+                # Stop queue processing
+                if queue_processing_running:
+                    result = stop_queue_processor()
+                    results.append(("Queue Processing", result))
+                
+                # Show results
+                for service, result in results:
+                    if result.get("success"):
+                        st.success(f"✅ {service}: {result.get('message', 'Stopped')}")
+                    else:
+                        st.error(f"❌ {service}: {result.get('message', 'Failed to stop')}")
+                
+                st.rerun()
+    
+    st.markdown("---")
+    
     col1, col2 = st.columns(2)
     
     with col1:
