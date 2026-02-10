@@ -1562,13 +1562,53 @@ def get_automation_status() -> Dict[str, Any]:
     }
 
 
+def get_monitored_games() -> Dict[str, Any]:
+    """Get currently monitored game states.
+    
+    Returns:
+        Dictionary with game_id -> game_state mapping
+    """
+    global _automation_monitor
+    
+    try:
+        if _automation_monitor is None:
+            return {}
+        
+        # Get game states from monitor
+        # Works with both GameStateMonitor and GameStateService
+        if hasattr(_automation_monitor, 'game_monitor'):
+            # GameStateService - get from game_monitor attribute
+            states = _automation_monitor.game_monitor.get_all_states()
+        elif hasattr(_automation_monitor, 'get_all_states'):
+            # GameStateMonitor - direct call
+            states = _automation_monitor.get_all_states()
+        else:
+            logger.warning(f"_automation_monitor type: {type(_automation_monitor)} - no get_all_states method")
+            states = {}
+        
+        # Convert to serializable dict
+        result = {}
+        for game_id, state in states.items():
+            result[game_id] = state.to_dict()
+        
+        return result
+    
+    except Exception as e:
+        logger.error(f"Error getting monitored games: {e}")
+        return {}
+
+
 def start_game_state_monitor(
     poll_interval_seconds: int = 30,
 ) -> Dict[str, Any]:
-    """Start game state monitor in background thread.
+    """Start game state service in background thread.
     
-    This is a simpler function that starts just the game state monitor
-    for dashboard toggle control, without the full automation workflow.
+    This starts the full GameStateService which includes:
+    - Game State Monitor (tracks live games)
+    - Trigger Engine (evaluates halftime/Q3 triggers)
+    - Auto Queue Processor (posts predictions automatically)
+    
+    This is the main service for dashboard toggle control.
     
     Args:
         poll_interval_seconds: How often to poll for game updates
@@ -1592,33 +1632,37 @@ def start_game_state_monitor(
             logger.warning("Game state monitor is already running")
             return result
         
-        logger.info("Starting game state monitor...")
+        logger.info("Starting game state service...")
         
         # Import required classes
-        from src.automation.game_state_monitor import GameStateMonitor
+        from src.automation.game_state_service import GameStateService
         
-        # Initialize monitor
-        monitor = GameStateMonitor(poll_interval_seconds=poll_interval_seconds)
+        # Initialize GameStateService (includes monitor, trigger engine, and queue processor)
+        service = GameStateService(
+            poll_interval_seconds=poll_interval_seconds,
+            platforms=None,  # Post to all enabled platforms
+            dry_run=False,  # Actually post (not test mode)
+        )
         
-        # Store monitor globally so we can stop it later
-        _automation_monitor = monitor
+        # Store service globally so we can stop it later
+        _automation_monitor = service
         
         # Start monitoring in background thread
         def monitor_loop():
             """Background monitoring loop."""
             try:
-                logger.info("Starting game state monitoring loop...")
+                logger.info("Starting game state service loop...")
                 st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
                     "status": "running",
-                    "message": "Monitoring games for halftime/Q3 triggers...",
+                    "message": "Monitoring games for halftime/Q3 triggers and processing queue automatically...",
                     "last_update": datetime.now().isoformat(),
                 }
                 
-                # Run monitoring loop
-                monitor.start()
+                # Run service loop (includes monitor, triggers, and queue processing)
+                service.start()
             
             except Exception as e:
-                logger.error(f"Error in game state monitoring loop: {e}")
+                logger.error(f"Error in game state service loop: {e}")
                 st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
                     "status": "error",
                     "message": str(e),
@@ -1628,7 +1672,7 @@ def start_game_state_monitor(
                 traceback.print_exc()
             finally:
                 st.session_state[SESSION_STATE_AUTOMATION_RUNNING] = False
-                logger.info("Game state monitoring loop stopped")
+                logger.info("Game state service loop stopped")
         
         # Start monitoring in background thread
         
@@ -1636,7 +1680,7 @@ def start_game_state_monitor(
         if _automation_thread and _automation_thread.is_alive():
             logger.info("Stopping existing automation thread...")
             if _automation_monitor is not None:
-                logger.info(f"Stopping monitor (running={_automation_monitor.running})...")
+                logger.info(f"Stopping service (running={_automation_monitor.running})...")
                 _automation_monitor.stop()
             _automation_thread.join(timeout=5)
         
@@ -1647,7 +1691,7 @@ def start_game_state_monitor(
         _automation_thread = threading.Thread(
             target=monitor_loop,
             daemon=True,
-            name="GameStateMonitor"
+            name="GameStateService"
         )
         _automation_thread.start()
         
@@ -1657,22 +1701,22 @@ def start_game_state_monitor(
         # Update status
         st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
             "status": "running",
-            "message": f"Game state monitor started. Polling every {poll_interval_seconds}s.",
+            "message": f"Game state service started. Polling every {poll_interval_seconds}s. Triggers: halftime, Q3-5min.",
             "last_update": datetime.now().isoformat(),
         }
         
         result["success"] = True
-        result["message"] = f"Game state monitor started successfully (polling every {poll_interval_seconds}s)"
+        result["message"] = f"Game state service started (monitoring, triggers, queue processing) - polling every {poll_interval_seconds}s"
         result["running"] = True
         result["thread_alive"] = _automation_thread.is_alive()
         result["thread_name"] = _automation_thread.name
         
-        logger.info(f"Game state monitor started successfully")
+        logger.info(f"Game state service started successfully")
         logger.info(f"Monitoring thread started: {_automation_thread.name}")
     
     except Exception as e:
-        result["message"] = f"Error starting game state monitor: {e}"
-        logger.error(f"Error starting game state monitor: {e}")
+        result["message"] = f"Error starting game state service: {e}"
+        logger.error(f"Error starting game state service: {e}")
         import traceback
         traceback.print_exc()
     

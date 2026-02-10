@@ -60,6 +60,7 @@ from src.automation.automation_ui import (
     # Automation status functions
     get_automation_status,
     get_queue_processor_status,
+    get_monitored_games,
     start_queue_processor,
     stop_queue_processor,
     start_game_state_monitor,
@@ -374,20 +375,65 @@ def render_dashboard():
     if not games:
         st.info(f"No games scheduled for {selected_date}")
     else:
+        # Check if game state monitor is running
+        automation_status = get_automation_status()
+        monitor_running = automation_status.get("running", False)
+        
+        # Get real-time game states if monitor is running
+        monitored_states = {}
+        refresh_times = {}
+        if monitor_running:
+            monitored_states = get_monitored_games()
+            for game_id, state in monitored_states.items():
+                # Calculate seconds since last refresh
+                try:
+                    from datetime import datetime
+                    last_update = datetime.fromisoformat(state.get("last_updated", ""))
+                    seconds_ago = (datetime.now() - last_update).total_seconds()
+                    refresh_times[game_id] = int(seconds_ago)
+                except:
+                    refresh_times[game_id] = -1
+        
         # Display games in a table
         game_data = []
         for game in games:
+            game_id = str(game.game_id)
+            
+            # Use real-time data if available
+            if game_id in monitored_states:
+                state = monitored_states[game_id]
+                display_period = state.get("period", "-")
+                display_clock = state.get("time_remaining", "-")
+                display_status = state.get("status", game.status_text or "Scheduled")
+                display_score = f"{state.get('away_score', 0)}-{state.get('home_score', 0)}"
+                seconds_ago = refresh_times.get(game_id, -1)
+                display_refresh = f"{seconds_ago}s ago" if seconds_ago >= 0 else "-"
+            else:
+                display_period = game.period or "-"
+                display_clock = game.clock or "-"
+                display_status = game.status_text or "Scheduled"
+                display_score = f"{game.away_score}-{game.home_score}" if game.away_score is not None and game.home_score is not None else "-"
+                display_refresh = "N/A"
+            
             game_data.append({
-                "Game ID": game.game_id,
+                "Game ID": game_id,
                 "Matchup": format_game_label(game),
-                "Status": game.status_text or "Scheduled",
-                "Period": game.period or "-",
-                "Clock": game.clock or "-",
-                "Score": f"{game.away_score}-{game.home_score}" if game.away_score is not None and game.home_score is not None else "-",
+                "Status": display_status,
+                "Period": display_period,
+                "Clock": display_clock,
+                "Score": display_score,
+                "Last Refresh": display_refresh,
             })
         
         import pandas as pd
         df = pd.DataFrame(game_data)
+        
+        # Show monitor status
+        if monitor_running:
+            st.success("🟢 **Game Monitor Running** - Showing real-time data from live games")
+        else:
+            st.warning("🔴 **Game Monitor Stopped** - Showing static game data")
+        
         st.dataframe(df, use_container_width=True, hide_index=True)
     
     st.markdown("---")
