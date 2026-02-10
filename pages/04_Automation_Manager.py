@@ -251,13 +251,19 @@ def render_dashboard():
         if st.button("🔘 Toggle Game Monitoring", key="dashboard_toggle_game_monitor"):
             if automation_status.get("running"):
                 # Stop it
-                stop_automation()
-                st.success("Game monitoring stopped")
+                result = stop_automation()
+                if result.get("success"):
+                    st.success(f"Game monitoring stopped: {result.get('message')}")
+                else:
+                    st.error(f"Failed to stop: {result.get('message')}")
                 st.rerun()
             else:
                 # Start it
-                start_game_state_monitor(poll_interval_seconds=30)
-                st.success("Game monitoring started")
+                result = start_game_state_monitor(poll_interval_seconds=30)
+                if result.get("success"):
+                    st.success(f"Game monitoring started: {result.get('message')}")
+                else:
+                    st.error(f"Failed to start: {result.get('message')}")
                 st.rerun()
     
     with col2:

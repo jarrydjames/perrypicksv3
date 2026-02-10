@@ -1635,14 +1635,30 @@ def start_game_state_monitor(
         logger.info("Starting game state service...")
         
         # Import required classes
-        from src.automation.game_state_service import GameStateService
+        try:
+            from src.automation.game_state_service import GameStateService
+            logger.info("Successfully imported GameStateService")
+        except Exception as e:
+            result["message"] = f"Failed to import GameStateService: {e}"
+            logger.error(f"Failed to import GameStateService: {e}")
+            import traceback
+            traceback.print_exc()
+            return result
         
         # Initialize GameStateService (includes monitor, trigger engine, and queue processor)
-        service = GameStateService(
-            poll_interval_seconds=poll_interval_seconds,
-            platforms=None,  # Post to all enabled platforms
-            dry_run=False,  # Actually post (not test mode)
-        )
+        try:
+            service = GameStateService(
+                poll_interval_seconds=poll_interval_seconds,
+                platforms=None,  # Post to all enabled platforms
+                dry_run=False,  # Actually post (not test mode)
+            )
+            logger.info("Successfully created GameStateService instance")
+        except Exception as e:
+            result["message"] = f"Failed to create GameStateService: {e}"
+            logger.error(f"Failed to create GameStateService: {e}")
+            import traceback
+            traceback.print_exc()
+            return result
         
         # Store service globally so we can stop it later
         _automation_monitor = service
@@ -1688,22 +1704,38 @@ def start_game_state_monitor(
         _automation_stop_event = threading.Event()
         
         # Start new thread
-        _automation_thread = threading.Thread(
-            target=monitor_loop,
-            daemon=True,
-            name="GameStateService"
-        )
-        _automation_thread.start()
+        try:
+            _automation_thread = threading.Thread(
+                target=monitor_loop,
+                daemon=True,
+                name="GameStateService"
+            )
+            _automation_thread.start()
+            logger.info(f"Successfully started background thread: {_automation_thread.name}")
+        except Exception as e:
+            result["message"] = f"Failed to start background thread: {e}"
+            logger.error(f"Failed to start background thread: {e}")
+            import traceback
+            traceback.print_exc()
+            return result
         
         # Update session state
-        st.session_state[SESSION_STATE_AUTOMATION_RUNNING] = True
+        try:
+            st.session_state[SESSION_STATE_AUTOMATION_RUNNING] = True
+            logger.info("Set SESSION_STATE_AUTOMATION_RUNNING = True")
+        except Exception as e:
+            logger.error(f"Failed to set session state: {e}")
         
         # Update status
-        st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
-            "status": "running",
-            "message": f"Game state service started. Polling every {poll_interval_seconds}s. Triggers: halftime, Q3-5min.",
-            "last_update": datetime.now().isoformat(),
-        }
+        try:
+            st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
+                "status": "running",
+                "message": f"Game state service started. Polling every {poll_interval_seconds}s. Triggers: halftime, Q3-5min.",
+                "last_update": datetime.now().isoformat(),
+            }
+            logger.info("Updated SESSION_STATE_AUTOMATION_STATUS")
+        except Exception as e:
+            logger.error(f"Failed to update automation status: {e}")
         
         result["success"] = True
         result["message"] = f"Game state service started (monitoring, triggers, queue processing) - polling every {poll_interval_seconds}s"
@@ -1713,6 +1745,7 @@ def start_game_state_monitor(
         
         logger.info(f"Game state service started successfully")
         logger.info(f"Monitoring thread started: {_automation_thread.name}")
+        logger.info(f"Thread alive: {_automation_thread.is_alive()}")
     
     except Exception as e:
         result["message"] = f"Error starting game state service: {e}"
