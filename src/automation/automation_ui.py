@@ -996,7 +996,7 @@ def run_full_day_automation(
         enable_background_monitoring: If True, start background monitoring for real-time triggers
         rate_limit_delay: Seconds to wait between API calls (default 1.0s)
         progress_callback: Optional callback(progress, message) for UI updates
-    """
+        
     Returns:
         Comprehensive results dictionary with all automation results
     """
