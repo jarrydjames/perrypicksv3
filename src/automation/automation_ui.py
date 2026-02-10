@@ -402,6 +402,34 @@ def process_queue(max_posts: int = 10) -> Dict[str, Any]:
     return orchestrator.process_post_queue(batch_size=max_posts)
 
 
+def clear_processed_cache() -> Dict[str, Any]:
+    """Clear processed predictions cache.
+    
+    This allows re-running predictions that were previously marked as processed.
+    Useful for testing or re-posting failed predictions.
+    
+    Returns:
+        Status dictionary with count of cleared entries
+    """
+    orchestrator = get_orchestrator()
+    if not orchestrator:
+        return {"success": False, "error": "Orchestrator not initialized"}
+    
+    try:
+        count = orchestrator.clear_processed_predictions()
+        return {
+            "success": True,
+            "message": f"Cleared {count} processed prediction entries from cache",
+            "count": count,
+        }
+    except Exception as e:
+        logger.error(f"Error clearing processed cache: {e}")
+        return {
+            "success": False,
+            "error": str(e),
+        }
+
+
 def get_statistics() -> Dict[str, Any]:
     """Get automation statistics."""
     orchestrator = get_orchestrator()

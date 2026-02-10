@@ -48,6 +48,7 @@ from src.automation.automation_ui import (
     run_full_day_automation,
     queue_gamestate_conscious_posts,
     process_queue,
+    clear_processed_cache,
     refresh_data,
     render_status_card,
     render_platform_status,
@@ -506,6 +507,29 @@ def render_manual_predictions():
         return
     
     st.markdown(f"**Found {len(games)} games for {selected_date}**")
+    st.markdown("---")
+    
+    # Cache management
+    st.markdown("### 🔧 Cache Management")
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        st.info(
+            "💡 **Predictions are cached to prevent duplicates. "
+            "If you see 'No predictions generated', click Clear Cache to re-run predictions." 
+            "Or use '♻️ Allow Duplicate Posts' checkbox to bypass duplicate detection."
+        )
+    
+    with col2:
+        if st.button("🗑️ Clear Processed Cache", use_container_width=True):
+            result = clear_processed_cache()
+            if result.get("success"):
+                st.success(f"✅ {result.get('message')}")
+            else:
+                st.error(f"❌ Failed to clear cache: {result.get('error')}")
+            st.rerun()
+    
     st.markdown("---")
     
     # Game selection with team names

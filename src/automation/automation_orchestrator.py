@@ -173,14 +173,18 @@ class AutomationOrchestrator:
                     logger.info(f"Post results for {game_id}: {post_results}")
                     results["posted"].append(post_results)
                     
-                    # Mark as processed
-                    self._mark_prediction_processed(game_id, trigger_type)
-                    
                     # Count successful posts
                     platforms_dict = post_results.get('platforms', {})
                     queued_count = sum(1 for p in platforms_dict.values() if p and p.get('status') == 'queued')
                     duplicate_count = sum(1 for p in platforms_dict.values() if p and p.get('status') == 'duplicate')
                     error_count = sum(1 for p in platforms_dict.values() if p and p.get('status') == 'error')
+                    
+                    # Mark as processed ONLY if at least one post was queued
+                    if queued_count > 0:
+                        self._mark_prediction_processed(game_id, trigger_type)
+                        logger.info(f"Marked {game_id} {trigger_type} as processed ({queued_count} posts queued)")
+                    else:
+                        logger.warning(f"Did NOT mark {game_id} {trigger_type} as processed - no posts queued (duplicates: {duplicate_count}, errors: {error_count})")
                     
                     if progress_callback:
                         msg = f"✓ Completed {game_id}"
@@ -313,6 +317,25 @@ class AutomationOrchestrator:
         if game_id not in self.processed_predictions:
             self.processed_predictions[game_id] = set()
         self.processed_predictions[game_id].add(trigger_type)
+    
+    def clear_processed_predictions(self) -> int:
+        """Clear all processed predictions from cache.
+        
+        Returns:
+            Number of entries cleared
+        """
+        count = sum(len(triggers) for triggers in self.processed_predictions.values())
+        self.processed_predictions.clear()
+        logger.info(f"Cleared {count} processed prediction entries from cache")
+        return count
+    
+    def get_processed_predictions_count(self) -> int:
+        """Get count of processed predictions in cache.
+        
+        Returns:
+            Number of processed predictions
+        """
+        return sum(len(triggers) for triggers in self.processed_predictions.values())
     
     def get_stats(self) -> Dict[str, Any]:
         """Get orchestration statistics."""
