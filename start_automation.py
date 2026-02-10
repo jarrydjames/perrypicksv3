@@ -143,24 +143,17 @@ def start_backend(
     dry_run: bool = False,
 ) -> Optional[subprocess.Popen]:
     """Start backend automation (CLI scheduler)."""
-    script_path = PROJECT_ROOT / "scripts" / "automation" / "social_poster.py"
-    
-    if not script_path.exists():
-        logger.error(f"❌ Backend script not found: {script_path}")
-        return None
     
     python_cmd_type, python_cmd = get_python_command()
     
     # Build command
     if python_cmd_type == "uv":
-        cmd = ["uv", "run", "python", str(script_path)]
+        cmd = ["uv", "run", "python", "-m", "src.automation.game_state_service"]
     else:
-        cmd = python_cmd + [str(script_path)]
-    
-    cmd.extend(["--schedule", "--poll-interval", str(poll_interval)])
-    
-    if dry_run:
-        cmd.append("--dry-run")
+        cmd = python_cmd + ["-m", "src.automation.game_state_service"]
+
+    os.environ["GAME_STATE_POLL_INTERVAL"] = str(int(poll_interval) * 60)
+    os.environ["GAME_STATE_DRY_RUN"] = "true" if dry_run else "false"
     
     logger.info(f"Starting backend automation: {' '.join(cmd)}")
     

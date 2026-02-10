@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 class TriggerType:
     """Trigger types."""
     HALFTIME = "halftime"
-    Q3_5MIN = "q3_5min"
+    Q3_5MIN = "q3"
 
 
 class TriggerEvent:
@@ -151,12 +151,12 @@ class TriggerEngine:
                     
                     return event
         
-        # Check Q3-5min trigger
-        if self.monitor.is_q3_five_minutes_left(game_id):
+        # Check Q3 trigger
+        if self.monitor.is_q3_trigger(game_id):
             trigger_key = self._make_trigger_key(game_id, TriggerType.Q3_5MIN)
             
             if trigger_key not in self.fired_triggers:
-                logger.info(f"Q3-5MIN TRIGGER: {game_id}")
+                logger.info(f"Q3 TRIGGER: {game_id}")
                 
                 # Generate prediction
                 prediction = self._generate_prediction(game_id, TriggerType.Q3_5MIN)
@@ -181,7 +181,7 @@ class TriggerEngine:
         self,
         game_id: str,
         trigger_type: str,
-        fetch_odds: bool = False,
+        fetch_odds: bool = True,
     ) -> Optional[Dict[str, Any]]:
         """Generate prediction for a trigger.
         
@@ -231,7 +231,7 @@ class TriggerEngine:
             logger.error(f"Error generating prediction for {game_id}: {e}")
             return None
     
-    def process_trigger_event(self, event: TriggerEvent, platforms: List[str]) -> bool:
+    def process_trigger_event(self, event: TriggerEvent, platforms: Optional[List[str]] = None) -> bool:
         """Process a trigger event - queue prediction and process.
         
         Args:
@@ -254,9 +254,11 @@ class TriggerEngine:
                 return False
             
             # Use queue processor to post
+            normalized_trigger_type = "q3" if event.trigger_type == TriggerType.Q3_5MIN else event.trigger_type
+
             result = self.processor.queue_and_post(
                 prediction=prediction,
-                trigger_type=event.trigger_type,
+                trigger_type=normalized_trigger_type,
                 platforms=platforms,
             )
             
@@ -277,7 +279,7 @@ class TriggerEngine:
             logger.error(f"Error processing trigger event: {e}")
             return False
     
-    def evaluate_all(self, platforms: List[str]) -> List[TriggerEvent]:
+    def evaluate_all(self, platforms: Optional[List[str]] = None) -> List[TriggerEvent]:
         """Evaluate triggers for all active games.
         
         Args:

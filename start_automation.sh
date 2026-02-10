@@ -202,25 +202,27 @@ fi
 
 # Build commands
 if [[ "$PYTHON_CMD" == uv* ]]; then
-    BACKEND_CMD="uv run python scripts/automation/social_poster.py --schedule --poll-interval $POLL_INTERVAL"
+    BACKEND_CMD="uv run python -m src.automation.game_state_service"
     FRONTEND_CMD="uv run streamlit run pages/04_Automation_Manager.py --server.port $PORT"
 else
-    BACKEND_CMD="$PYTHON_CMD scripts/automation/social_poster.py --schedule --poll-interval $POLL_INTERVAL"
+    BACKEND_CMD="$PYTHON_CMD -m src.automation.game_state_service"
     FRONTEND_CMD="$PYTHON_CMD -m streamlit run pages/04_Automation_Manager.py --server.port $PORT"
 fi
 
 # Add dry-run flag
 if [ "$DRY_RUN" = true ]; then
-    BACKEND_CMD="$BACKEND_CMD --dry-run"
+    export GAME_STATE_DRY_RUN=true
+else
+    export GAME_STATE_DRY_RUN=false
 fi
 # Add verbose flag
 if [ "$VERBOSE" = true ]; then
-    BACKEND_CMD="$BACKEND_CMD --verbose"
     FRONTEND_CMD="$FRONTEND_CMD --verbose"
 fi
 
 # Start backend
 if [ "$FRONTEND_ONLY" = false ]; then
+    export GAME_STATE_POLL_INTERVAL=$((POLL_INTERVAL * 60))
     echo "Starting backend automation..."
     echo "$BACKEND_CMD"
     $BACKEND_CMD &

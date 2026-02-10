@@ -118,7 +118,7 @@ class GameStateService:
                 # 2. Evaluate triggers
                 logger.info("[2/3] Evaluating triggers...")
                 fired_events = self.trigger_engine.evaluate_all(
-                    platforms=self.platforms or [],
+                    platforms=self.platforms,
                 )
                 
                 self.stats["triggers_fired"] += len(fired_events)
