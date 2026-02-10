@@ -132,7 +132,15 @@ class AutomationOrchestrator:
                 if progress_callback:
                     progress_callback(progress, f"Predicting {game_id}...")
                 logger.info(f"Running prediction for {game_id} with mode={mode}, trigger_type={trigger_type}")
-                prediction = predict_game(game_id, mode=mode, fetch_odds=fetch_odds)
+                
+                # For in-progress games (halftime, q3), bypass the import gate
+                # This allows predictions even if schedule has placeholder teams (UNK @ UNK)
+                # The actual boxscore data will have real team names
+                bypass_gate = mode in ('halftime', 'q3')
+                if bypass_gate:
+                    logger.info(f"Bypassing import gate for {game_id} (mode={mode})")
+                
+                prediction = predict_game(game_id, mode=mode, fetch_odds=fetch_odds, bypass_import_gate=bypass_gate)
                 
                 # Add trigger_type to prediction result for post_generator
                 if isinstance(prediction, dict):
