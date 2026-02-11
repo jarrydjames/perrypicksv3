@@ -67,6 +67,7 @@ from src.automation.automation_ui import (
     filter_posts_by_platform,
     filter_posts_by_game,
     SESSION_STATE_PLATFORMS,
+    get_automation_status,
     # Automation status functions
     get_automation_status,
     get_queue_processor_status,
@@ -89,6 +90,17 @@ from src.data.scoreboard import format_game_label
 # Initialize session state
 init_session_state()
 
+# Auto-refresh hook - refresh every 30 seconds when automation is running
+if HAS_AUTOREFRESH:
+    automation_status = get_automation_status()
+    if automation_status.get("running"):
+        st_autorefresh(limit=30000, key="automation_manager_autorefresh")
+else:
+    # Auto-refresh not available
+    if "no_autorefresh_warning" not in st.session_state:
+        st.warning("⚠️ Auto-refresh requires `streamlit-autorefresh`. Install with: `uv pip install streamlit-autorefresh`")
+        st.session_state["no_autorefresh_warning"] = True
+
 # Initialize logging
 logger = logging.getLogger(__name__)
 
@@ -106,11 +118,6 @@ def render_sidebar():
 
 def render_dashboard():
     """Render dashboard with statistics and game schedule."""
-    # FIX: Add auto-refresh to refresh UI every 30 seconds when automation is running
-    automation_status = get_automation_status()
-    if automation_status.get("running") and HAS_AUTOREFRESH:
-        st_autorefresh(limit=30000, key="dashboard_autorefresh")
-    
     st.markdown("## 📊 Dashboard")
     
     # Date filter for game schedule
@@ -1378,11 +1385,6 @@ def render_manual_predictions():
 
 def render_queue_manager():
     """Render queue management interface."""
-    # FIX: Add auto-refresh to refresh UI every 30 seconds when automation is running
-    automation_status = get_automation_status()
-    if automation_status.get("running") and HAS_AUTOREFRESH:
-        st_autorefresh(limit=30000, key="queue_autorefresh")
-    
     st.markdown("## 📋 Queue Manager")
     
     # Section 1: Triggers Waiting to Fire
@@ -1762,11 +1764,6 @@ def render_game_state_monitor():
     This tab allows monitoring and control of the live game state
     monitoring service that automatically generates predictions at halftime and Q3-5min.
     """
-    # FIX: Add auto-refresh to refresh UI every 30 seconds when automation is running
-    automation_status = get_automation_status()
-    if automation_status.get("running") and HAS_AUTOREFRESH:
-        st_autorefresh(limit=30000, key="gamestate_autorefresh")
-    
     st.markdown("### 🎮 Game State Monitor")
     
     st.info(
