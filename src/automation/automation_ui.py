@@ -1797,6 +1797,8 @@ def start_game_state_monitor(
             """Background monitoring loop."""
             try:
                 logger.info("Starting game state service loop...")
+                logger.info(f"Service poll interval: {service.poll_interval}s")
+                logger.info(f"Service running flag: {service.running}")
                 st.session_state[SESSION_STATE_AUTOMATION_STATUS] = {
                     "status": "running",
                     "message": "Monitoring games for halftime/Q3 triggers and processing queue automatically...",
@@ -1804,7 +1806,9 @@ def start_game_state_monitor(
                 }
                 
                 # Run service loop (includes monitor, triggers, and queue processing)
+                logger.info("Calling service.start()...")
                 service.start()
+                logger.info("service.start() returned (service stopped)")
             
             except Exception as e:
                 logger.error(f"Error in game state service loop: {e}")

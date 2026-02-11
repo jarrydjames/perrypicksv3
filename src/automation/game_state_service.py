@@ -73,6 +73,7 @@ class GameStateService:
             "triggers_fired": 0,
             "posts_processed": 0,
             "errors": 0,
+            "last_heartbeat": None,
         }
         
         # Setup signal handlers for graceful shutdown
@@ -121,6 +122,9 @@ class GameStateService:
         
         while self.running:
             try:
+                # Update heartbeat
+                self.stats["last_heartbeat"] = datetime.now()
+                
                 # 1. Update game states
                 logger.info("[1/3] Updating game states...")
                 updated_states = self.game_monitor.update_all_games()
@@ -173,6 +177,8 @@ class GameStateService:
             
             except Exception as e:
                 logger.error(f"Error in main service loop: {e}")
+                logger.error(f"Exception type: {type(e).__name__}")
+                logger.debug(f"Full traceback:", exc_info=True)
                 self.stats["errors"] += 1
                 
                 # Wait before retrying
