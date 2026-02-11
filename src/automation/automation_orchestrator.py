@@ -163,6 +163,12 @@ class AutomationOrchestrator:
                     logger.info(f"  Model used: {prediction.get('model_used', 'missing')}")
                     logger.info(f"  Trigger type: {prediction.get('trigger_type', 'missing')}")
                     logger.info(f"  Error: {prediction.get('error', 'none')}")
+                    
+                    # CRITICAL LOG: Check if prediction is successful
+                    if prediction.get('status') in ('success', 'warning'):
+                        logger.info(f"  ✓ PREDICTION SUCCESSFUL - will post")
+                    else:
+                        logger.error(f"  ✗ PREDICTION FAILED - status={prediction.get('status')}, error={prediction.get('error')}")
                 else:
                     logger.warning(f"Prediction is not a dict: {prediction}")
                 

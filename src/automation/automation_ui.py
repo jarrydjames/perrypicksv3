@@ -340,8 +340,23 @@ def run_prediction(
     Returns:
         Prediction results dictionary
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    # CRITICAL LOG: Show what parameters we received
+    logger.info(f"="*60)
+    logger.info(f"RUN_PREDICTION CALLED")
+    logger.info(f"  game_id: {game_id}")
+    logger.info(f"  trigger_type: {trigger_type}")
+    logger.info(f"  platforms: {platforms}")
+    logger.info(f"  dry_run: {dry_run}")
+    logger.info(f"  fetch_odds: {fetch_odds}")
+    logger.info(f"  allow_duplicates: {allow_duplicates}")
+    logger.info(f"="*60)
+    
     orchestrator = get_orchestrator(dry_run=dry_run)
     if not orchestrator:
+        logger.error("Orchestrator not initialized")
         return {"success": False, "error": "Orchestrator not initialized"}
     
     # Map retroactive trigger types to actual prediction modes

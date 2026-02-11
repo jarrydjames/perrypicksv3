@@ -663,14 +663,31 @@ def render_manual_predictions():
                     if result.get("error"):
                         st.error(f"Error: {result['error']}")
                     
-                    # Predictions
+                    # Predictions - separate successful and failed
                     predictions = result.get("predictions", [])
-                    if predictions:
-                        st.success(f"✅ Successfully generated {len(predictions)} prediction(s)")
-                        for pred in predictions:
+                    
+                    # Filter predictions by status
+                    successful_preds = [p for p in predictions if p.get('status') in ('success', 'warning')]
+                    failed_preds = [p for p in predictions if p.get('status') not in ('success', 'warning')]
+                    
+                    # Show successful predictions
+                    if successful_preds:
+                        st.success(f"✅ Successfully generated {len(successful_preds)} prediction(s)")
+                        for pred in successful_preds:
                             st.markdown(f"- **Game ID:** {pred.get('game_id')}")
                             st.markdown(f"  **Status:** {pred.get('status')}")
                             st.markdown(f"  **Trigger:** {trigger_type}")
+                    
+                    # Show failed predictions
+                    if failed_preds:
+                        st.error(f"❌ Failed to generate {len(failed_preds)} prediction(s)")
+                        for pred in failed_preds:
+                            game_id = pred.get('game_id', 'unknown')
+                            status = pred.get('status', 'unknown')
+                            error = pred.get('error', 'No error message')
+                            st.markdown(f"- **Game ID:** {game_id}")
+                            st.markdown(f"  **Status:** {status}")
+                            st.markdown(f"  **Error:** {error}")
                     
                     # Posted
                     posted = result.get("posted", [])
@@ -717,6 +734,24 @@ def render_manual_predictions():
                     # Show message if nothing happened
                     if not predictions and not posted and not errors and not result.get("error"):
                         st.warning("⚠️ No predictions generated. Game may have already been processed.")
+                        st.info("💡 If you expected a prediction, check:")
+                        st.markdown("- The game is at the right state (Q3 in progress)")
+                        st.markdown("- The game ID is correct")
+                        st.markdown("- The terminal/console output for detailed error messages")
+                    
+                    # Show debugging tips for failed predictions
+                    if failed_preds:
+                        st.markdown("---")
+                        with st.expander("🔍 Debugging Tips", expanded=False):
+                            st.markdown("**Common Issues:**")
+                            st.markdown("1. **Wrong Game State** - Game might not be at Q3 yet. Try 'halftime' instead.")
+                            st.markdown("2. **Invalid Game ID** - Check the game ID format (e.g., 0022500771)")
+                            st.markdown("3. **API Error** - NBA.com API might be rate-limited or down")
+                            st.markdown("4. **Missing Data** - Boxscore or schedule data might be unavailable")
+                            st.markdown("\n**How to Debug:**")
+                            st.markdown("- Check the error message above for details")
+                            st.markdown("- Look at the terminal/console output for full Python traceback")
+                            st.markdown("- Try a different game ID or prediction type")
                     
                     # Check queue to confirm posts are queued
                     if posted:
