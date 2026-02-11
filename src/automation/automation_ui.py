@@ -67,6 +67,13 @@ def init_session_state():
             "message": "",
             "last_update": None,
         }
+    # FIX: Store automation thread/monitor in session state to survive reruns
+    if "automation_thread" not in st.session_state:
+        st.session_state["automation_thread"] = None
+    if "automation_monitor" not in st.session_state:
+        st.session_state["automation_monitor"] = None
+    if "automation_stop_event" not in st.session_state:
+        st.session_state["automation_stop_event"] = None
 
 
 def get_orchestrator(dry_run: bool = False) -> Optional[AutomationOrchestrator]:
@@ -1694,12 +1701,13 @@ def get_automation_status() -> Dict[str, Any]:
     Returns:
         Status dictionary with running state and details
     """
-    global _automation_thread
+    # FIX: Read from session state to survive Streamlit reruns
+    automation_thread = st.session_state.get("automation_thread")
     
     return {
         "running": st.session_state.get(SESSION_STATE_AUTOMATION_RUNNING, False),
-        "thread_alive": _automation_thread.is_alive() if _automation_thread else False,
-        "thread_name": _automation_thread.name if _automation_thread else None,
+        "thread_alive": automation_thread.is_alive() if automation_thread else False,
+        "thread_name": automation_thread.name if automation_thread else None,
         "status": st.session_state.get(SESSION_STATE_AUTOMATION_STATUS, {}),
     }
 
@@ -1710,22 +1718,23 @@ def get_monitored_games() -> Dict[str, Any]:
     Returns:
         Dictionary with game_id -> game_state mapping
     """
-    global _automation_monitor
+    # FIX: Read from session state to survive Streamlit reruns
+    automation_monitor = st.session_state.get("automation_monitor")
     
     try:
-        if _automation_monitor is None:
+        if automation_monitor is None:
             return {}
         
         # Get game states from monitor
         # Works with both GameStateMonitor and GameStateService
-        if hasattr(_automation_monitor, 'game_monitor'):
+        if hasattr(automation_monitor, 'game_monitor'):
             # GameStateService - get from game_monitor attribute
-            states = _automation_monitor.game_monitor.get_all_states()
-        elif hasattr(_automation_monitor, 'get_all_states'):
+            states = automation_monitor.game_monitor.get_all_states()
+        elif hasattr(automation_monitor, 'get_all_states'):
             # GameStateMonitor - direct call
-            states = _automation_monitor.get_all_states()
+            states = automation_monitor.get_all_states()
         else:
-            logger.warning(f"_automation_monitor type: {type(_automation_monitor)} - no get_all_states method")
+            logger.warning(f"automation_monitor type: {type(automation_monitor)} - no get_all_states method")
             states = {}
         
         # Convert to serializable dict
@@ -1827,7 +1836,10 @@ def start_game_state_monitor(
     Returns:
         Status dictionary with success/failure result
     """
-    global _automation_thread, _automation_stop_event, _automation_monitor
+    # FIX: Use session state instead of globals to survive Streamlit reruns
+    _automation_stop_event = st.session_state.get("automation_stop_event")
+    _automation_thread = st.session_state.get("automation_thread")
+    _automation_monitor = st.session_state.get("automation_monitor")
     
     result = {
         "success": False,
@@ -1871,8 +1883,8 @@ def start_game_state_monitor(
             traceback.print_exc()
             return result
         
-        # Store service globally so we can stop it later
-        _automation_monitor = service
+        # FIX: Store service in session state so it survives Streamlit reruns
+        st.session_state["automation_monitor"] = service
         
         # Start monitoring in background thread
         def monitor_loop():
@@ -1925,6 +1937,9 @@ def start_game_state_monitor(
                 daemon=True,
                 name="GameStateService"
             )
+            # FIX: Store thread in session state to survive Streamlit reruns
+            st.session_state["automation_thread"] = _automation_thread
+            st.session_state["automation_stop_event"] = threading.Event()
             _automation_thread.start()
             logger.info(f"Successfully started background thread: {_automation_thread.name}")
             

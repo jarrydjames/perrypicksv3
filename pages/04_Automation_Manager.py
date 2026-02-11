@@ -24,6 +24,13 @@ if str(PROJECT_ROOT) not in sys.path:
 
 import streamlit as st
 
+# Optional autorefresh (recommended)
+try:
+    from streamlit_autorefresh import st_autorefresh
+    HAS_AUTOREFRESH = True
+except Exception:
+    HAS_AUTOREFRESH = False
+
 # Page config
 st.set_page_config(
     page_title="Automation Manager | PerryPicks v3",
@@ -99,6 +106,11 @@ def render_sidebar():
 
 def render_dashboard():
     """Render dashboard with statistics and game schedule."""
+    # FIX: Add auto-refresh to refresh UI every 30 seconds when automation is running
+    automation_status = get_automation_status()
+    if automation_status.get("running") and HAS_AUTOREFRESH:
+        st_autorefresh(limit=30000, key="dashboard_autorefresh")
+    
     st.markdown("## 📊 Dashboard")
     
     # Date filter for game schedule
@@ -1366,6 +1378,11 @@ def render_manual_predictions():
 
 def render_queue_manager():
     """Render queue management interface."""
+    # FIX: Add auto-refresh to refresh UI every 30 seconds when automation is running
+    automation_status = get_automation_status()
+    if automation_status.get("running") and HAS_AUTOREFRESH:
+        st_autorefresh(limit=30000, key="queue_autorefresh")
+    
     st.markdown("## 📋 Queue Manager")
     
     # Section 1: Triggers Waiting to Fire
@@ -1745,6 +1762,11 @@ def render_game_state_monitor():
     This tab allows monitoring and control of the live game state
     monitoring service that automatically generates predictions at halftime and Q3-5min.
     """
+    # FIX: Add auto-refresh to refresh UI every 30 seconds when automation is running
+    automation_status = get_automation_status()
+    if automation_status.get("running") and HAS_AUTOREFRESH:
+        st_autorefresh(limit=30000, key="gamestate_autorefresh")
+    
     st.markdown("### 🎮 Game State Monitor")
     
     st.info(
