@@ -111,15 +111,25 @@ class GameStateMonitor:
                 
                 # Detect halftime BEFORE normalizing status
                 # Halftime = after Q2 ends, before Q3 starts
-                # Check: Game has 2 periods with scores, not yet in Q3
+                # Correct logic: Q2 has finished (time_remaining is "00:00" or 0:00)
                 home_periods = len(game_data.get("homeTeam", {}).get("periods", []))
                 away_periods = len(game_data.get("awayTeam", {}).get("periods", []))
                 
+                # Check if time_remaining indicates end of period
+                # Format can be "0:00", "00:00", or with trailing zeros
+                time_remaining_zero = (
+                    time_remaining == "0:00" or
+                    time_remaining == "00:00" or
+                    time_remaining.startswith("00:00") or
+                    time_remaining.startswith("0:00")
+                )
+                
                 is_halftime = (
-                    home_periods >= 2 and      # Q2 completed
-                    away_periods >= 2 and      # Q2 completed
-                    period <= 2 and            # Not in Q3 yet
-                    game_status in (1, 2)     # Game is live (Q1 or Q2)
+                    home_periods == 2 and      # Exactly 2 periods (Q1 and Q2 completed)
+                    away_periods == 2 and      # Both teams have 2 periods
+                    period == 2 and            # Currently at period 2 (end of Q2)
+                    game_status == 2 and         # Game is in Q2 (not yet Q3)
+                    time_remaining_zero         # Time remaining is 00:00 (Q2 finished)
                 )
                 
                 # Normalize status
@@ -134,7 +144,18 @@ class GameStateMonitor:
                 
                 # Log for debugging
                 if is_halftime:
-                    logger.info(f"HALFTIME DETECTED: {game_id} (periods: {home_periods}/{away_periods}, gameStatus: {game_status})")
+                    logger.info(
+                        f"HALFTIME DETECTED: {game_id} "
+                        f"(periods: {home_periods}/{away_periods}, period: {period}, "
+                        f"gameStatus: {game_status}, time_remaining: {time_remaining})"
+                    )
+                elif period == 2 and game_status == 2 and not time_remaining_zero:
+                    # Log when we're in Q2 but not yet at halftime
+                    logger.debug(
+                        f"Q2 IN PROGRESS: {game_id} "
+                        f"(periods: {home_periods}/{away_periods}, "
+                        f"time_remaining: {time_remaining}, NOT HALFTIME YET)"
+                    )
                 
                 # Create game state
                 game_state = GameState(
