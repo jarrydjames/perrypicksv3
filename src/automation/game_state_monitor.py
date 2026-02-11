@@ -145,14 +145,6 @@ class GameStateMonitor:
                 )
                 )
                 
-                is_halftime = (
-                    home_periods == 2 and      # Exactly 2 periods (Q1 and Q2 completed)
-                    away_periods == 2 and      # Both teams have 2 periods
-                    period == 2 and            # Currently at period 2 (end of Q2)
-                    game_status == 2 and         # Game is in Q2 (not yet Q3)
-                    time_remaining_zero         # Time remaining is 00:00 (Q2 finished)
-                )
-                
                 # DEBUG: Log halftime detection details
                 if period == 2 and time_remaining_zero:
                     logger.info(
