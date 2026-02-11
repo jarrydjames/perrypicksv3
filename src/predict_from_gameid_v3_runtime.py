@@ -58,6 +58,19 @@ def _parse_period_clock(game: Dict[str, Any]) -> tuple[int, str]:
     return period_int, clock_str
 
 # Q3 helper functions
+def _full_team_name(team_block: dict, fallback: str) -> str:
+    """Extract full team name for odds API matching.
+    
+    The odds API returns games with full team names like "Los Angeles Lakers",
+    so we need to pass full names to match correctly.
+    """
+    # Try teamName first (full name)
+    for k in ("teamName", "name", "teamCity", "teamTricode"):
+        v = team_block.get(k)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return fallback
+
 def sum_first3(periods):
     """Sum scores from periods 1-3."""
     s = 0
@@ -265,6 +278,11 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
         home_name = home_tri
         away_name = away_tri
         
+        # Full team names for odds API matching
+        # The odds API returns games with full names like "Los Angeles Lakers"
+        home_name_full = _full_team_name(home, "Home")
+        away_name_full = _full_team_name(away, "Away")
+        
         # Extract Q3 scores
         q3_home, q3_away = third_quarter_score(game)
         
@@ -373,7 +391,8 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             try:
                 # Use persistent cache to avoid repeated API calls
                 cache = PersistentOddsCache()
-                odds_snapshot = cache.get_or_fetch(home_name, away_name)
+                # Use full team names for odds API matching
+                odds_snapshot = cache.get_or_fetch(home_name_full, away_name_full)
                 
                 if odds_snapshot:
                     result.update({
