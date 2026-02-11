@@ -231,7 +231,7 @@ class TriggerEngine:
                 logger.info(f"Bypassing import gate for {game_id} (mode={mode})")
             
             prediction = predict_game(
-                game_id=game_id,
+                game_input=game_id,
                 mode=mode,
                 fetch_odds=fetch_odds,
                 bypass_import_gate=bypass_gate,
