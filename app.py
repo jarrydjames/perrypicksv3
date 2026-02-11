@@ -1,6 +1,14 @@
 import os
 import sys
 
+# Fix: Load environment variables from .env file
+# This ensures ODDS_API_KEY and other env vars are available locally
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass  # dotenv not available, but that's OK (Streamlit Cloud uses st.secrets)
+
 # Fix: Add project root to sys.path for Streamlit Cloud
 # This ensures imports like 'from src.data.scoreboard' work in all environments
 _project_root = os.path.dirname(os.path.abspath(__file__))
