@@ -381,6 +381,7 @@ def run_prediction(
     )
     
     # Convert orchestrator results to simple success/error format
+    # CRITICAL: Flatten the results so UI can access predictions and posted directly
     if results.get("errors") and len(results["errors"]) > 0:
         # Check if all errors were just duplicate posts
         all_duplicates = all("duplicate" in str(e.get("error", "")) for e in results["errors"])
@@ -389,6 +390,9 @@ def run_prediction(
                 "success": True,
                 "message": "Post already exists (duplicate)",
                 "results": results,
+                "predictions": results.get("predictions", []),  # FLATTEN
+                "posted": results.get("posted", []),  # FLATTEN
+                "errors": results.get("errors", []),  # FLATTEN
             }
         else:
             # Return the first error
@@ -397,17 +401,27 @@ def run_prediction(
                 "success": False,
                 "error": first_error,
                 "results": results,
+                "predictions": results.get("predictions", []),  # FLATTEN
+                "posted": results.get("posted", []),  # FLATTEN
+                "errors": results.get("errors", []),  # FLATTEN
             }
     elif len(results.get("predictions", [])) > 0:
+        # Successfully generated predictions - FLATTEN the results structure
         return {
             "success": True,
             "results": results,
+            "predictions": results.get("predictions", []),  # FLATTEN - UI can access directly
+            "posted": results.get("posted", []),  # FLATTEN - UI can access directly
+            "errors": results.get("errors", []),  # FLATTEN - UI can access directly
         }
     else:
         return {
             "success": False,
             "error": "No predictions generated",
             "results": results,
+            "predictions": results.get("predictions", []),  # FLATTEN
+            "posted": results.get("posted", []),  # FLATTEN
+            "errors": results.get("errors", []),  # FLATTEN
         }
 
 
