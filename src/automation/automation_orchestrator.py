@@ -61,13 +61,21 @@ class AutomationOrchestrator:
         # game_id -> set of trigger_types processed
         
         # Setup signal handlers (only if in main thread)
+        # This will fail in Streamlit callbacks (non-main thread), which is OK
         try:
             signal.signal(signal.SIGINT, self._handle_shutdown)
             signal.signal(signal.SIGTERM, self._handle_shutdown)
-        except ValueError as e:
+            logger.info("Signal handlers set up successfully")
+        except (ValueError, RuntimeError, AttributeError) as e:
             # Can't set signal handlers if not in main thread
-            # This happens when running in subprocess - that's OK
-            logger.warning(f"Could not set signal handlers (not in main thread): {e}")
+            # This happens when running in Streamlit callbacks - that's OK
+            # Signal handlers are optional, service will work without them
+            logger.warning(f"Could not set signal handlers (not in main thread): {type(e).__name__}: {e}")
+        except Exception as e:
+            # Catch any other signal-related errors
+            # Signal handlers are optional, service will work without them
+            logger.warning(f"Unexpected error setting up signal handlers: {type(e).__name__}: {e}")
+            logger.debug(f"Signal handler setup error details:", exc_info=True)
         
         logger.info(
             f"Automation Orchestrator initialized. "
