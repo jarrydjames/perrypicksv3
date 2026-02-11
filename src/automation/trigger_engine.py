@@ -127,15 +127,26 @@ class TriggerEngine:
         Returns:
             TriggerEvent if triggered, None otherwise
         """
+        logger.debug(f"Evaluating triggers for {game_id}: status={game_state.status}, period={game_state.period}")
+        
         # Check halftime trigger
         if game_state.status == "halftime":
             trigger_key = self._make_trigger_key(game_id, TriggerType.HALFTIME)
+            logger.info(f"HALFTIME DETECTED: {game_id} - checking if already fired...")
             
             if trigger_key not in self.fired_triggers:
-                logger.info(f"HALFTIME TRIGGER: {game_id}")
+                logger.info(f"HALFTIME TRIGGER: {game_id} - NOT YET FIRED, generating prediction...")
+                logger.info(f"Fired triggers so far: {self.fired_triggers}")
                 
                 # Generate prediction
+                logger.info(f"Generating halftime prediction for {game_id}...")
                 prediction = self._generate_prediction(game_id, TriggerType.HALFTIME)
+                
+                # Log prediction result
+                if prediction is None:
+                    logger.error(f"Halftime prediction returned None for {game_id}")
+                else:
+                    logger.info(f"Prediction result for {game_id}: status={prediction.get('status')}, error={prediction.get('error')}")
                 
                 if prediction and prediction.get("status") in ("success", "warning"):
                     # Mark as fired
@@ -150,16 +161,26 @@ class TriggerEngine:
                     )
                     
                     return event
+                else:
+                    logger.error(f"Halftime prediction failed for {game_id}: prediction={prediction}")
         
         # Check Q3 trigger
         if self.monitor.is_q3_trigger(game_id):
             trigger_key = self._make_trigger_key(game_id, TriggerType.Q3_5MIN)
             
             if trigger_key not in self.fired_triggers:
-                logger.info(f"Q3 TRIGGER: {game_id}")
+                logger.info(f"Q3 TRIGGER: {game_id} - NOT YET FIRED, generating prediction...")
+                logger.info(f"Fired triggers so far: {self.fired_triggers}")
                 
                 # Generate prediction
+                logger.info(f"Generating Q3 prediction for {game_id}...")
                 prediction = self._generate_prediction(game_id, TriggerType.Q3_5MIN)
+                
+                # Log prediction result
+                if prediction is None:
+                    logger.error(f"Q3 prediction returned None for {game_id}")
+                else:
+                    logger.info(f"Prediction result for {game_id}: status={prediction.get('status')}, error={prediction.get('error')}")
                 
                 if prediction and prediction.get("status") in ("success", "warning"):
                     # Mark as fired
@@ -174,6 +195,8 @@ class TriggerEngine:
                     )
                     
                     return event
+                else:
+                    logger.error(f"Q3 prediction failed for {game_id}: prediction={prediction}")
         
         return None
     
@@ -300,17 +323,22 @@ class TriggerEngine:
             for game_id, game_state in game_states.items():
                 # Skip finished games
                 if game_state.status == "finished":
+                    logger.debug(f"Skipping finished game: {game_id}")
                     continue
                 
                 # Evaluate triggers
+                logger.debug(f"Evaluating {game_id}: status={game_state.status}, period={game_state.period}")
                 event = self.evaluate_game(game_id, game_state)
                 
                 if event:
                     # Process the event
+                    logger.info(f"Trigger event created for {game_id}, processing...")
                     success = self.process_trigger_event(event, platforms)
                     
                     if success:
                         fired_events.append(event)
+                    else:
+                        logger.error(f"Failed to process trigger event for {game_id}")
             
             logger.info(f"Fired {len(fired_events)} trigger(s)")
         
