@@ -190,7 +190,11 @@ class PostGenerator:
         Format best bets section for post.
         """
         if not bets:
-            return ''
+            # No bets available - return informative message
+            if platform == 'twitter':
+                return '\nNo bets with >6% edge available.\n'
+            else:
+                return '\n🎯 No bets with >6% edge available at this time.\n'
         
         if platform == 'twitter':
             section = 'Top Bets (by edge):\n\n'
