@@ -118,16 +118,31 @@ class GameStateMonitor:
                 # Detect halftime BEFORE normalizing status
                 # Halftime = after Q2 ends, before Q3 starts
                 # Correct logic: Q2 has finished (time_remaining is "00:00" or 0:00)
-                home_periods = len(game_data.get("homeTeam", {}).get("periods", []))
-                away_periods = len(game_data.get("awayTeam", {}).get("periods", []))
+                home_team_data = game_data.get("homeTeam", {})
+                away_team_data = game_data.get("awayTeam", {})
+                home_periods = len(home_team_data.get("periods", []))
+                away_periods = len(away_team_data.get("periods", []))
                 
-                # Check if time_remaining indicates end of period
-                # Format can be "0:00", "00:00", or with trailing zeros
-                time_remaining_zero = (
-                    time_remaining == "0:00" or
-                    time_remaining == "00:00" or
-                    time_remaining.startswith("00:00") or
-                    time_remaining.startswith("0:00")
+                # DEBUG: Log period data
+                if period == 2 and time_remaining_zero:
+                    logger.info(
+                        f"[PERIOD DEBUG] {game_id}: "
+                        f"home_periods={home_periods}, away_periods={away_periods}, "
+                        f"home_periods_data={home_team_data.get('periods', [])}, "
+                        f"away_periods_data={away_team_data.get('periods', [])}, "
+                        f"game_status={game_status}"
+                    )
+                
+                # FIX: Remove game_status check - rely on period and time only
+                # The API might have race conditions where game_status updates before we check
+                # If period == 2 and time_remaining == 00:00, it's halftime
+                # regardless of what game_status says
+                is_halftime = (
+                    home_periods >= 2 and      # At least 2 periods (Q1 and Q2 completed)
+                    away_periods >= 2 and      # Both teams have at least 2 periods
+                    period == 2 and            # Currently at period 2 (end of Q2)
+                    time_remaining_zero         # Time remaining is 00:00 (Q2 finished)
+                )
                 )
                 
                 is_halftime = (
@@ -138,9 +153,20 @@ class GameStateMonitor:
                     time_remaining_zero         # Time remaining is 00:00 (Q2 finished)
                 )
                 
+                # DEBUG: Log halftime detection details
+                if period == 2 and time_remaining_zero:
+                    logger.info(
+                        f"[HALFTIME DEBUG] {game_id}: "
+                        f"home_periods={home_periods}, away_periods={away_periods}, "
+                        f"period={period}, game_status={game_status}, "
+                        f"time_remaining_zero={time_remaining_zero}, "
+                        f"is_halftime={is_halftime}"
+                    )
+                
                 # Normalize status
                 if is_halftime:
                     status = "halftime"
+                    logger.info(f"✅ HALFTIME STATUS SET for {game_id}")
                 elif game_status >= 6:  # Final (gameStatus 6 = Final, per automation_ui.py)
                     status = "finished"
                 elif period > 0:
