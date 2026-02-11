@@ -111,6 +111,7 @@ class GameStateService:
         """
         self.running = True
         self.stats["started_at"] = datetime.now()
+        self.stats["loop_iterations"] = 0  # NEW: Track loop iterations
         
         logger.info("="*60)
         logger.info("GAME STATE SERVICE STARTED")
@@ -118,9 +119,19 @@ class GameStateService:
         logger.info(f"Poll Interval: {self.poll_interval}s")
         logger.info(f"Platforms: {self.platforms or 'All enabled'}")
         logger.info(f"Dry Run: {self.dry_run}")
+        logger.info(f"Running flag: {self.running}")
         logger.info("="*60)
         
+        logger.info("[ENTERING WHILE LOOP - This should log every ~30 seconds]")
+        
         while self.running:
+            self.stats["loop_iterations"] += 1
+            iteration_num = self.stats["loop_iterations"]
+            
+            logger.info(f"=" * 60)
+            logger.info(f"[LOOP ITERATION {iteration_num}]")
+            logger.info(f"Running flag: {self.running}")
+            
             try:
                 # Update heartbeat
                 self.stats["last_heartbeat"] = datetime.now()
@@ -186,6 +197,10 @@ class GameStateService:
                 time.sleep(60)
         
         logger.info("="*60)
+        logger.info("[EXITED WHILE LOOP]")
+        logger.info(f"Final running flag: {self.running}")
+        logger.info(f"Total iterations: {self.stats.get('loop_iterations', 0)}")
+        logger.info("="*60)
         logger.info("GAME STATE SERVICE STOPPED")
         logger.info("="*60)
         self._log_final_stats()
@@ -207,10 +222,18 @@ class GameStateService:
         logger.info("SERVICE STATS")
         logger.info("="*60)
         logger.info(f"Uptime: {uptime:.0f}s ({uptime/60:.1f}min)")
+        logger.info(f"Loop Iterations: {self.stats.get('loop_iterations', 0)}")
         logger.info(f"Games Monitored: {self.stats['games_monitored']}")
         logger.info(f"Triggers Fired: {self.stats['triggers_fired']}")
         logger.info(f"Posts Processed: {self.stats['posts_processed']}")
         logger.info(f"Errors: {self.stats['errors']}")
+        
+        # Show last heartbeat if available
+        last_heartbeat = self.stats.get('last_heartbeat')
+        if last_heartbeat:
+            seconds_ago = (datetime.now() - last_heartbeat).total_seconds()
+            logger.info(f"Last Heartbeat: {seconds_ago:.0f}s ago")
+        
         logger.info("="*60)
     
     def _log_final_stats(self):
