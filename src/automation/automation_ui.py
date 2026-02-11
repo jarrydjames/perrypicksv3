@@ -414,6 +414,15 @@ def run_prediction(
     logger.info(f"  allow_duplicates: {allow_duplicates}")
     logger.info(f"="*60)
     
+    # OPTIMIZATION: Mark game as manually queued if fetch_odds=True
+    # This ensures odds will be fetched when triggers fire for this game
+    # Only do this for single game predictions, not for bulk predictions
+    if fetch_odds and trigger_type in ("halftime", "q3"):
+        automation_monitor = st.session_state.get("automation_monitor")
+        if automation_monitor and hasattr(automation_monitor, 'trigger_engine'):
+            automation_monitor.trigger_engine.add_manually_queued_game(game_id)
+            logger.info(f"Marked {game_id} as manually queued (odds will be fetched when {trigger_type} trigger fires)")
+    
     orchestrator = get_orchestrator(dry_run=dry_run)
     if not orchestrator:
         logger.error("Orchestrator not initialized")
@@ -873,6 +882,14 @@ def queue_gamestate_conscious_posts(
         "q3": None,
         "errors": [],
     }
+    
+    # OPTIMIZATION: Mark this game as manually queued
+    # This ensures odds will be fetched when triggers fire for this game
+    # Background monitoring on other games will NOT fetch odds (saving API credits)
+    automation_monitor = st.session_state.get("automation_monitor")
+    if automation_monitor and hasattr(automation_monitor, 'trigger_engine'):
+        automation_monitor.trigger_engine.add_manually_queued_game(game_id)
+        logger.info(f"Marked {game_id} as manually queued (odds will be fetched when trigger fires)")
     
     trigger_types = ["pregame", "halftime", "q3"]
     

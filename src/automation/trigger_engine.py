@@ -80,6 +80,9 @@ class TriggerEngine:
         # Track fired triggers to prevent duplicates
         self.fired_triggers: Set[str] = set()
         
+        # Track manually queued games (only these games should fetch odds)
+        self.manually_queued_games: Set[str] = set()
+        
         # Load previously fired triggers from storage
         self._load_fired_triggers()
         
@@ -117,17 +120,45 @@ class TriggerEngine:
         key = self._make_trigger_key(game_id, trigger_type)
         self._save_fired_trigger(key)
     
-    def evaluate_game(self, game_id: str, game_state: GameState) -> Optional[TriggerEvent]:
+    def add_manually_queued_game(self, game_id: str):
+        """Add a game to the manually queued set.
+        
+        Only manually queued games will fetch odds when triggers fire.
+        This prevents wasting API credits on games that weren't specifically requested.
+        
+        Args:
+            game_id: Game ID to mark as manually queued
+        """
+        self.manually_queued_games.add(game_id)
+        logger.info(f"Marked {game_id} as manually queued (odds will be fetched when trigger fires)")
+    
+    def is_manually_queued(self, game_id: str) -> bool:
+        """Check if a game was manually queued.
+        
+        Args:
+            game_id: Game ID to check
+            
+        Returns:
+            True if game was manually queued, False otherwise
+        """
+        return game_id in self.manually_queued_games
+    
+    def evaluate_game(self, game_id: str, game_state: GameState, fetch_odds: bool = True) -> Optional[TriggerEvent]:
         """Evaluate triggers for a single game.
         
         Args:
             game_id: Game ID to evaluate
             game_state: Current game state
+            fetch_odds: Whether to fetch odds API (default True for manual, False for auto)
             
         Returns:
             TriggerEvent if triggered, None otherwise
         """
         logger.debug(f"Evaluating triggers for {game_id}: status={game_state.status}, period={game_state.period}")
+        
+        # OPTIMIZATION: Only fetch odds for manually queued games
+        # Background monitoring will skip odds to save API credits
+        should_fetch_odds = fetch_odds and self.is_manually_queued(game_id)
         
         # Check halftime trigger
         if game_state.status == "halftime":
@@ -140,7 +171,8 @@ class TriggerEngine:
                 
                 # Generate prediction
                 logger.info(f"Generating halftime prediction for {game_id}...")
-                prediction = self._generate_prediction(game_id, TriggerType.HALFTIME)
+                logger.info(f"should_fetch_odds={should_fetch_odds} (only for manually queued games)")
+                prediction = self._generate_prediction(game_id, TriggerType.HALFTIME, fetch_odds=should_fetch_odds)
                 
                 # Log prediction result
                 if prediction is None:
@@ -174,7 +206,8 @@ class TriggerEngine:
                 
                 # Generate prediction
                 logger.info(f"Generating Q3 prediction for {game_id}...")
-                prediction = self._generate_prediction(game_id, TriggerType.Q3_5MIN)
+                logger.info(f"should_fetch_odds={should_fetch_odds} (only for manually queued games)")
+                prediction = self._generate_prediction(game_id, TriggerType.Q3_5MIN, fetch_odds=should_fetch_odds)
                 
                 # Log prediction result
                 if prediction is None:
@@ -309,11 +342,12 @@ class TriggerEngine:
             logger.error(f"Error processing trigger event: {e}")
             return False
     
-    def evaluate_all(self, platforms: Optional[List[str]] = None) -> List[TriggerEvent]:
+    def evaluate_all(self, platforms: Optional[List[str]] = None, fetch_odds: bool = True) -> List[TriggerEvent]:
         """Evaluate triggers for all active games.
         
         Args:
             platforms: Platforms to post to
+            fetch_odds: Whether to fetch odds API (default True for manual, False for auto)
             
         Returns:
             List of fired TriggerEvent objects
@@ -324,7 +358,7 @@ class TriggerEngine:
             # Get all game states
             game_states = self.monitor.get_all_states()
             
-            logger.info(f"Evaluating triggers for {len(game_states)} games")
+            logger.info(f"Evaluating triggers for {len(game_states)} games (fetch_odds={fetch_odds})")
             
             # Evaluate each game
             for game_id, game_state in game_states.items():
@@ -335,7 +369,7 @@ class TriggerEngine:
                 
                 # Evaluate triggers
                 logger.debug(f"Evaluating {game_id}: status={game_state.status}, period={game_state.period}")
-                event = self.evaluate_game(game_id, game_state)
+                event = self.evaluate_game(game_id, game_state, fetch_odds=fetch_odds)
                 
                 if event:
                     # Process the event
