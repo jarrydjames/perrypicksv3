@@ -27,6 +27,9 @@ from src.automation.post_queue import PostStatus
 
 logger = logging.getLogger(__name__)
 
+# Project root path for running scripts
+PROJECT_ROOT = Path(__file__).parent.parent.parent.absolute()
+
 # Global variables to track running automation
 _automation_thread = None
 _automation_stop_event = None
@@ -1029,6 +1032,35 @@ def run_full_day_automation(
         Comprehensive results dictionary with all automation results
     """
     global _automation_monitor  # Declare global for assignment
+    
+    # Auto-freshen data: Run game scanner to import today's games and update watermark
+    # This ensures fresh data before any predictions are generated
+    try:
+        if progress_callback:
+            progress_callback(0.01, "Freshening game data...")
+        
+        logger.info("Running game scanner to freshen data...")
+        result = agent_run_shell_command(
+            command=f"uv run python scripts/automation/game_scanner.py --date {date.isoformat()}",
+            cwd=PROJECT_ROOT,
+            timeout=60,
+        )
+        
+        if result.get("success"):
+            logger.info("Game scanner completed successfully - data freshened")
+            if progress_callback:
+                progress_callback(0.03, "✓ Data freshened")
+        else:
+            logger.warning(f"Game scanner failed: {result.get('error')}")
+            # Don't fail the whole automation if scanner fails, just log a warning
+            if progress_callback:
+                progress_callback(0.03, "⚠ Game scanner failed (continuing...)")
+    
+    except Exception as e:
+        logger.warning(f"Error running game scanner: {e}")
+        # Don't fail the whole automation if scanner fails, just log a warning
+        if progress_callback:
+            progress_callback(0.03, "⚠ Game scanner error (continuing...)")
     
     # Get game IDs for the date
     game_ids = get_game_ids(date)
