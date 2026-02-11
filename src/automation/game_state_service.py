@@ -145,12 +145,12 @@ class GameStateService:
                 
                 # 2. Evaluate triggers
                 logger.info("[2/3] Evaluating triggers...")
-                # OPTIMIZATION: Don't fetch odds for background automation triggers
-                # Odds should only be fetched when manually queueing gamestate-conscious posts
-                # Background monitoring should run without odds to save API credits
+                # Let TriggerEngine decide whether to fetch odds based on is_manually_queued()
+                # Manually queued games will fetch odds when triggers fire
+                # Background games will NOT fetch odds (saving API credits)
                 fired_events = self.trigger_engine.evaluate_all(
                     platforms=self.platforms,
-                    fetch_odds=False,  # Don't fetch odds for background monitoring
+                    # fetch_odds defaults to True, TriggerEngine will check is_manually_queued()
                 )
                 
                 self.stats["triggers_fired"] += len(fired_events)
