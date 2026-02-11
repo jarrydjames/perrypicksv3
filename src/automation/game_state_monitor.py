@@ -303,6 +303,24 @@ class GameStateMonitor:
         """Get all current game states."""
         return self.game_states.copy()
     
+    def stop_monitoring_game(self, game_id: str) -> bool:
+        """Stop monitoring a specific game.
+        
+        Args:
+            game_id: Game ID to stop monitoring
+            
+        Returns:
+            True if game was being monitored and stopped, False otherwise
+        """
+        if game_id in self.game_states:
+            game_state = self.game_states[game_id]
+            logger.info(f"Stopping monitoring for {game_id}: {game_state.home_name} vs {game_state.away_name}")
+            del self.game_states[game_id]
+            return True
+        else:
+            logger.warning(f"Game {game_id} not being monitored, cannot stop")
+            return False
+    
     def start(self):
         """Start monitoring loop."""
         self.running = True

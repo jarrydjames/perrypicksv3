@@ -1749,6 +1749,58 @@ def get_monitored_games() -> Dict[str, Any]:
         return {}
 
 
+def stop_monitoring_game(game_id: str) -> Dict[str, Any]:
+    """Stop monitoring a specific game.
+    
+    Args:
+        game_id: Game ID to stop monitoring
+        
+    Returns:
+        Status dictionary with success/failure result
+    """
+    # FIX: Read from session state to survive Streamlit reruns
+    automation_monitor = st.session_state.get("automation_monitor")
+    
+    result = {
+        "success": False,
+        "message": "",
+        "game_id": game_id,
+    }
+    
+    try:
+        if automation_monitor is None:
+            result["message"] = "Game monitor not running"
+            logger.warning("Cannot stop monitoring: automation_monitor is None")
+            return result
+        
+        # Works with both GameStateMonitor and GameStateService
+        if hasattr(automation_monitor, 'game_monitor'):
+            # GameStateService - get from game_monitor attribute
+            stopped = automation_monitor.game_monitor.stop_monitoring_game(game_id)
+        elif hasattr(automation_monitor, 'stop_monitoring_game'):
+            # GameStateMonitor - direct call
+            stopped = automation_monitor.stop_monitoring_game(game_id)
+        else:
+            result["message"] = "Monitor does not support stop_monitoring_game"
+            logger.warning(f"automation_monitor type: {type(automation_monitor)} - no stop_monitoring_game method")
+            return result
+        
+        if stopped:
+            result["success"] = True
+            result["message"] = f"Stopped monitoring for {game_id}"
+            logger.info(f"Successfully stopped monitoring for {game_id}")
+        else:
+            result["message"] = f"Game {game_id} was not being monitored"
+            logger.warning(f"Failed to stop monitoring for {game_id}: game not in monitoring list")
+        
+        return result
+    
+    except Exception as e:
+        result["message"] = f"Error stopping monitoring: {e}"
+        logger.error(f"Error stopping monitoring for {game_id}: {e}")
+        return result
+
+
 def test_game_state_service_import() -> Dict[str, Any]:
     """Test GameStateService import and initialization.
     

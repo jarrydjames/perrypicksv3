@@ -72,6 +72,7 @@ from src.automation.automation_ui import (
     get_automation_status,
     get_queue_processor_status,
     get_monitored_games,
+    stop_monitoring_game,
     test_game_state_service_import,
     start_queue_processor,
     stop_queue_processor,
@@ -1474,9 +1475,13 @@ def render_queue_manager():
                     st.markdown(f"- Q3-5min: {'✅ Fired' if q3_fired else '⏳ Waiting'}")
                 
                 # Remove from monitoring button
-                if st.button(f"🚫 Stop Monitoring {game_id}", key=f"stop_monitoring_{game_id}"):
-                    # TODO: Implement stop monitoring functionality
-                    st.warning("⚠️ Stop monitoring functionality not yet implemented")
+                if st.button(f"🚫 Stop Monitoring", key=f"stop_monitoring_{game_id}"):
+                    result = stop_monitoring_game(game_id)
+                    if result.get("success"):
+                        st.toast(f"Stopped monitoring {game_id}", icon="🚫")
+                        st.rerun()
+                    else:
+                        st.error(f"Failed to stop monitoring: {result.get('message')}")
     
     st.markdown("---")
     
