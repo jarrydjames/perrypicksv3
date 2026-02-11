@@ -27,8 +27,21 @@ def _clamp_sd(x: float, lo: float) -> float:
 
 def _safe_team_name(team_block: dict, fallback: str) -> str:
     # NBA endpoints vary; be defensive
-    # PREFER tricodes for consistency across the system
+    # PREFER tricodes for consistency across system
     for k in ("teamTricode", "teamName", "teamCity", "name"):
+        v = team_block.get(k)
+        if isinstance(v, str) and v.strip():
+            return v.strip()
+    return fallback
+
+
+def _full_team_name(team_block: dict, fallback: str) -> str:
+    # Extract full team name for odds API matching
+    # The odds API returns games with full team names like "Los Angeles Lakers"
+    # so we need to pass full names to match correctly
+    
+    # Try teamName first (full name)
+    for k in ("teamName", "name", "teamCity", "teamTricode"):
         v = team_block.get(k)
         if isinstance(v, str) and v.strip():
             return v.strip()
@@ -160,6 +173,12 @@ def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True, fet
     
     home_name = _safe_team_name(home_team, "Home")
     away_name = _safe_team_name(away_team, "Away")
+    
+    # Full team names for odds API matching
+    # The odds API returns games with full names like "Los Angeles Lakers"
+    home_name_full = _full_team_name(home_team, "Home")
+    away_name_full = _full_team_name(away_team, "Away")
+    
     status = _extract_status(game)
     
     # Don't need elapsed_since_halftime_seconds for post generator
@@ -173,7 +192,8 @@ def predict_from_game_id(gid_or_url: str, use_binned_intervals: bool = True, fet
             from src.odds.persistent_cache import PersistentOddsCache
             
             cache = PersistentOddsCache()
-            odds_snapshot = cache.get_or_fetch(home_name, away_name)
+            # Use full team names for odds API matching
+            odds_snapshot = cache.get_or_fetch(home_name_full, away_name_full)
             
             if odds_snapshot:
                 odds_data = {
