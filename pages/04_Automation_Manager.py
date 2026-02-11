@@ -281,6 +281,25 @@ def render_dashboard():
                     if step_name == "attributes":
                         st.json(step)
         
+        # Add manual freshen button
+        if st.button("🔄 Freshen Game Data", key="manual_freshen_data"):
+            with st.spinner("Importing today's games and freshening data..."):
+                import subprocess
+                from pathlib import Path
+                
+                result = subprocess.run(
+                    ["uv", "run", "python", "scripts/automation/game_scanner.py"],
+                    capture_output=True,
+                    text=True,
+                    cwd=Path(__file__).parent.parent
+                )
+                
+                if result.returncode == 0:
+                    st.success("✅ Game data freshened successfully!")
+                    st.info("Import watermark updated. Predictions can now run on fresh data.")
+                else:
+                    st.error(f"❌ Failed to freshen data: {result.stderr}")
+        
         # Add quick toggle
         if st.button("🔘 Toggle Game Monitoring", key="dashboard_toggle_game_monitor"):
             if automation_status.get("running"):
