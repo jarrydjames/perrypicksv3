@@ -889,7 +889,13 @@ def queue_gamestate_conscious_posts(
     automation_monitor = st.session_state.get("automation_monitor")
     if automation_monitor and hasattr(automation_monitor, 'trigger_engine'):
         automation_monitor.trigger_engine.add_manually_queued_game(game_id)
-        logger.info(f"Marked {game_id} as manually queued (odds will be fetched when trigger fires)")
+        logger.info(f"Marked {game_id} as manually queued in automation_monitor.trigger_engine")
+    else:
+        # Automation not running - store in session state for when it starts
+        if "manually_queued_games" not in st.session_state:
+            st.session_state["manually_queued_games"] = set()
+        st.session_state["manually_queued_games"].add(game_id)
+        logger.info(f"Marked {game_id} as manually queued in session state (automation not running)")
     
     trigger_types = ["pregame", "halftime", "q3"]
     
@@ -1961,6 +1967,14 @@ def start_game_state_monitor(
         
         # FIX: Store service in session state so it survives Streamlit reruns
         st.session_state["automation_monitor"] = service
+        
+        # Load manually queued games from session state
+        manually_queued_games = st.session_state.get("manually_queued_games", set())
+        if manually_queued_games:
+            logger.info(f"Loading {len(manually_queued_games)} manually queued game(s) into TriggerEngine")
+            for game_id in manually_queued_games:
+                service.trigger_engine.add_manually_queued_game(game_id)
+                logger.info(f"  - Loaded {game_id}")
         
         # Start monitoring in background thread
         def monitor_loop():

@@ -115,6 +115,15 @@ class GameStateMonitor:
                 # Calculate scores from periods
                 home_score, away_score = self._calculate_scores(game_data)
                 
+                # Check if time_remaining indicates end of period
+                # Format can be "0:00", "00:00", or with trailing zeros
+                time_remaining_zero = (
+                    time_remaining == "0:00" or
+                    time_remaining == "00:00" or
+                    time_remaining.startswith("00:00") or
+                    time_remaining.startswith("0:00")
+                )
+                
                 # Detect halftime BEFORE normalizing status
                 # Halftime = after Q2 ends, before Q3 starts
                 # Correct logic: Q2 has finished (time_remaining is "00:00" or 0:00)
@@ -378,12 +387,27 @@ class GameStateMonitor:
         return state.status == "halftime"
     
     def is_q3_trigger(self, game_id: str) -> bool:
-        """Check if game has reached the Q3 trigger point."""
+        """Check if game has reached the Q3 trigger point (5 minutes left in Q3)."""
         state = self.get_game_state(game_id)
         if not state:
             return False
 
-        return state.period >= 3 and state.status in ("live", "halftime")
+        # Q3 trigger = 5 minutes left in Q3 (or less)
+        # Must be in Q3 (period == 3) and time_remaining <= 5:00
+        # Example: time_remaining = "4:32" -> trigger, time_remaining = "6:00" -> don't trigger
+        
+        # Parse time_remaining to minutes
+        try:
+            time_parts = state.time_remaining.split(':')
+            minutes_left = int(time_parts[0])
+        except (ValueError, IndexError, AttributeError):
+            minutes_left = 12  # Default to full quarter if can't parse
+        
+        return (
+            state.period == 3 and       # Must be in Q3
+            state.status == "live" and    # Must be live (not halftime)
+            minutes_left <= 5            # 5 minutes or less left in Q3
+        )
 
     def is_q3_five_minutes_left(self, game_id: str) -> bool:
         """Backward-compatible alias for Q3 trigger detection."""
