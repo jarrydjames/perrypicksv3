@@ -1448,14 +1448,18 @@ def render_queue_manager():
         st.markdown(f"**{len(monitored_games)} game(s) being monitored:**")
         
         for game_id, game_state in monitored_games.items():
-            with st.expander(f"🏀 {game_id}: {game_state.get('home_name', 'Home')} vs {game_state.get('away_name', 'Away')}", expanded=False):
+            # Get team names with fallbacks
+            home_name = game_state.get('home_name') or 'Home'
+            away_name = game_state.get('away_name') or 'Away'
+            
+            with st.expander(f"🏀 {home_name} vs {away_name} ({game_id})", expanded=False):
                 col1, col2 = st.columns(2)
                 
                 with col1:
                     st.markdown("**Game Info:**")
                     st.markdown(f"- Status: `{game_state.get('status', 'Unknown')}`")
-                    st.markdown(f"- Quarter: `{game_state.get('quarter', 'Unknown')}`")
-                    st.markdown(f"- Clock: `{game_state.get('clock', 'Unknown')}`")
+                    st.markdown(f"- Quarter: `{game_state.get('period', 'Unknown')}`")
+                    st.markdown(f"- Clock: `{game_state.get('time_remaining', 'Unknown')}`")
                     st.markdown(f"- Score: `{game_state.get('away_score', 0)} - {game_state.get('home_score', 0)}`")
                 
                 with col2:

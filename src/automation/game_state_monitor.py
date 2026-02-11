@@ -28,6 +28,8 @@ class GameState:
         time_remaining: str = "0:00",
         home_score: int = 0,
         away_score: int = 0,
+        home_name: Optional[str] = None,
+        away_name: Optional[str] = None,
     ):
         self.game_id = game_id
         self.status = status  # 'scheduled', 'live', 'halftime', 'finished', etc.
@@ -35,6 +37,8 @@ class GameState:
         self.time_remaining = time_remaining  # Time remaining in period (e.g., "5:32", "0:00")
         self.home_score = home_score
         self.away_score = away_score
+        self.home_name = home_name  # Team full name
+        self.away_name = away_name  # Team full name
         self.last_updated = datetime.now()
     
     def to_dict(self) -> Dict[str, Any]:
@@ -46,6 +50,8 @@ class GameState:
             "time_remaining": self.time_remaining,
             "home_score": self.home_score,
             "away_score": self.away_score,
+            "home_name": self.home_name,
+            "away_name": self.away_name,
             "last_updated": self.last_updated.isoformat(),
         }
 
@@ -142,6 +148,12 @@ class GameStateMonitor:
                 else:
                     status = "scheduled"
                 
+                # Extract team names
+                home_team = game_data.get("homeTeam", {})
+                away_team = game_data.get("awayTeam", {})
+                home_name = home_team.get("teamName", home_team.get("fullName", "Home"))
+                away_name = away_team.get("teamName", away_team.get("fullName", "Away"))
+                
                 # Log for debugging
                 if is_halftime:
                     logger.info(
@@ -165,6 +177,8 @@ class GameStateMonitor:
                     time_remaining=time_remaining,
                     home_score=home_score,
                     away_score=away_score,
+                    home_name=home_name,
+                    away_name=away_name,
                 )
                 
                 # Update cache
