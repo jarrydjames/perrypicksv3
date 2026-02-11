@@ -460,11 +460,21 @@ def predict_game(
                     'status': 'success',
                 }
                 
-                # Fetch odds if requested (for bet recommendations)
-                if fetch_odds:
+                # Copy odds from raw_result if already fetched (by predict_from_game_id_v2_ci)
+                # The halftime model fetches odds with full team names, so we preserve them
+                for key in ['odds_home_ml', 'odds_away_ml', 'odds_total_line', 
+                           'odds_total_over', 'odds_total_under', 
+                           'odds_spread_home_line', 'odds_spread_home', 'odds_spread_away']:
+                    if key in raw_result:
+                        result[key] = raw_result[key]
+                
+                # Fetch odds if requested and not already fetched (for bet recommendations)
+                # The halftime model may have already fetched odds with full team names
+                if fetch_odds and 'odds_total_line' not in result:
                     try:
                         # Use persistent cache to avoid repeated API calls
                         cache = PersistentOddsCache()
+                        # Use team names from raw_result (may be tricodes, but cache handles matching)
                         odds_snapshot = cache.get_or_fetch(raw_result.get('home_name', 'Home'), raw_result.get('away_name', 'Away'))
                         
                         if odds_snapshot:
