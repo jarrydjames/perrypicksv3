@@ -1,0 +1,151 @@
+{
+  "version": "champion_testing_v1",
+  "objective": {
+    "metric": "mae_total",
+    "secondary": [
+      "mae_margin",
+      "rmse_total",
+      "ece_win",
+      "stability_std_mae_total"
+    ],
+    "maximize": false
+  },
+  "required_models": [
+    "ridge",
+    "elasticnet",
+    "random_forest",
+    "gradient_boosting",
+    "xgboost",
+    "lightgbm",
+    "catboost",
+    "neural_network",
+    "quantile_gbm",
+    "huber",
+    "extra_trees",
+    "stacked_ensemble"
+  ],
+  "global_checks": {
+    "fold_strategy": "nested_walk_forward",
+    "outer_test_size": 200,
+    "outer_step_size": 200,
+    "inner_folds": 5,
+    "min_train_size": 500,
+    "seed": 42
+  },
+  "states": {
+    "pregame": {
+      "dataset_path": "data/processed/pregame_team_v2.parquet",
+      "required_columns": [
+        "game_id",
+        "total",
+        "margin",
+        "home_efg",
+        "away_efg"
+      ],
+      "targets": [
+        "total",
+        "margin"
+      ],
+      "leaderboard_path": "reports/champion_runs/latest/pregame_leaderboard.csv",
+      "stages": [
+        {
+          "name": "build",
+          "command": "python src/build_dataset_pregame.py",
+          "required_artifacts": [
+            "data/processed/pregame_team_v2.parquet"
+          ]
+        },
+        {
+          "name": "train",
+          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/pregame_team_v2.parquet --out reports/champion_runs/latest/pregame_fold_metrics.csv --include-xgb --include-cat",
+          "required_artifacts": [
+            "reports/champion_runs/latest/pregame_fold_metrics.csv"
+          ]
+        },
+        {
+          "name": "leaderboard",
+          "command": "python src/pipelines/build_champion_leaderboard.py --input reports/champion_runs/latest/pregame_fold_metrics.csv --output reports/champion_runs/latest/pregame_leaderboard.csv --state pregame",
+          "required_artifacts": [
+            "reports/champion_runs/latest/pregame_leaderboard.csv"
+          ]
+        }
+      ]
+    },
+    "halftime": {
+      "dataset_path": "data/processed/halftime_with_temporal_features_total.parquet",
+      "required_columns": [
+        "game_id",
+        "h2_total",
+        "h2_margin",
+        "h1_total",
+        "h1_margin"
+      ],
+      "targets": [
+        "h2_total",
+        "h2_margin"
+      ],
+      "leaderboard_path": "reports/champion_runs/latest/halftime_leaderboard.csv",
+      "stages": [
+        {
+          "name": "build",
+          "command": "python src/build_dataset_v2.py",
+          "required_artifacts": [
+            "data/processed/halftime_with_temporal_features_total.parquet"
+          ]
+        },
+        {
+          "name": "train",
+          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/halftime_with_temporal_features_total.parquet --out reports/champion_runs/latest/halftime_fold_metrics.csv --include-xgb --include-cat",
+          "required_artifacts": [
+            "reports/champion_runs/latest/halftime_fold_metrics.csv"
+          ]
+        },
+        {
+          "name": "leaderboard",
+          "command": "python src/pipelines/build_champion_leaderboard.py --input reports/champion_runs/latest/halftime_fold_metrics.csv --output reports/champion_runs/latest/halftime_leaderboard.csv --state halftime",
+          "required_artifacts": [
+            "reports/champion_runs/latest/halftime_leaderboard.csv"
+          ]
+        }
+      ]
+    },
+    "q3": {
+      "dataset_path": "data/processed/q3_team_v2.parquet",
+      "required_columns": [
+        "game_id",
+        "q3_total",
+        "q3_margin",
+        "home_efg",
+        "away_efg"
+      ],
+      "targets": [
+        "q3_total",
+        "q3_margin"
+      ],
+      "leaderboard_path": "reports/champion_runs/latest/q3_leaderboard.csv",
+      "stages": [
+        {
+          "name": "build",
+          "command": "python src/build_dataset_q3.py",
+          "required_artifacts": [
+            "data/processed/q3_team_v2.parquet"
+          ]
+        },
+        {
+          "name": "train",
+          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/q3_team_v2.parquet --out reports/champion_runs/latest/q3_fold_metrics.csv --include-xgb --include-cat",
+          "required_artifacts": [
+            "reports/champion_runs/latest/q3_fold_metrics.csv"
+          ]
+        },
+        {
+          "name": "leaderboard",
+          "command": "python src/pipelines/build_champion_leaderboard.py --input reports/champion_runs/latest/q3_fold_metrics.csv --output reports/champion_runs/latest/q3_leaderboard.csv --state q3",
+          "required_artifacts": [
+            "reports/champion_runs/latest/q3_leaderboard.csv"
+          ]
+        }
+      ]
+    }
+  }
+}
