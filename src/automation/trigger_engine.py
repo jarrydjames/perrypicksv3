@@ -217,6 +217,13 @@ class TriggerEngine:
             Prediction dictionary or None if failed
         """
         try:
+            # OPTIMIZATION: Don't fetch odds for games that are "final"
+            # Check game state before fetching
+            game_state = self.monitor.get_game_state(game_id)
+            if game_state and game_state.status == "finished":
+                logger.info(f"Skipping odds fetch for {game_id} - game is finished")
+                fetch_odds = False
+            
             # Map trigger type to prediction mode
             mode = "halftime" if trigger_type == TriggerType.HALFTIME else "q3"
             

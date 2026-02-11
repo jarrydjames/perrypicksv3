@@ -877,11 +877,18 @@ def queue_gamestate_conscious_posts(
     trigger_types = ["pregame", "halftime", "q3"]
     
     for trigger_type in trigger_types:
+        # OPTIMIZATION: Don't fetch odds when queueing posts
+        # Odds should only be fetched when triggers actually fire (halftime/Q3)
+        # This saves API credits - we don't need odds for posts that haven't triggered yet
+        # Pregame posts: fetch odds=False (will fetch when posted)
+        # Halftime posts: fetch odds=False (will fetch when halftime trigger fires)
+        # Q3 posts: fetch odds=False (will fetch when Q3 trigger fires)
         result = run_prediction(
             game_id=game_id,
             trigger_type=trigger_type,
             platforms=platforms,
             dry_run=dry_run,
+            fetch_odds=False,  # Don't fetch odds when queueing - save API credits
             allow_duplicates=allow_duplicates,
         )
         
