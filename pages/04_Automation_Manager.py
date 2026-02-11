@@ -90,16 +90,9 @@ from src.data.scoreboard import format_game_label
 # Initialize session state
 init_session_state()
 
-# Auto-refresh hook - refresh every 30 seconds when automation is running
-if HAS_AUTOREFRESH:
-    automation_status = get_automation_status()
-    if automation_status.get("running"):
-        st_autorefresh(limit=30000, key="automation_manager_autorefresh")
-else:
-    # Auto-refresh not available
-    if "no_autorefresh_warning" not in st.session_state:
-        st.warning("⚠️ Auto-refresh requires `streamlit-autorefresh`. Install with: `uv pip install streamlit-autorefresh`")
-        st.session_state["no_autorefresh_warning"] = True
+# Initialize selected tab state
+if "selected_tab" not in st.session_state:
+    st.session_state["selected_tab"] = "Dashboard"
 
 # Initialize logging
 logger = logging.getLogger(__name__)
@@ -1787,28 +1780,38 @@ def main():
     st.markdown("# 🤖 Automation Manager")
     st.markdown("Manage PerryPicks v3 social media automation.")
     
-    # Tabs
-    tab_dashboard, tab_manual, tab_queue, tab_history, tab_settings, tab_logs = st.tabs(
-        ["Dashboard", "Manual", "Queue", "History", "Settings", "Logs"]
+    # Tab navigation (selectbox allows persistence across reruns)
+    selected_tab = st.selectbox(
+        "Navigate to:",
+        ["Dashboard", "Manual", "Queue", "History", "Settings", "Logs"],
+        index=["Dashboard", "Manual", "Queue", "History", "Settings", "Logs"].index(
+            st.session_state.get("selected_tab", "Dashboard")
+        ),
+        label_visibility="collapsed",
     )
     
-    # Render each tab's content
-    with tab_dashboard:
+    # Update session state with selected tab
+    st.session_state["selected_tab"] = selected_tab
+    
+    # Auto-refresh: only on Dashboard and Queue (tabs that need live data)
+    # Background monitoring continues regardless, but we only refresh UI on tabs that show live data
+    if HAS_AUTOREFRESH:
+        automation_status = get_automation_status()
+        if automation_status.get("running") and selected_tab in ["Dashboard", "Queue"]:
+            st_autorefresh(limit=30000, key="automation_manager_autorefresh")
+    
+    # Render selected tab content
+    if selected_tab == "Dashboard":
         render_dashboard()
-    
-    with tab_manual:
+    elif selected_tab == "Manual":
         render_manual_predictions()
-    
-    with tab_queue:
+    elif selected_tab == "Queue":
         render_queue_manager()
-    
-    with tab_history:
+    elif selected_tab == "History":
         render_history()
-    
-    with tab_settings:
+    elif selected_tab == "Settings":
         render_settings()
-    
-    with tab_logs:
+    elif selected_tab == "Logs":
         render_logs()
 
 
