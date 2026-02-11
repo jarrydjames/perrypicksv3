@@ -110,6 +110,30 @@ def get_queue() -> PostQueue:
         return PostQueue()
 
 
+def delete_post_from_queue(post_id: str) -> Dict[str, Any]:
+    """Delete a post from the queue.
+    
+    Args:
+        post_id: Post ID to delete
+        
+    Returns:
+        Result dict with success flag
+    """
+    queue = get_queue()
+    success = queue.delete_post(post_id)
+    
+    if success:
+        return {
+            "success": True,
+            "message": f"Post {post_id} deleted from queue",
+        }
+    else:
+        return {
+            "success": False,
+            "message": f"Post {post_id} not found in queue",
+        }
+
+
 def render_status_card(
     title: str,
     value: str,
@@ -187,7 +211,7 @@ def render_platform_status(
 
 
 def render_queue_table(posts: List[Any], max_rows: int = 20):
-    """Render queue as table."""
+    """Render queue as table with delete buttons."""
     if not posts:
         st.info("No posts in queue")
         return
@@ -195,9 +219,8 @@ def render_queue_table(posts: List[Any], max_rows: int = 20):
     # Limit rows
     posts = posts[:max_rows]
     
-    # Convert to DataFrame
-    data = []
-    for post in posts:
+    # Render each post as a row with delete button
+    for i, post in enumerate(posts):
         # Parse created_at_utc (ISO 8601 string) and format it
         try:
             created_dt = datetime.fromisoformat(post.created_at_utc.replace("Z", "+00:00"))
@@ -206,17 +229,47 @@ def render_queue_table(posts: List[Any], max_rows: int = 20):
             logger.warning(f"Error parsing created_at_utc for {post.post_id}: {e}")
             created_str = post.created_at_utc[:16] if post.created_at_utc else "Unknown"
         
-        data.append({
-            "Post ID": post.post_id[:20] + "..." if len(post.post_id) > 20 else post.post_id,
-            "Game ID": post.game_id,
-            "Platform": post.platform,
-            "Status": post.status.value,
-            "Created": created_str,
-            "Content": post.content[:50] + "..." if len(post.content) > 50 else post.content,
-        })
-    
-    df = pd.DataFrame(data)
-    st.dataframe(df, use_container_width=True)
+        # Status color
+        status_colors = {
+            "pending": "🟡",
+            "posting": "🔄",
+            "posted": "✅",
+            "failed": "❌",
+            "retrying": "⚠️",
+        }
+        status_emoji = status_colors.get(post.status.value, "❓")
+        
+        # Create row with columns
+        col1, col2, col3, col4, col5, col6 = st.columns([0.15, 0.1, 0.1, 0.1, 0.3, 0.25])
+        
+        with col1:
+            st.text(post.game_id)
+        
+        with col2:
+            st.text(post.platform)
+        
+        with col3:
+            st.text(status_emoji)
+        
+        with col4:
+            st.text(created_str)
+        
+        with col5:
+            content_preview = post.content[:40] + "..." if len(post.content) > 40 else post.content
+            st.text(content_preview)
+        
+        with col6:
+            # Delete button
+            button_key = f"delete_{post.post_id}_{i}"
+            if st.button("🗑️", key=button_key, help=f"Delete post {post.post_id}"):
+                result = delete_post_from_queue(post.post_id)
+                if result.get("success"):
+                    st.toast(f"Deleted post: {post.post_id[:20]}...", icon="🗑️")
+                    st.rerun()
+                else:
+                    st.error(f"Failed to delete post: {result.get('message')}")
+        
+        st.divider()
 
 
 def render_post_content(content: str, max_chars: int = 500):

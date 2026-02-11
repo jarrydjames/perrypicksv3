@@ -1366,8 +1366,68 @@ def render_queue_manager():
     """Render queue management interface."""
     st.markdown("## 📋 Queue Manager")
     
+    # Section 1: Triggers Waiting to Fire
+    st.markdown("### ⏳ Triggers Waiting to Fire")
+    st.info("ℹ️ These games are being monitored and will fire predictions when they reach halftime or Q3-5min.")
+    
+    monitored_games = get_monitored_games()
+    
+    if not monitored_games:
+        st.info("No games being monitored")
+    else:
+        st.markdown(f"**{len(monitored_games)} game(s) being monitored:**")
+        
+        for game_id, game_state in monitored_games.items():
+            with st.expander(f"🏀 {game_id}: {game_state.get('home_name', 'Home')} vs {game_state.get('away_name', 'Away')}", expanded=False):
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("**Game Info:**")
+                    st.markdown(f"- Status: `{game_state.get('status', 'Unknown')}`")
+                    st.markdown(f"- Quarter: `{game_state.get('quarter', 'Unknown')}`")
+                    st.markdown(f"- Clock: `{game_state.get('clock', 'Unknown')}`")
+                    st.markdown(f"- Score: `{game_state.get('away_score', 0)} - {game_state.get('home_score', 0)}`")
+                
+                with col2:
+                    st.markdown("**Trigger Status:**")
+                    
+                    # Check if halftime has fired
+                    halftime_fired = f"{game_id}_halftime" in st.session_state.get("fired_triggers", set())
+                    st.markdown(f"- Halftime: {'✅ Fired' if halftime_fired else '⏳ Waiting'}")
+                    
+                    # Check if Q3 has fired
+                    q3_fired = f"{game_id}_q3" in st.session_state.get("fired_triggers", set())
+                    st.markdown(f"- Q3-5min: {'✅ Fired' if q3_fired else '⏳ Waiting'}")
+                
+                # Remove from monitoring button
+                if st.button(f"🚫 Stop Monitoring {game_id}", key=f"stop_monitoring_{game_id}"):
+                    # TODO: Implement stop monitoring functionality
+                    st.warning("⚠️ Stop monitoring functionality not yet implemented")
+    
+    st.markdown("---")
+    
+    # Section 2: Posts in Queue
+    st.markdown("### 📨 Posts in Queue")
+    
     queue = get_queue()
     all_posts = queue.get_all_posts()
+    
+    # Show queue stats
+    stats = queue.get_stats()
+    st.markdown("**Queue Stats:**")
+    col1, col2, col3, col4, col5 = st.columns(5)
+    with col1:
+        st.metric("Total", stats["total"])
+    with col2:
+        st.metric("Pending", stats["pending"], delta_color="normal")
+    with col3:
+        st.metric("Posted", stats["posted"])
+    with col4:
+        st.metric("Failed", stats["failed"])
+    with col5:
+        st.metric("Retry", stats["retrying"])
+    
+    st.markdown("---")
     
     if not all_posts:
         st.info("No posts in queue")
@@ -1415,6 +1475,9 @@ def render_queue_manager():
     
     # Queue table
     if filtered_posts:
+        # Show legend
+        st.markdown("**Status Legend:** 🟡 Pending | 🔄 Posting | ✅ Posted | ❌ Failed | ⚠️ Retrying")
+        
         render_queue_table(filtered_posts, max_rows=50)
         
         # Actions

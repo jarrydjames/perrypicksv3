@@ -375,6 +375,25 @@ class PostQueue:
         
         return stats
     
+    def delete_post(self, post_id: str) -> bool:
+        """
+        Delete a post from the queue.
+        
+        Args:
+            post_id: Post ID to delete
+            
+        Returns:
+            True if deleted, False if not found
+        """
+        if post_id in self.queue:
+            del self.queue[post_id]
+            self._save_queue()
+            logger.info(f"Deleted post from queue: {post_id}")
+            return True
+        else:
+            logger.warning(f"Post not found for deletion: {post_id}")
+            return False
+    
     def _save_queue(self):
         """Save queue to disk."""
         try:
