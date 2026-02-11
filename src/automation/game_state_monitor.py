@@ -143,7 +143,6 @@ class GameStateMonitor:
                     period == 2 and            # Currently at period 2 (end of Q2)
                     time_remaining_zero         # Time remaining is 00:00 (Q2 finished)
                 )
-                )
                 
                 # DEBUG: Log halftime detection details
                 if period == 2 and time_remaining_zero:
