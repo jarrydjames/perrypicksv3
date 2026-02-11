@@ -270,6 +270,23 @@ def render_dashboard():
         else:
             st.caption("Thread: Inactive")
         
+        # Last activity timestamp
+        if "status" in automation_status:
+            status_data = automation_status["status"]
+            if "last_update" in status_data and status_data["last_update"]:
+                try:
+                    last_update = datetime.fromisoformat(status_data["last_update"])
+                    time_ago = (datetime.now() - last_update).total_seconds()
+                    if time_ago < 60:
+                        time_str = f"{int(time_ago)}s ago"
+                    elif time_ago < 3600:
+                        time_str = f"{int(time_ago // 60)}m ago"
+                    else:
+                        time_str = f"{int(time_ago // 3600)}h ago"
+                    st.caption(f"Last activity: {time_str}")
+                except:
+                    pass
+        
         # Debug info
         with st.expander("🔍 Debug Info"):
             st.json(automation_status)
@@ -363,6 +380,21 @@ def render_dashboard():
         processed = stats.get("processed", 0)
         st.caption(f"Posts processed: {processed}")
         
+        # Last processed timestamp
+        if "last_processed_at" in stats and stats["last_processed_at"]:
+            try:
+                last_processed = datetime.fromisoformat(stats["last_processed_at"])
+                time_ago = (datetime.now() - last_processed).total_seconds()
+                if time_ago < 60:
+                    time_str = f"{int(time_ago)}s ago"
+                elif time_ago < 3600:
+                    time_str = f"{int(time_ago // 60)}m ago"
+                else:
+                    time_str = f"{int(time_ago // 3600)}h ago"
+                st.caption(f"Last processed: {time_str}")
+            except:
+                pass
+        
         # Add quick toggle
         if st.button("🔘 Toggle Queue Processing", key="dashboard_toggle_queue"):
             if queue_status.get("running"):
@@ -377,6 +409,30 @@ def render_dashboard():
                 start_queue_processor(poll_interval=poll_interval, batch_size=batch_size)
                 st.success("Queue processing started")
                 st.rerun()
+    
+    st.markdown("---")
+    
+    # How It Works
+    with st.expander("📖 How Automation Works", expanded=False):
+        st.markdown(
+            """**Service Control:**\n\n"
+            "• Use the buttons above to start/stop game monitoring and queue processing services\n"
+            "• Each service has its own toggle button for independent control\n"
+            "• Configure queue processing settings (poll interval, batch size) below\n\n\n"
+            "**Game State Monitoring Flow:**\n\n"
+            "1. **Service starts** - Polls NBA API every 30 seconds\n"
+            "2. **Game tracking** - Monitors period and time for all active games\n"
+            "3. **Halftime trigger** - When game reaches end of Q2, generates halftime prediction\n"
+            "4. **Q3 trigger** - When game reaches 5 minutes left in Q3, generates Q3 prediction\n"
+            "5. **Queue processor** - Polls queue periodically and posts to platforms\n"
+            "6. **Repeat** - Continues monitoring until games finish or service stops\n\n\n"
+            "**Trigger Logic:**\n"
+            "• **Halftime**: period=2 AND time_remaining=0:00\n"
+            "• **Q3-5min**: period=3 AND time_remaining≈5:00\n\n\n"
+            "**Duplicate Prevention:**\n"
+            "Each trigger is marked as fired after first execution, "
+            "preventing duplicate posts for the same game."""
+        )
     
     st.markdown("---")
     
@@ -1732,8 +1788,8 @@ def main():
     st.markdown("Manage PerryPicks v3 social media automation.")
     
     # Tabs
-    tab_dashboard, tab_manual, tab_queue, tab_history, tab_settings, tab_logs, tab_game_state = st.tabs(
-        ["Dashboard", "Manual", "Queue", "History", "Settings", "Logs", "Game State"]
+    tab_dashboard, tab_manual, tab_queue, tab_history, tab_settings, tab_logs = st.tabs(
+        ["Dashboard", "Manual", "Queue", "History", "Settings", "Logs"]
     )
     
     # Render each tab's content
@@ -1754,167 +1810,8 @@ def main():
     
     with tab_logs:
         render_logs()
-    
-    with tab_game_state:
-        render_game_state_monitor()
 
-def render_game_state_monitor():
-    """Render game state monitoring tab.
-    
-    This tab allows monitoring and control of the live game state
-    monitoring service that automatically generates predictions at halftime and Q3-5min.
-    """
-    st.markdown("### 🎮 Game State Monitor")
-    
-    st.info(
-        """**Live Game State Monitoring**\n\n"
-        "This service monitors NBA games in real-time and automatically:\n"
-        "• Generates predictions when games reach **halftime**\n"
-        "• Generates predictions when games have **5 minutes left in Q3**\n"
-        "• Automatically processes queue to post to platforms\n"
-        "• Runs hands-off - no manual intervention needed"""
-    )
-    
-    st.markdown("---")
-    
-    # Status Flags for both services
-    st.markdown("### 🚦 Service Status")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        # Game Monitoring Status
-        st.markdown("#### 🎮 Game Monitoring")
-        
-        # Get automation status
-        automation_status = get_automation_status()
-        
-        # Status indicator
-        if automation_status.get("running"):
-            st.success("🟢 **LIVE** - Game State Monitor is active")
-        else:
-            st.warning("🔴 **STOPPED** - Game State Monitor is inactive")
-        
-        # Thread status
-        if automation_status.get("thread_alive"):
-            st.caption(f"Thread: {automation_status.get('thread_name', 'N/A')}")
-        else:
-            st.caption("Thread: Not running")
-        
-        # Last update
-        if "status" in automation_status:
-            status_data = automation_status["status"]
-            if "last_update" in status_data and status_data["last_update"]:
-                try:
-                    last_update = datetime.fromisoformat(status_data["last_update"])
-                    time_ago = (datetime.now() - last_update).total_seconds()
-                    if time_ago < 60:
-                        time_str = f"{int(time_ago)}s ago"
-                    elif time_ago < 3600:
-                        time_str = f"{int(time_ago // 60)}m ago"
-                    else:
-                        time_str = f"{int(time_ago // 3600)}h ago"
-                    st.caption(f"Last activity: {time_str}")
-                except:
-                    pass
-    
-    with col2:
-        # Queue Processing Status
-        st.markdown("#### 📨 Queue Processing")
-        
-        # Get queue processor status
-        queue_status = get_queue_processor_status()
-        
-        # Status indicator
-        if queue_status.get("running"):
-            st.success("🟢 **LIVE** - Queue Processor is active")
-        else:
-            st.warning("🔴 **STOPPED** - Queue Processor is inactive")
-        
-        # Thread status
-        if queue_status.get("thread_alive"):
-            st.caption(f"Thread: {queue_status.get('thread_name', 'N/A')}")
-        else:
-            st.caption("Thread: Not running")
-        
-        # Stats
-        stats = queue_status.get("stats", {})
-        processed = stats.get("processed", 0)
-        st.caption(f"Posts processed: {processed}")
-        
-        if "last_processed_at" in stats and stats["last_processed_at"]:
-            try:
-                last_processed = datetime.fromisoformat(stats["last_processed_at"])
-                time_ago = (datetime.now() - last_processed).total_seconds()
-                if time_ago < 60:
-                    time_str = f"{int(time_ago)}s ago"
-                elif time_ago < 3600:
-                    time_str = f"{int(time_ago // 60)}m ago"
-                else:
-                    time_str = f"{int(time_ago // 3600)}h ago"
-                st.caption(f"Last processed: {time_str}")
-            except:
-                pass
-    
-    st.markdown("---")
-    
-    # One-off queue processing
-    st.markdown("### ⚡ Manual Queue Processing")
-    st.info(
-        "**Use the Dashboard tab** to start/stop game monitoring and queue processing services. "
-        "Use the button below to manually process the queue now (one-time action)."
-    )
-    
-    if st.button("🔄 Process Queue Now", use_container_width=True, key="game_state_process_now"):
-        with st.spinner("Processing queue..."):
-            result = process_queue(max_posts=50)
-            
-            processed = result.get('processed', 0)
-            successful = result.get('successful', 0)
-            
-            if processed > 0:
-                st.success(f"✅ Processed {processed} post(s)! ({successful} successful)")
-            else:
-                st.info("ℹ️ No pending posts to process")
-    
-    st.markdown("---")
-    
-    # Detailed status
-    st.markdown("### 📊 Detailed Status")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("#### Game Monitor Details")
-        render_automation_status()
-    
-    with col2:
-        st.markdown("#### Queue Processor Details")
-        render_queue_processor_status()
-    
-    st.markdown("---")
-    
-    # Instructions
-    with st.expander("📖 How It Works", expanded=False):
-        st.markdown(
-            """**Service Control:**\n\n"
-            "• Use the **Dashboard tab** to start/stop game monitoring and queue processing services\n"
-            "• Each service has its own toggle button for independent control\n"
-            "• Configure queue processing settings (poll interval, batch size) in Dashboard\n\n\n"
-            "**Game State Monitoring Flow:**\n\n"
-            "1. **Service starts** - Polls NBA API every 30 seconds\n"
-            "2. **Game tracking** - Monitors period and time for all active games\n"
-            "3. **Halftime trigger** - When game reaches end of Q2, generates halftime prediction\n"
-            "4. **Q3 trigger** - When game reaches 5 minutes left in Q3, generates Q3 prediction\n"
-            "5. **Queue processor** - Polls queue periodically and posts to platforms\n"
-            "6. **Repeat** - Continues monitoring until games finish or service stops\n\n\n"
-            "**Trigger Logic:**\n"
-            "• **Halftime**: period=2 AND time_remaining=0:00\n"
-            "• **Q3-5min**: period=3 AND time_remaining≈5:00\n\n\n"
-            "**Duplicate Prevention:**\n"
-            "Each trigger is marked as fired after first execution, "
-            "preventing duplicate posts for the same game."""
-        )
+
 
 if __name__ == "__main__":
     main()
