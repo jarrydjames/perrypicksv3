@@ -110,14 +110,7 @@ def _sample_lgbm_params(rng: np.random.Generator) -> Dict[str, Any]:
     return {
         "n_estimators": int(rng.integers(400, 1400)),
         "learning_rate": float(rng.choice([0.02, 0.03, 0.05, 0.08])),
-        "max_depth": int(rng.integers(3, 7)),
-        "subsample": float(rng.choice([0.7, 0.8, 0.9, 1.0])),
-        "colsample_bytree": float(rng.choice([0.7, 0.8, 0.9, 1.0])),
-        "min_child_samples": int(rng.integers(10, 40)),
-        "reg_alpha": float(rng.choice([0.0, 0.1, 0.5, 1.0])),
-        "reg_lambda": float(rng.choice([0.0, 0.1, 0.5, 1.0])),
-        "n_jobs": -1,
-        "verbosity": -1,
+        "num_leaves": int(rng.integers(15, 127)),
     }
 
 
@@ -346,7 +339,7 @@ def _tune_xgb_optuna(
     if study.best_trial is None:
         raise RuntimeError("Optuna XGB tuning produced no trials")
 
-    return dict(study.best_trial.params) | {"n_jobs": -1}, float(study.best_value)
+    return dict(study.best_trial.params), float(study.best_value)
 
 
 def _tune_cat(
@@ -565,13 +558,7 @@ def _tune_lgbm_optuna(
         params = {
             "n_estimators": int(trial.suggest_int("n_estimators", 300, 1800, step=100)),
             "learning_rate": float(trial.suggest_float("learning_rate", 0.015, 0.12, log=True)),
-            "max_depth": int(trial.suggest_int("max_depth", 3, 8)),
-            "subsample": float(trial.suggest_float("subsample", 0.65, 1.0)),
-            "colsample_bytree": float(trial.suggest_float("colsample_bytree", 0.65, 1.0)),
-            "min_child_samples": int(trial.suggest_int("min_child_samples", 5, 50)),
-            "reg_alpha": float(trial.suggest_float("reg_alpha", 0.0, 1.0)),
-            "reg_lambda": float(trial.suggest_float("reg_lambda", 0.0, 1.0)),
-            "n_jobs": -1,
+            "num_leaves": int(trial.suggest_int("num_leaves", 15, 127)),
         }
         fold_scores: List[float] = []
         for tr, te in splits:
@@ -593,7 +580,7 @@ def _tune_lgbm_optuna(
     if study.best_trial is None:
         raise RuntimeError("Optuna LGBM tuning produced no trials")
 
-    return dict(study.best_trial.params) | {"n_jobs": -1}, float(study.best_value)
+    return dict(study.best_trial.params), float(study.best_value)
 
 
 def run_nested_backtest(
