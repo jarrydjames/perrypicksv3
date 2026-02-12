@@ -150,16 +150,15 @@ def detect_game_state(game_id: str) -> Tuple[str, Optional[dict]]:
                 # No period 3 data yet - assume halftime
                 return ('halftime', game)
         elif max_period == 3:
-            # Period 3 - check if we're halfway through
-            # Q3 is 12 minutes; halfway is 6 minutes remaining
+            # Period 3 - check trigger alignment with automation.
+            # Q3 trigger is 5:00 remaining (or less).
             minutes_remaining = parse_clock(game_clock)
             
-            if minutes_remaining <= 6.0:
-                # Halfway through Q3 or further (6 minutes or less remaining)
+            if minutes_remaining <= 5.0:
+                # Trigger reached in Q3 (5 minutes or less remaining)
                 return ('q3', game)
             else:
-                # Less than halfway through Q3 (more than 6 minutes remaining)
-                # Still use halftime model
+                # Before Q3 trigger point, keep halftime model.
                 return ('halftime', game)
         elif max_period >= 4:
             # Period 4 or higher (Q4, OT) - use Q3 model
@@ -216,15 +215,15 @@ def predict_game(
     ------------------------------
     The system now properly detects game state to ensure correct model usage:
     - 'pregame':   Use pregame model (before game starts or early Q1)
-    - 'halftime':  Use halftime model (at end of Q2, or early Q3 before halfway)
-    - 'q3':        Use Q3 model (halfway through Q3 or later, Q4, OT)
+    - 'halftime':  Use halftime model (at end of Q2, or early Q3 before trigger)
+    - 'q3':        Use Q3 model (Q3 with <=5:00 remaining, Q4, OT)
     - 'final':     Use Q3 model (game finished)
     
     Auto-detection logic:
     - Period 0 or not started → PREGAME
     - Period 2 (no period 3 data) → HALFTIME
-    - Period 3 (< 6 min remaining) → HALFTIME (early Q3)
-    - Period 3 (>= 6 min remaining) → Q3 (halfway through Q3 or later)
+    - Period 3 (> 5 min remaining) → HALFTIME (early Q3)
+    - Period 3 (<= 5 min remaining) → Q3 (trigger reached)
     - Period 4+ → Q3
     
     Args:

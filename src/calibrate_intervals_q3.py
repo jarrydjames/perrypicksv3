@@ -1,7 +1,7 @@
-"""Calibrate Q3 intervals - follows same methodology as halftime calibration.
+"""Calibrate Q3 intervals for the 5:00-remaining Q3 model.
 
-This script computes q10/q90 quantiles from Q3 prediction residuals
-to generate 80% confidence bands (same approach as v2 halftime calibration).
+This script computes q10/q90 quantiles from residual-game prediction errors
+for the Q3 snapshot model to generate 80% confidence bands.
 """
 
 import joblib
@@ -13,7 +13,7 @@ from pathlib import Path
 def main():
     """Calibrate Q3 intervals using residuals."""
     # Q3 dataset (same structure as halftime dataset)
-    df = pd.read_parquet("data/processed/q3_team_v2.parquet").dropna(subset=["q3_total", "q3_margin"])
+    df = pd.read_parquet("data/processed/q3_team_v2.parquet").dropna(subset=["remaining_total", "remaining_margin"])
     
     # Load Q3 trained models (using gbt as default)
     obj = joblib.load("models_v3/q3/gbt_twohead.joblib")
@@ -28,8 +28,8 @@ def main():
     pred_m = obj["margin"]["model"].predict(Xm)
     
     # Compute residuals
-    resid_t = df["q3_total"].values - pred_t
-    resid_m = df["q3_margin"].values - pred_m
+    resid_t = df["remaining_total"].values - pred_t
+    resid_m = df["remaining_margin"].values - pred_m
     
     # Compute q10/q90 quantiles (same as halftime)
     q_t = np.quantile(resid_t, [0.1, 0.9])

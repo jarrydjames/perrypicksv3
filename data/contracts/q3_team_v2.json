@@ -4,7 +4,9 @@
     "game_id",
     "home_tri",
     "away_tri",
-    "q3_total",
-    "q3_margin"
+    "q3_5m_total",
+    "q3_5m_margin",
+    "remaining_total",
+    "remaining_margin"
   ]
 }
