@@ -1,0 +1,66 @@
+{
+  "generated_at": "2026-02-12T00:26:00.259168+00:00",
+  "repo_root": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3",
+  "environment": {
+    "python": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv/bin/python",
+    "cwd": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3",
+    "VIRTUAL_ENV": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/.venv"
+  },
+  "checks": [
+    {
+      "name": "python_version",
+      "required": ">=3.10",
+      "actual": "3.14.2",
+      "ok": true
+    },
+    {
+      "name": "module:pandas",
+      "ok": true
+    },
+    {
+      "name": "module:numpy",
+      "ok": true
+    },
+    {
+      "name": "module:pyarrow",
+      "ok": true
+    },
+    {
+      "name": "module:sklearn",
+      "ok": true
+    },
+    {
+      "name": "file:/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/config/champion_testing_v1.json",
+      "ok": true
+    },
+    {
+      "name": "file:/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/config/champion_refresh_policy_v1.json",
+      "ok": true
+    },
+    {
+      "name": "file:/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/pipelines/champion_e2e.py",
+      "ok": true
+    },
+    {
+      "name": "file:/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/pipelines/champion_refresh_cycle.py",
+      "ok": true
+    },
+    {
+      "name": "file:/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/pipelines/run_champion_ops_cycle.py",
+      "ok": true
+    },
+    {
+      "name": "file:/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/pipelines/build_champion_leaderboard.py",
+      "ok": true
+    },
+    {
+      "name": "exec:python",
+      "ok": true
+    },
+    {
+      "name": "writable:/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs",
+      "ok": true
+    }
+  ],
+  "ok": true
+}

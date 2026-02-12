@@ -1,0 +1,18 @@
+$ python src/build_dataset_pregame.py
+
+STDOUT:
+Building pregame dataset from 3520 completed games...
+
+
+STDERR:
+Traceback (most recent call last):
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/build_dataset_pregame.py", line 309, in <module>
+    main()
+    ~~~~^^
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/build_dataset_pregame.py", line 305, in main
+    build_pregame_dataset(game_ids, out_parquet)
+    ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/build_dataset_pregame.py", line 258, in build_pregame_dataset
+    from tqdm import tqdm
+ModuleNotFoundError: No module named 'tqdm'
+

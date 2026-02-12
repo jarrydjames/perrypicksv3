@@ -1,0 +1,1 @@
+[DRY RUN] python src/modeling/nested_walkforward_backtest.py --data data/processed/q3_team_v2.parquet --out /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/q3_fold_metrics.csv --include-xgb --include-cat

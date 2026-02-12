@@ -8,6 +8,8 @@ import pandas as pd
 DEFAULT_IGNORE: Set[str] = {
     "game_id",
     "season_end_yy",
+    "home_tri",
+    "away_tri",
     "h2_total",
     "h2_margin",
     "final_total",

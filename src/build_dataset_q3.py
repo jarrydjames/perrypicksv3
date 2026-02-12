@@ -280,7 +280,7 @@ def main() -> None:
     ap.add_argument(
         "--game-ids-file",
         type=Path,
-        default=Path("data/processed/game_ids_2023_2024.json"),
+        default=Path("data/processed/game_ids_3_seasons.json"),
         help="Path to JSON file with list of GAME_IDs",
     )
     ap.add_argument(
@@ -296,8 +296,15 @@ def main() -> None:
         game_ids = json.load(f)
     
     if isinstance(game_ids, dict):
-        # Handle both list and dict formats
-        game_ids = list(game_ids.values()) if "game_ids" not in game_ids else game_ids.get("game_ids", [])
+        # Handle dict format
+        if "game_ids" in game_ids:
+            game_ids = game_ids.get("game_ids", [])
+        else:
+            # Extract gameId from each dict in values
+            game_ids = [g.get("gameId", g) if isinstance(g, dict) else g for g in game_ids.values()]
+    elif isinstance(game_ids, list):
+        # Extract gameId from each dict if present
+        game_ids = [g.get("gameId", g) if isinstance(g, dict) else g for g in game_ids]
     
     build_q3_dataset(game_ids, args.out_parquet)
 

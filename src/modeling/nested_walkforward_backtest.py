@@ -13,11 +13,13 @@ import pandas as pd
 from src.modeling.backtest_utils import FoldSpec, attach_game_time_utc, brier, coverage, iter_walkforward_indices, mae, p_home_win, rmse
 from src.modeling.base import BaseTwoHeadModel
 from src.modeling.feature_columns import feature_columns
-from src.modeling.sklearn_models import GBTTwoHeadModel, RandomForestTwoHeadModel, RidgeTwoHeadModel
+from src.modeling.sklearn_models import ElasticNetTwoHeadModel, GBTTwoHeadModel, MLPTwoHeadModel, RandomForestTwoHeadModel, RidgeTwoHeadModel
+from src.modeling.lgbm_models import LightGBMTwoHeadModel
 
 
-TARGET_TOTAL = "h2_total"
-TARGET_MARGIN = "h2_margin"
+# Default target names (can be overridden via CLI)
+DEFAULT_TARGET_TOTAL = "h2_total"
+DEFAULT_TARGET_MARGIN = "h2_margin"
 
 
 @dataclass(frozen=True)
@@ -101,6 +103,20 @@ def _sample_cat_params(rng: np.random.Generator) -> Dict[str, Any]:
         "depth": int(rng.integers(4, 9)),
         "l2_leaf_reg": float(rng.choice([2.0, 3.0, 5.0, 8.0])),
         "subsample": float(rng.choice([0.7, 0.8, 0.9, 1.0])),
+    }
+
+def _sample_lgbm_params(rng: np.random.Generator) -> Dict[str, Any]:
+    return {
+        "n_estimators": int(rng.integers(400, 1400)),
+        "learning_rate": float(rng.choice([0.02, 0.03, 0.05, 0.08])),
+        "max_depth": int(rng.integers(3, 7)),
+        "subsample": float(rng.choice([0.7, 0.8, 0.9, 1.0])),
+        "colsample_bytree": float(rng.choice([0.7, 0.8, 0.9, 1.0])),
+        "min_child_samples": int(rng.integers(10, 40)),
+        "reg_alpha": float(rng.choice([0.0, 0.1, 0.5, 1.0])),
+        "reg_lambda": float(rng.choice([0.0, 0.1, 0.5, 1.0])),
+        "n_jobs": -1,
+        "verbosity": -1,
     }
 
 
@@ -319,6 +335,60 @@ def _tune_cat(
 
     return best_params, best_score
 
+def _tune_lgbm(
+    *,
+    X: np.ndarray,
+    ytot: np.ndarray,
+    ymar: np.ndarray,
+    feature_names: List[str],
+    inner_folds: int,
+    trials: int,
+    rng: np.random.Generator,
+    log_prefix: str = "",
+    start_ts: float | None = None,
+) -> Tuple[Dict[str, Any], float]:
+    from src.modeling.lgbm_models import LightGBMTwoHeadModel
+
+    splits = _inner_splits(len(X), inner_folds=inner_folds)
+
+    best_params: Dict[str, Any] | None = None
+    best_score = float("inf")
+
+    start_ts = start_ts if start_ts is not None else time.perf_counter()
+
+    for trial_i in range(int(trials)):
+        params = _sample_lgbm_params(rng)
+
+        fold_scores: List[float] = []
+        for tr, te in splits:
+            m = LightGBMTwoHeadModel(feature_version="v1", **params)
+            met = _fit_eval_model(
+                m,
+                X_tr=X[tr],
+                ytot_tr=ytot[tr],
+                ymar_tr=ymar[tr],
+                X_te=X[te],
+                ytot_te=ytot[te],
+                ymar_te=ymar[te],
+                feature_names=feature_names,
+            )
+            fold_scores.append(_score_objective({k: float(v) for k, v in met.items()}))
+
+        s = float(np.mean(fold_scores)) if fold_scores else float("inf")
+        if s < best_score:
+            best_score = s
+            best_params = params
+
+        if (trial_i + 1) == 1 or (trial_i + 1) == int(trials) or (trial_i + 1) % 5 == 0:
+            print(
+                f"{log_prefix}LGBM tune trial {trial_i+1}/{int(trials)}  best={best_score:.4f}  elapsed={_fmt_elapsed(start_ts)}",
+                flush=True,
+            )
+
+    if best_params is None:
+        best_params = _sample_lgbm_params(rng)
+
+    return best_params, best_score
 
 def run_nested_backtest(
     *,
@@ -329,6 +399,8 @@ def run_nested_backtest(
     nested: NestedSpec,
     include_xgb: bool,
     include_cat: bool,
+    target_total: str = DEFAULT_TARGET_TOTAL,
+    target_margin: str = DEFAULT_TARGET_MARGIN,
 ) -> None:
     run_start = time.perf_counter()
 
@@ -339,8 +411,8 @@ def run_nested_backtest(
     feats = feature_columns(df, ignore={"gameTimeUTC"})
 
     X_all = df[feats].to_numpy(dtype=float)
-    y_total_all = df[TARGET_TOTAL].to_numpy(dtype=float)
-    y_margin_all = df[TARGET_MARGIN].to_numpy(dtype=float)
+    y_total_all = df[target_total].to_numpy(dtype=float)
+    y_margin_all = df[target_margin].to_numpy(dtype=float)
 
     rng = np.random.default_rng(int(nested.seed))
 
@@ -348,6 +420,8 @@ def run_nested_backtest(
         RidgeTwoHeadModel(alpha=2.0, feature_version="v1"),
         RandomForestTwoHeadModel(feature_version="v1"),
         GBTTwoHeadModel(feature_version="v1"),
+        ElasticNetTwoHeadModel(alpha=1.0, l1_ratio=0.5, feature_version="v1"),
+        MLPTwoHeadModel(hidden_layer_sizes=(64, 32), max_iter=500, feature_version="v1"),
     ]
 
     rows: List[Dict[str, object]] = []
@@ -477,6 +551,43 @@ def run_nested_backtest(
                 }
             )
 
+        # Tune + evaluate LGBM
+        print(f"[fold {fold_i}/{len(outer_splits)}] tuning LGBM...", flush=True)
+        params, tune_score = _tune_lgbm(
+            X=X_tr,
+            ytot=yt_tr,
+            ymar=ym_tr,
+            feature_names=feats,
+            inner_folds=nested.inner_folds,
+            trials=nested.trials,
+            rng=rng,
+            log_prefix=f"[fold {fold_i}/{len(outer_splits)}] ",
+            start_ts=fold_start,
+        )
+        m = LightGBMTwoHeadModel(feature_version="v1", **params)
+        met = _fit_eval_model(
+            m,
+            X_tr=X_tr,
+            ytot_tr=yt_tr,
+            ymar_tr=ym_tr,
+            X_te=X_te,
+            ytot_te=yt_te,
+            ymar_te=ym_te,
+            feature_names=feats,
+        )
+        rows.append(
+            {
+                "fold": fold_i,
+                "model": m.name,
+                "n_train": int(len(tr)),
+                "n_test": int(len(te)),
+                "tuned": True,
+                "tune_score": float(tune_score),
+                "params": json.dumps(params, sort_keys=True),
+                **{k: float(v) for k, v in met.items()},
+            }
+        )
+
     res = pd.DataFrame(rows)
     out_csv.parent.mkdir(parents=True, exist_ok=True)
     res.to_csv(out_csv, index=False)
@@ -517,6 +628,8 @@ def main() -> None:
 
     ap.add_argument("--include-xgb", action="store_true")
     ap.add_argument("--include-cat", action="store_true")
+    ap.add_argument("--target-total", type=str, default=DEFAULT_TARGET_TOTAL, help="Target column for total points")
+    ap.add_argument("--target-margin", type=str, default=DEFAULT_TARGET_MARGIN, help="Target column for margin")
 
     args = ap.parse_args()
 
@@ -528,6 +641,8 @@ def main() -> None:
         nested=NestedSpec(inner_folds=args.inner_folds, trials=args.trials, seed=args.seed),
         include_xgb=args.include_xgb,
         include_cat=args.include_cat,
+        target_total=args.target_total,
+        target_margin=args.target_margin,
     )
 
 

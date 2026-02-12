@@ -1,0 +1,102 @@
+{
+  "policy": "config/champion_refresh_policy_v1.json",
+  "generated_at": "2026-02-12T00:26:18.950372+00:00",
+  "cadence": {
+    "full_retrain_cron": "0 7 * * MON",
+    "calibration_only_cron": "0 7 * * THU",
+    "drift_check_cron": "0 */6 * * *"
+  },
+  "promotion_gates": {
+    "max_allowed_mae_regression_pct": 3.0,
+    "max_allowed_ece": 0.04,
+    "minimum_fold_count": 6,
+    "require_significance_if_close": true,
+    "close_threshold_mae_pct": 1.0
+  },
+  "drift_triggers": {
+    "psi_feature_threshold": 0.2,
+    "rolling_mae_degradation_pct": 5.0,
+    "calibration_coverage_deviation_pct": 5.0
+  },
+  "rollout": {
+    "shadow_days": 14,
+    "canary_traffic_pct": 25,
+    "auto_rollback": true
+  },
+  "states": {
+    "pregame": {
+      "freshness": {
+        "path": "data/processed/pregame_team_v2.parquet",
+        "exists": true,
+        "rows": 3520,
+        "latest_game_date": null,
+        "holdout_cutoff": null,
+        "ok": true
+      },
+      "new_data_volume": {
+        "path": "data/processed/pregame_team_v2.parquet",
+        "minimum_new_games_to_retrain": 120,
+        "estimated_new_games": 3520,
+        "ok": true
+      },
+      "leaderboard": {
+        "path": "reports/champion_runs/latest/pregame_leaderboard.csv",
+        "exists": false,
+        "ok": false
+      },
+      "ready_for_full_retrain": false,
+      "ready_for_calibration_only": false,
+      "ok": false
+    },
+    "halftime": {
+      "freshness": {
+        "path": "data/processed/halftime_with_temporal_features_total.parquet",
+        "exists": true,
+        "rows": 11184,
+        "latest_game_date": "2025-06-23T00:00:00+00:00",
+        "holdout_cutoff": "2026-01-13T00:26:20.352540+00:00",
+        "ok": false
+      },
+      "new_data_volume": {
+        "path": "data/processed/halftime_with_temporal_features_total.parquet",
+        "minimum_new_games_to_retrain": 120,
+        "estimated_new_games": 5600,
+        "ok": true
+      },
+      "leaderboard": {
+        "path": "reports/champion_runs/latest/halftime_leaderboard.csv",
+        "exists": false,
+        "ok": false
+      },
+      "ready_for_full_retrain": false,
+      "ready_for_calibration_only": false,
+      "ok": false
+    },
+    "q3": {
+      "freshness": {
+        "path": "data/processed/q3_team_v2.parquet",
+        "exists": true,
+        "rows": 2000,
+        "latest_game_date": null,
+        "holdout_cutoff": null,
+        "ok": true
+      },
+      "new_data_volume": {
+        "path": "data/processed/q3_team_v2.parquet",
+        "minimum_new_games_to_retrain": 120,
+        "estimated_new_games": 2000,
+        "ok": true
+      },
+      "leaderboard": {
+        "path": "reports/champion_runs/latest/q3_leaderboard.csv",
+        "exists": false,
+        "ok": false
+      },
+      "ready_for_full_retrain": false,
+      "ready_for_calibration_only": false,
+      "ok": false
+    }
+  },
+  "recommendation": "block_promotion_and_fix_data",
+  "ok": false
+}

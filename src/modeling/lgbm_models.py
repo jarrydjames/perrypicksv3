@@ -9,7 +9,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 
 from src.modeling.base import BaseTwoHeadModel, TwoHeadFitResult
-from src.modeling.types import TrainedHead
+from src.modeling.types_model import TrainedHead
 from src.modeling.uncertainty import sigma_from_residuals
 
 

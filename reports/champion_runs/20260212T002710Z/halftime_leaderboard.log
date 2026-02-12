@@ -1,0 +1,10 @@
+$ python src/pipelines/build_champion_leaderboard.py --input /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/halftime_fold_metrics.csv --output /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/halftime_leaderboard.csv --state halftime
+
+STDOUT:
+
+
+STDERR:
+usage: build_champion_leaderboard.py [-h] --input INPUT --output OUTPUT
+                                     --state STATE
+build_champion_leaderboard.py: error: unrecognized arguments: v3/reports/champion_runs/latest/halftime_fold_metrics.csv v3/reports/champion_runs/latest/halftime_leaderboard.csv
+

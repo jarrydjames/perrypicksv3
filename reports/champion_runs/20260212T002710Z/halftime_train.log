@@ -1,0 +1,11 @@
+$ python src/modeling/nested_walkforward_backtest.py --data data/processed/halftime_with_temporal_features_total.parquet --out /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/halftime_fold_metrics.csv --include-xgb --include-cat
+
+STDOUT:
+
+
+STDERR:
+Traceback (most recent call last):
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/modeling/nested_walkforward_backtest.py", line 13, in <module>
+    from src.modeling.backtest_utils import FoldSpec, attach_game_time_utc, brier, coverage, iter_walkforward_indices, mae, p_home_win, rmse
+ModuleNotFoundError: No module named 'src'
+

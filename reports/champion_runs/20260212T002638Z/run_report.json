@@ -1,0 +1,300 @@
+{
+  "run_id": "20260212T002638Z",
+  "config": "config/champion_testing_v1.json",
+  "dry_run": true,
+  "skip_checks": true,
+  "started_at": "2026-02-12T00:26:38.985259+00:00",
+  "global_checks": {
+    "fold_strategy": "nested_walk_forward",
+    "outer_test_size": 200,
+    "outer_step_size": 200,
+    "inner_folds": 5,
+    "min_train_size": 500,
+    "seed": 42
+  },
+  "states": {
+    "pregame": {
+      "dataset_check": {
+        "dataset_path": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/data/processed/pregame_team_v2.parquet",
+        "exists": true,
+        "rows": null,
+        "columns": null,
+        "missing_columns": [],
+        "ok": true
+      },
+      "stages": [
+        {
+          "name": "build",
+          "command": "python src/build_dataset_pregame.py",
+          "return_code": 0,
+          "ok": true,
+          "log_file": "reports/champion_runs/20260212T002638Z/pregame_build.log",
+          "artifact_check": {
+            "checks": [
+              {
+                "path": "data/processed/pregame_team_v2.parquet",
+                "exists": true
+              }
+            ],
+            "ok": true
+          }
+        },
+        {
+          "name": "train",
+          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/pregame_team_v2.parquet --out /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/pregame_fold_metrics.csv --include-xgb --include-cat",
+          "return_code": 0,
+          "ok": false,
+          "log_file": "reports/champion_runs/20260212T002638Z/pregame_train.log",
+          "artifact_check": {
+            "checks": [
+              {
+                "path": "reports/champion_runs/latest/pregame_fold_metrics.csv",
+                "exists": false
+              }
+            ],
+            "ok": false
+          }
+        },
+        {
+          "name": "leaderboard",
+          "command": "python src/pipelines/build_champion_leaderboard.py --input /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/pregame_fold_metrics.csv --output /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/pregame_leaderboard.csv --state pregame",
+          "return_code": 0,
+          "ok": false,
+          "log_file": "reports/champion_runs/20260212T002638Z/pregame_leaderboard.log",
+          "artifact_check": {
+            "checks": [
+              {
+                "path": "reports/champion_runs/latest/pregame_leaderboard.csv",
+                "exists": false
+              }
+            ],
+            "ok": false
+          }
+        }
+      ],
+      "leaderboard_check": {
+        "leaderboard": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/pregame_leaderboard.csv",
+        "exists": false,
+        "missing_models": [],
+        "missing_columns": [],
+        "columns": [],
+        "ok": false
+      },
+      "ok": false
+    },
+    "halftime": {
+      "dataset_check": {
+        "dataset_path": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/data/processed/halftime_with_temporal_features_total.parquet",
+        "exists": true,
+        "rows": null,
+        "columns": null,
+        "missing_columns": [],
+        "ok": true
+      },
+      "stages": [
+        {
+          "name": "build",
+          "command": "python src/build_dataset_v2.py",
+          "return_code": 0,
+          "ok": true,
+          "log_file": "reports/champion_runs/20260212T002638Z/halftime_build.log",
+          "artifact_check": {
+            "checks": [
+              {
+                "path": "data/processed/halftime_with_temporal_features_total.parquet",
+                "exists": true
+              }
+            ],
+            "ok": true
+          }
+        },
+        {
+          "name": "train",
+          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/halftime_with_temporal_features_total.parquet --out /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/halftime_fold_metrics.csv --include-xgb --include-cat",
+          "return_code": 0,
+          "ok": false,
+          "log_file": "reports/champion_runs/20260212T002638Z/halftime_train.log",
+          "artifact_check": {
+            "checks": [
+              {
+                "path": "reports/champion_runs/latest/halftime_fold_metrics.csv",
+                "exists": false
+              }
+            ],
+            "ok": false
+          }
+        },
+        {
+          "name": "leaderboard",
+          "command": "python src/pipelines/build_champion_leaderboard.py --input /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/halftime_fold_metrics.csv --output /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/halftime_leaderboard.csv --state halftime",
+          "return_code": 0,
+          "ok": false,
+          "log_file": "reports/champion_runs/20260212T002638Z/halftime_leaderboard.log",
+          "artifact_check": {
+            "checks": [
+              {
+                "path": "reports/champion_runs/latest/halftime_leaderboard.csv",
+                "exists": false
+              }
+            ],
+            "ok": false
+          }
+        }
+      ],
+      "leaderboard_check": {
+        "leaderboard": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/halftime_leaderboard.csv",
+        "exists": false,
+        "missing_models": [],
+        "missing_columns": [],
+        "columns": [],
+        "ok": false
+      },
+      "ok": false
+    },
+    "q3": {
+      "dataset_check": {
+        "dataset_path": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/data/processed/q3_team_v2.parquet",
+        "exists": true,
+        "rows": null,
+        "columns": null,
+        "missing_columns": [],
+        "ok": true
+      },
+      "stages": [
+        {
+          "name": "build",
+          "command": "python src/build_dataset_q3.py",
+          "return_code": 0,
+          "ok": true,
+          "log_file": "reports/champion_runs/20260212T002638Z/q3_build.log",
+          "artifact_check": {
+            "checks": [
+              {
+                "path": "data/processed/q3_team_v2.parquet",
+                "exists": true
+              }
+            ],
+            "ok": true
+          }
+        },
+        {
+          "name": "train",
+          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/q3_team_v2.parquet --out /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/q3_fold_metrics.csv --include-xgb --include-cat",
+          "return_code": 0,
+          "ok": false,
+          "log_file": "reports/champion_runs/20260212T002638Z/q3_train.log",
+          "artifact_check": {
+            "checks": [
+              {
+                "path": "reports/champion_runs/latest/q3_fold_metrics.csv",
+                "exists": false
+              }
+            ],
+            "ok": false
+          }
+        },
+        {
+          "name": "leaderboard",
+          "command": "python src/pipelines/build_champion_leaderboard.py --input /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/q3_fold_metrics.csv --output /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/q3_leaderboard.csv --state q3",
+          "return_code": 0,
+          "ok": false,
+          "log_file": "reports/champion_runs/20260212T002638Z/q3_leaderboard.log",
+          "artifact_check": {
+            "checks": [
+              {
+                "path": "reports/champion_runs/latest/q3_leaderboard.csv",
+                "exists": false
+              }
+            ],
+            "ok": false
+          }
+        }
+      ],
+      "leaderboard_check": {
+        "leaderboard": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/q3_leaderboard.csv",
+        "exists": false,
+        "missing_models": [],
+        "missing_columns": [],
+        "columns": [],
+        "ok": false
+      },
+      "ok": false
+    }
+  },
+  "stage_results": [
+    {
+      "state": "pregame",
+      "stage": "build",
+      "command": "python src/build_dataset_pregame.py",
+      "return_code": 0,
+      "log_file": "reports/champion_runs/20260212T002638Z/pregame_build.log",
+      "ok": true
+    },
+    {
+      "state": "pregame",
+      "stage": "train",
+      "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/pregame_team_v2.parquet --out /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/pregame_fold_metrics.csv --include-xgb --include-cat",
+      "return_code": 0,
+      "log_file": "reports/champion_runs/20260212T002638Z/pregame_train.log",
+      "ok": false
+    },
+    {
+      "state": "pregame",
+      "stage": "leaderboard",
+      "command": "python src/pipelines/build_champion_leaderboard.py --input /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/pregame_fold_metrics.csv --output /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/pregame_leaderboard.csv --state pregame",
+      "return_code": 0,
+      "log_file": "reports/champion_runs/20260212T002638Z/pregame_leaderboard.log",
+      "ok": false
+    },
+    {
+      "state": "halftime",
+      "stage": "build",
+      "command": "python src/build_dataset_v2.py",
+      "return_code": 0,
+      "log_file": "reports/champion_runs/20260212T002638Z/halftime_build.log",
+      "ok": true
+    },
+    {
+      "state": "halftime",
+      "stage": "train",
+      "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/halftime_with_temporal_features_total.parquet --out /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/halftime_fold_metrics.csv --include-xgb --include-cat",
+      "return_code": 0,
+      "log_file": "reports/champion_runs/20260212T002638Z/halftime_train.log",
+      "ok": false
+    },
+    {
+      "state": "halftime",
+      "stage": "leaderboard",
+      "command": "python src/pipelines/build_champion_leaderboard.py --input /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/halftime_fold_metrics.csv --output /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/halftime_leaderboard.csv --state halftime",
+      "return_code": 0,
+      "log_file": "reports/champion_runs/20260212T002638Z/halftime_leaderboard.log",
+      "ok": false
+    },
+    {
+      "state": "q3",
+      "stage": "build",
+      "command": "python src/build_dataset_q3.py",
+      "return_code": 0,
+      "log_file": "reports/champion_runs/20260212T002638Z/q3_build.log",
+      "ok": true
+    },
+    {
+      "state": "q3",
+      "stage": "train",
+      "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/q3_team_v2.parquet --out /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/q3_fold_metrics.csv --include-xgb --include-cat",
+      "return_code": 0,
+      "log_file": "reports/champion_runs/20260212T002638Z/q3_train.log",
+      "ok": false
+    },
+    {
+      "state": "q3",
+      "stage": "leaderboard",
+      "command": "python src/pipelines/build_champion_leaderboard.py --input /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/q3_fold_metrics.csv --output /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/q3_leaderboard.csv --state q3",
+      "return_code": 0,
+      "log_file": "reports/champion_runs/20260212T002638Z/q3_leaderboard.log",
+      "ok": false
+    }
+  ],
+  "ok": false,
+  "completed_at": "2026-02-12T00:26:38.989140+00:00"
+}

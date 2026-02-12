@@ -1,0 +1,1 @@
+[DRY RUN] python src/pipelines/build_champion_leaderboard.py --input /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/q3_fold_metrics.csv --output /Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/q3_leaderboard.csv --state q3

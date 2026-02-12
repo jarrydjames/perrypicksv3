@@ -1,0 +1,11 @@
+$ python src/build_dataset_q3.py
+
+STDOUT:
+
+
+STDERR:
+Traceback (most recent call last):
+  File "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/src/build_dataset_q3.py", line 19, in <module>
+    from tqdm import tqdm
+ModuleNotFoundError: No module named 'tqdm'
+
