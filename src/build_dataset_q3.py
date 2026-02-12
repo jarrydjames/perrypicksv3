@@ -1,18 +1,17 @@
-"""Build Q3 training dataset - follows same methodology as halftime dataset builder.
+"""Build Q3 training dataset for the *5:00 remaining in Q3* decision point.
 
-This dataset filters to end-of-Q3 game state (periods 1-3) and creates
-features for training a Q3 model that can evaluate at any game clock.
+The Q3 model should run mid-quarter (with ~5:00 left in Q3) and predict the
+balance of the game (rest of Q3 + Q4). This dataset therefore:
 
-Key differences from halftime dataset:
-- Filters to periods 1-3 (instead of 1-2)
-- Creates cumulative features up to end of Q3
-- Labels are still game outcomes (total, margin) - same as halftime
+- Creates features from the game state at the first event with <=5:00 in Q3.
+- Stores snapshot score (`q3_5m_*`) as context.
+- Uses labels for remaining game outcome from the snapshot, not raw Q3 points.
 """
 
 from __future__ import annotations
 import json
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 
 import pandas as pd
 import requests
@@ -55,6 +54,77 @@ def third_quarter_score(game):
     return sum_first3(home.get("periods")), sum_first3(away.get("periods"))
 
 
+def _clock_to_seconds_remaining(clock_value: object) -> Optional[float]:
+    """Convert clock value (ISO PT string or MM:SS) into seconds remaining."""
+    if clock_value is None:
+        return None
+
+    text = str(clock_value).strip()
+    if not text:
+        return None
+
+    if text.startswith("PT") and "M" in text:
+        try:
+            body = text.removeprefix("PT").removesuffix("S")
+            mins, secs = body.split("M", 1)
+            return float(mins) * 60.0 + float(secs)
+        except Exception:
+            return None
+
+    if ":" in text:
+        try:
+            mins, secs = text.split(":", 1)
+            return float(mins) * 60.0 + float(secs)
+        except Exception:
+            return None
+
+    return None
+
+
+def _score_from_pbp_row(row: pd.Series, side: str) -> Optional[float]:
+    """Extract cumulative score from a PBP row for one side (home/away)."""
+    candidates = [
+        f"score{side.title()}",
+        f"{side}Score",
+        f"{side}_score",
+    ]
+    for key in candidates:
+        if key in row and pd.notna(row[key]):
+            try:
+                return float(row[key])
+            except Exception:
+                continue
+    return None
+
+
+def _q3_five_minute_snapshot(pbp: pd.DataFrame) -> Tuple[float, float]:
+    """Return (home_score, away_score) at the first event with <=5:00 left in Q3."""
+    if pbp is None or pbp.empty:
+        raise ValueError("Missing play-by-play data")
+
+    q3 = pbp[pbp["period"].astype(int) == 3].copy()
+    if q3.empty:
+        raise ValueError("No Q3 rows in play-by-play")
+
+    clock_col = "clock" if "clock" in q3.columns else ("gameClock" if "gameClock" in q3.columns else None)
+    if clock_col is None:
+        raise ValueError("PBP missing clock column")
+
+    q3["clock_seconds_remaining"] = q3[clock_col].map(_clock_to_seconds_remaining)
+    trigger_rows = q3[q3["clock_seconds_remaining"].notna() & (q3["clock_seconds_remaining"] <= 300.0)]
+    if trigger_rows.empty:
+        raise ValueError("No Q3 event at or below 5:00 remaining")
+
+    snapshot = trigger_rows.iloc[0]
+    home_score = _score_from_pbp_row(snapshot, "home")
+    away_score = _score_from_pbp_row(snapshot, "away")
+
+    if home_score is None or away_score is None:
+        raise ValueError("Q3 snapshot row missing score fields")
+
+    return home_score, away_score
+
+
 def behavior_counts_q3(pbp: pd.DataFrame) -> dict:
     """
     Count action types in first 3 quarters.
@@ -62,6 +132,17 @@ def behavior_counts_q3(pbp: pd.DataFrame) -> dict:
     Same structure as behavior_counts_1h, but filters to periods 1-3.
     """
     q3 = pbp[pbp["period"].astype(int) <= 3].copy()
+    clock_col = "clock" if "clock" in q3.columns else ("gameClock" if "gameClock" in q3.columns else None)
+    if clock_col:
+        q3["clock_seconds_remaining"] = q3[clock_col].map(_clock_to_seconds_remaining)
+        q3 = q3[
+            (q3["period"].astype(int) < 3)
+            | (
+                (q3["period"].astype(int) == 3)
+                & q3["clock_seconds_remaining"].notna()
+                & (q3["clock_seconds_remaining"] >= 300.0)
+            )
+        ]
     at = q3.get("actionType", pd.Series([""] * len(q3))).astype(str).fillna("")
     
     def c(prefix):
@@ -93,8 +174,8 @@ def extract_q3_row(gid: str) -> dict:
     home_tri = home.get("teamTricode", "HOME")
     away_tri = away.get("teamTricode", "AWAY")
     
-    # Get scores after Q3
-    q3_home, q3_away = third_quarter_score(game)
+    # Snapshot at 5:00 remaining in Q3
+    q3_5m_home, q3_5m_away = _q3_five_minute_snapshot(pbp)
     
     # Get behavior counts for Q3
     beh = behavior_counts_q3(pbp)
@@ -108,10 +189,10 @@ def extract_q3_row(gid: str) -> dict:
         "game_id": gid,
         "home_tri": home_tri,
         "away_tri": away_tri,
-        "q3_home": q3_home,
-        "q3_away": q3_away,
-        "q3_total": q3_home + q3_away,
-        "q3_margin": q3_home - q3_away,
+        "q3_5m_home": q3_5m_home,
+        "q3_5m_away": q3_5m_away,
+        "q3_5m_total": q3_5m_home + q3_5m_away,
+        "q3_5m_margin": q3_5m_home - q3_5m_away,
         **beh,
         **add_rate_features("home", ht, at),
         **add_rate_features("away", at, ht),
@@ -132,8 +213,19 @@ def extract_q3_row(gid: str) -> dict:
         raise ValueError(f"Missing final score for game {gid}")
     final_home, final_away = fin
     
-    row["total"] = final_home + final_away
-    row["margin"] = final_home - final_away
+    final_total = final_home + final_away
+    final_margin = final_home - final_away
+
+    snapshot_total = q3_5m_home + q3_5m_away
+    snapshot_margin = q3_5m_home - q3_5m_away
+
+    # Primary targets for Q3-5m model = remaining game from snapshot.
+    row["remaining_total"] = final_total - snapshot_total
+    row["remaining_margin"] = final_margin - snapshot_margin
+
+    # Keep final labels for diagnostics and optional downstream consumers.
+    row["total"] = final_total
+    row["margin"] = final_margin
     
     return row
 

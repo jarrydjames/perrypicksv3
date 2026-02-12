@@ -1,11 +1,11 @@
-"""Train Q3 models - follows same pipeline as halftime training.
+"""Train Q3 models for the 5:00 remaining in Q3 inference point.
 
 This script trains Q3 two-head models (total + margin) using the same
 training infrastructure, calibration, and quantile regression as halftime.
 
 Key differences from halftime training:
-- Uses Q3 dataset (data/processed/q3_team_v2.parquet)
-- Targets are q3_total and q3_margin (but still predicts game outcomes)
+- Uses Q3 snapshot dataset (data/processed/q3_team_v2.parquet)
+- Targets are remaining_total and remaining_margin from the 5:00 Q3 snapshot
 - Models stored in models_v3/q3/ (separate from halftime models)
 """
 
@@ -33,9 +33,9 @@ from src.modeling.sklearn_models import (
 )
 from src.modeling.lgbm_models import LightGBMTwoHeadModel
 
-# Q3-specific targets
-TARGET_TOTAL = "q3_total"
-TARGET_MARGIN = "q3_margin"
+# Q3-specific targets (from snapshot with 5:00 left in Q3)
+TARGET_TOTAL = "remaining_total"
+TARGET_MARGIN = "remaining_margin"
 
 
 def train_q3_models(

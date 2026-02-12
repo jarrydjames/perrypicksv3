@@ -363,6 +363,14 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
                 "model_used": "Q3_ERROR",
             }
         
+        remaining_total = pred.total_mean
+        remaining_margin = pred.margin_mean
+        snapshot_total = q3_home + q3_away
+        snapshot_margin = q3_home - q3_away
+
+        final_total = snapshot_total + remaining_total
+        final_margin = snapshot_margin + remaining_margin
+
         result = {
             "game_id": gid,
             "home_name": home_name,
@@ -371,12 +379,14 @@ def predict_from_game_id(game_input: str, fetch_odds: bool = True) -> Dict[str, 
             "clock": current_clock,
             "home_score": q3_home,
             "away_score": q3_away,
-            "margin": pred.margin_mean,
-            "total": pred.total_mean,
-            "margin_q10": pred.margin_q10,
-            "margin_q90": pred.margin_q90,
-            "total_q10": pred.total_q10,
-            "total_q90": pred.total_q90,
+            "remaining_margin": remaining_margin,
+            "remaining_total": remaining_total,
+            "margin": final_margin,
+            "total": final_total,
+            "margin_q10": snapshot_margin + pred.margin_q10,
+            "margin_q90": snapshot_margin + pred.margin_q90,
+            "total_q10": snapshot_total + pred.total_q10,
+            "total_q90": snapshot_total + pred.total_q90,
             "home_win_prob": pred.home_win_prob,
             "margin_sd": pred.margin_sd,
             "total_sd": pred.total_sd,

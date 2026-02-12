@@ -60,8 +60,8 @@ class Q3Model:
     # Model paths (separate from halftime models)
     MODELS_DIR = Path("models_v3/q3")
     
-    TARGET_TOTAL = "q3_total"
-    TARGET_MARGIN = "q3_margin"
+    TARGET_TOTAL = "remaining_total"
+    TARGET_MARGIN = "remaining_margin"
     
     def __init__(self):
         self.models_dir = self.MODELS_DIR
