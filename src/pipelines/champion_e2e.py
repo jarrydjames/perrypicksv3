@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import shutil
 import subprocess
 from dataclasses import dataclass
@@ -83,15 +84,70 @@ def _run_stage(command: str, log_file: Path, dry_run: bool) -> tuple[int, bool]:
     return completed.returncode, completed.returncode == 0
 
 
-def _assert_artifacts(paths: List[str], root: Path) -> Dict[str, Any]:
+def _resolve_latest_alias(path_str: str, latest_dir: Path) -> Path:
+    marker = "reports/champion_runs/latest"
+    if marker in path_str:
+        suffix = path_str.split(marker, 1)[1].lstrip("/")
+        return latest_dir / suffix
+    return Path(path_str)
+
+
+def _assert_artifacts(
+    paths: List[str],
+    root: Path,
+    latest_dir: Path,
+    min_mtime_ts: float | None,
+    dry_run: bool,
+) -> Dict[str, Any]:
     checks = []
     for rel in paths:
-        abs_path = root / rel
-        checks.append({"path": rel, "exists": abs_path.exists()})
+        resolved = _resolve_latest_alias(rel, latest_dir)
+        abs_path = resolved if resolved.is_absolute() else root / resolved
+        exists = abs_path.exists()
+        size_bytes = abs_path.stat().st_size if exists else 0
+        fresh = bool(exists)
+        if exists and min_mtime_ts is not None:
+            fresh = abs_path.stat().st_mtime >= float(min_mtime_ts)
+        checks.append(
+            {
+                "path": rel,
+                "resolved_path": str(abs_path.relative_to(root)) if abs_path.is_relative_to(root) else str(abs_path),
+                "exists": exists,
+                "size_bytes": int(size_bytes),
+                "fresh": True if dry_run else fresh,
+            }
+        )
+    if dry_run:
+        return {"checks": checks, "ok": True, "skipped_in_dry_run": True}
     return {
         "checks": checks,
-        "ok": all(item["exists"] for item in checks),
+        "ok": all(item["exists"] and item["size_bytes"] > 0 and item["fresh"] for item in checks),
     }
+
+
+def _scan_log_for_errors(log_file: Path, dry_run: bool) -> Dict[str, Any]:
+    if dry_run:
+        return {"checked": False, "ok": True, "matches": []}
+
+    if not log_file.exists():
+        return {"checked": True, "ok": False, "matches": ["log_missing"]}
+
+    content = log_file.read_text(encoding="utf-8", errors="replace")
+    patterns = [
+        r"Traceback \(most recent call last\)",
+        r"\bModuleNotFoundError\b",
+        r"\bImportError\b",
+        r"\bValueError\b",
+        r"\bRuntimeError\b",
+        r"\bERROR\b",
+        r"\bFAILED\b",
+    ]
+    matches: List[str] = []
+    for pattern in patterns:
+        if re.search(pattern, content):
+            matches.append(pattern)
+
+    return {"checked": True, "ok": len(matches) == 0, "matches": matches}
 
 
 def _validate_leaderboard(path: Path, required_models: List[str], skip_checks: bool) -> Dict[str, Any]:
@@ -113,6 +169,8 @@ def _validate_leaderboard(path: Path, required_models: List[str], skip_checks: b
     }
 
     if not path.exists():
+        if skip_checks:
+            result["ok"] = True
         return result
 
     if skip_checks:
@@ -145,7 +203,7 @@ def _promote_champions(champion_map: Dict[str, Dict[str, Any]], output_path: Pat
     output_path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
 
 
-def run_pipeline(config_path: Path, promote: bool, dry_run: bool, skip_checks: bool) -> Path:
+def run_pipeline(config_path: Path, promote: bool, dry_run: bool, skip_checks: bool) -> tuple[Path, bool]:
     repo_root = Path.cwd()
     config = _load_json(config_path)
 
@@ -195,10 +253,21 @@ def run_pipeline(config_path: Path, promote: bool, dry_run: bool, skip_checks: b
         for stage in state_cfg.get("stages", []):
             command = stage["command"].replace("reports/champion_runs/latest", str(latest_dir))
             log_file = run_root / f"{state}_{stage['name']}.log"
+            stage_start_ts = datetime.now(timezone.utc).timestamp()
             return_code, ok = _run_stage(command, log_file, dry_run)
 
-            artifact_check = _assert_artifacts(stage.get("required_artifacts", []), repo_root)
+            artifact_check = _assert_artifacts(
+                stage.get("required_artifacts", []),
+                repo_root,
+                latest_dir,
+                None if dry_run else stage_start_ts,
+                dry_run,
+            )
             if not artifact_check["ok"]:
+                ok = False
+
+            log_check = _scan_log_for_errors(log_file, dry_run)
+            if not log_check["ok"]:
                 ok = False
 
             state_stage = {
@@ -208,6 +277,7 @@ def run_pipeline(config_path: Path, promote: bool, dry_run: bool, skip_checks: b
                 "ok": ok,
                 "log_file": str(log_file.relative_to(repo_root)),
                 "artifact_check": artifact_check,
+                "log_check": log_check,
             }
             state_report["stages"].append(state_stage)
 
@@ -258,7 +328,7 @@ def run_pipeline(config_path: Path, promote: bool, dry_run: bool, skip_checks: b
     if promote and report["ok"]:
         _promote_champions(champions, repo_root / "data" / "processed" / "champion_models.json")
 
-    return report_path
+    return report_path, bool(report.get("ok", False))
 
 
 def main() -> None:
@@ -279,13 +349,15 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    report_path = run_pipeline(
+    report_path, ok = run_pipeline(
         config_path=args.config,
         promote=bool(args.promote),
         dry_run=bool(args.dry_run),
         skip_checks=bool(args.skip_checks),
     )
     print(f"Run report written to: {report_path}")
+    if not ok:
+        raise SystemExit(2)
 
 
 if __name__ == "__main__":

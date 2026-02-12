@@ -16,8 +16,8 @@ from src.modeling.feature_columns import feature_columns
 from src.modeling.sklearn_models import GBTTwoHeadModel, RandomForestTwoHeadModel, RidgeTwoHeadModel
 
 
-TARGET_TOTAL = "h2_total"
-TARGET_MARGIN = "h2_margin"
+TARGET_TOTAL_CANDIDATES = ["h2_total", "total", "q3_total", "remaining_total"]
+TARGET_MARGIN_CANDIDATES = ["h2_margin", "margin", "q3_margin", "remaining_margin"]
 
 
 @dataclass(frozen=True)
@@ -25,6 +25,8 @@ class NestedSpec:
     inner_folds: int
     trials: int
     seed: int
+    tuner: str = "random"
+    optuna_timeout_s: int = 0
 
 
 def _score_objective(met: Dict[str, float]) -> float:
@@ -264,6 +266,74 @@ def _tune_xgb(
     return best_params, best_score
 
 
+def _tune_xgb_optuna(
+    *,
+    X: np.ndarray,
+    ytot: np.ndarray,
+    ymar: np.ndarray,
+    feature_names: List[str],
+    inner_folds: int,
+    trials: int,
+    seed: int,
+    timeout_s: int,
+    log_prefix: str = "",
+) -> Tuple[Dict[str, Any], float]:
+    from src.modeling.xgb_models import XGBoostTwoHeadModel
+
+    try:
+        import optuna  # type: ignore
+    except Exception:
+        print(f"{log_prefix}optuna not available; falling back to random search for XGB", flush=True)
+        rng = np.random.default_rng(seed)
+        return _tune_xgb(
+            X=X,
+            ytot=ytot,
+            ymar=ymar,
+            feature_names=feature_names,
+            inner_folds=inner_folds,
+            trials=trials,
+            rng=rng,
+            log_prefix=log_prefix,
+        )
+
+    splits = _inner_splits(len(X), inner_folds=inner_folds)
+    sampler = optuna.samplers.TPESampler(seed=int(seed))
+    study = optuna.create_study(direction="minimize", sampler=sampler)
+
+    def objective(trial: Any) -> float:
+        params = {
+            "n_estimators": int(trial.suggest_int("n_estimators", 300, 1800, step=100)),
+            "learning_rate": float(trial.suggest_float("learning_rate", 0.015, 0.12, log=True)),
+            "max_depth": int(trial.suggest_int("max_depth", 3, 8)),
+            "subsample": float(trial.suggest_float("subsample", 0.65, 1.0)),
+            "colsample_bytree": float(trial.suggest_float("colsample_bytree", 0.65, 1.0)),
+            "min_child_weight": float(trial.suggest_float("min_child_weight", 1.0, 10.0)),
+            "reg_lambda": float(trial.suggest_float("reg_lambda", 0.2, 8.0, log=True)),
+            "n_jobs": -1,
+        }
+        fold_scores: List[float] = []
+        for tr, te in splits:
+            m = XGBoostTwoHeadModel(feature_version="v1", **params)
+            met = _fit_eval_model(
+                m,
+                X_tr=X[tr],
+                ytot_tr=ytot[tr],
+                ymar_tr=ymar[tr],
+                X_te=X[te],
+                ytot_te=ytot[te],
+                ymar_te=ymar[te],
+                feature_names=feature_names,
+            )
+            fold_scores.append(_score_objective({k: float(v) for k, v in met.items()}))
+        return float(np.mean(fold_scores)) if fold_scores else float("inf")
+
+    study.optimize(objective, n_trials=int(trials), timeout=int(timeout_s) if timeout_s > 0 else None)
+    if study.best_trial is None:
+        raise RuntimeError("Optuna XGB tuning produced no trials")
+
+    return dict(study.best_trial.params) | {"n_jobs": -1}, float(study.best_value)
+
+
 def _tune_cat(
     *,
     X: np.ndarray,
@@ -320,6 +390,72 @@ def _tune_cat(
     return best_params, best_score
 
 
+def _tune_cat_optuna(
+    *,
+    X: np.ndarray,
+    ytot: np.ndarray,
+    ymar: np.ndarray,
+    feature_names: List[str],
+    inner_folds: int,
+    trials: int,
+    seed: int,
+    timeout_s: int,
+    log_prefix: str = "",
+) -> Tuple[Dict[str, Any], float]:
+    from src.modeling.cat_models import CatBoostTwoHeadModel
+
+    try:
+        import optuna  # type: ignore
+    except Exception:
+        print(f"{log_prefix}optuna not available; falling back to random search for CAT", flush=True)
+        rng = np.random.default_rng(seed)
+        return _tune_cat(
+            X=X,
+            ytot=ytot,
+            ymar=ymar,
+            feature_names=feature_names,
+            inner_folds=inner_folds,
+            trials=trials,
+            rng=rng,
+            log_prefix=log_prefix,
+        )
+
+    splits = _inner_splits(len(X), inner_folds=inner_folds)
+    sampler = optuna.samplers.TPESampler(seed=int(seed))
+    study = optuna.create_study(direction="minimize", sampler=sampler)
+
+    def objective(trial: Any) -> float:
+        params = {
+            "iterations": int(trial.suggest_int("iterations", 600, 3500, step=100)),
+            "learning_rate": float(trial.suggest_float("learning_rate", 0.015, 0.12, log=True)),
+            "depth": int(trial.suggest_int("depth", 4, 10)),
+            "l2_leaf_reg": float(trial.suggest_float("l2_leaf_reg", 1.0, 12.0, log=True)),
+            "subsample": float(trial.suggest_float("subsample", 0.65, 1.0)),
+            "random_seed": int(seed),
+        }
+        fold_scores: List[float] = []
+        for tr, te in splits:
+            m = CatBoostTwoHeadModel(feature_version="v1", **params)
+            met = _fit_eval_model(
+                m,
+                X_tr=X[tr],
+                ytot_tr=ytot[tr],
+                ymar_tr=ymar[tr],
+                X_te=X[te],
+                ytot_te=ytot[te],
+                ymar_te=ymar[te],
+                feature_names=feature_names,
+            )
+            fold_scores.append(_score_objective({k: float(v) for k, v in met.items()}))
+        return float(np.mean(fold_scores)) if fold_scores else float("inf")
+
+    study.optimize(objective, n_trials=int(trials), timeout=int(timeout_s) if timeout_s > 0 else None)
+    if study.best_trial is None:
+        raise RuntimeError("Optuna CAT tuning produced no trials")
+
+    return dict(study.best_trial.params) | {"random_seed": int(seed)}, float(study.best_value)
+
+
 def run_nested_backtest(
     *,
     parquet_path: Path,
@@ -329,6 +465,9 @@ def run_nested_backtest(
     nested: NestedSpec,
     include_xgb: bool,
     include_cat: bool,
+    include_lgbm: bool,
+    target_total: str | None,
+    target_margin: str | None,
 ) -> None:
     run_start = time.perf_counter()
 
@@ -338,9 +477,27 @@ def run_nested_backtest(
 
     feats = feature_columns(df, ignore={"gameTimeUTC"})
 
+    resolved_total = target_total
+    if not resolved_total:
+        resolved_total = next((c for c in TARGET_TOTAL_CANDIDATES if c in df.columns), None)
+    resolved_margin = target_margin
+    if not resolved_margin:
+        resolved_margin = next((c for c in TARGET_MARGIN_CANDIDATES if c in df.columns), None)
+
+    if not resolved_total or resolved_total not in df.columns:
+        raise RuntimeError(
+            f"Could not resolve total target column. "
+            f"Pass --target-total explicitly. Tried candidates={TARGET_TOTAL_CANDIDATES}."
+        )
+    if not resolved_margin or resolved_margin not in df.columns:
+        raise RuntimeError(
+            f"Could not resolve margin target column. "
+            f"Pass --target-margin explicitly. Tried candidates={TARGET_MARGIN_CANDIDATES}."
+        )
+
     X_all = df[feats].to_numpy(dtype=float)
-    y_total_all = df[TARGET_TOTAL].to_numpy(dtype=float)
-    y_margin_all = df[TARGET_MARGIN].to_numpy(dtype=float)
+    y_total_all = df[resolved_total].to_numpy(dtype=float)
+    y_margin_all = df[resolved_margin].to_numpy(dtype=float)
 
     rng = np.random.default_rng(int(nested.seed))
 
@@ -356,7 +513,8 @@ def run_nested_backtest(
 
     print(
         f"Nested backtest starting  n_rows={len(df)}  n_feats={len(feats)}  outer_folds={len(outer_splits)}  "
-        f"inner_folds={nested.inner_folds}  trials={nested.trials}",
+        f"inner_folds={nested.inner_folds}  trials={nested.trials}  "
+        f"target_total={resolved_total}  target_margin={resolved_margin}",
         flush=True,
     )
 
@@ -384,6 +542,40 @@ def run_nested_backtest(
                 ymar_te=ym_te,
                 feature_names=feats,
             )
+
+        if include_lgbm:
+            print(f"[fold {fold_i}/{len(outer_splits)}] eval lightgbm", flush=True)
+            try:
+                from src.modeling.lgbm_models import LightGBMTwoHeadModel
+            except Exception as exc:
+                raise RuntimeError(
+                    "--include-lgbm requested but lightgbm dependency/model import failed. "
+                    "Install lightgbm in runtime or remove --include-lgbm."
+                ) from exc
+
+            lm = LightGBMTwoHeadModel(feature_version="v1")
+            met = _fit_eval_model(
+                lm,
+                X_tr=X_tr,
+                ytot_tr=yt_tr,
+                ymar_tr=ym_tr,
+                X_te=X_te,
+                ytot_te=yt_te,
+                ymar_te=ym_te,
+                feature_names=feats,
+            )
+            rows.append(
+                {
+                    "fold": fold_i,
+                    "model": lm.name,
+                    "n_train": int(len(tr)),
+                    "n_test": int(len(te)),
+                    "tuned": False,
+                    "tune_score": None,
+                    "params": None,
+                    **{k: float(v) for k, v in met.items()},
+                }
+            )
             rows.append(
                 {
                     "fold": fold_i,
@@ -402,17 +594,30 @@ def run_nested_backtest(
             print(f"[fold {fold_i}/{len(outer_splits)}] tuning XGB...", flush=True)
             from src.modeling.xgb_models import XGBoostTwoHeadModel
 
-            params, tune_score = _tune_xgb(
-                X=X_tr,
-                ytot=yt_tr,
-                ymar=ym_tr,
-                feature_names=feats,
-                inner_folds=nested.inner_folds,
-                trials=nested.trials,
-                rng=rng,
-                log_prefix=f"[fold {fold_i}/{len(outer_splits)}] ",
-                start_ts=fold_start,
-            )
+            if nested.tuner == "optuna":
+                params, tune_score = _tune_xgb_optuna(
+                    X=X_tr,
+                    ytot=yt_tr,
+                    ymar=ym_tr,
+                    feature_names=feats,
+                    inner_folds=nested.inner_folds,
+                    trials=nested.trials,
+                    seed=int(nested.seed + fold_i),
+                    timeout_s=int(nested.optuna_timeout_s),
+                    log_prefix=f"[fold {fold_i}/{len(outer_splits)}] ",
+                )
+            else:
+                params, tune_score = _tune_xgb(
+                    X=X_tr,
+                    ytot=yt_tr,
+                    ymar=ym_tr,
+                    feature_names=feats,
+                    inner_folds=nested.inner_folds,
+                    trials=nested.trials,
+                    rng=rng,
+                    log_prefix=f"[fold {fold_i}/{len(outer_splits)}] ",
+                    start_ts=fold_start,
+                )
             m = XGBoostTwoHeadModel(feature_version="v1", **params)
             met = _fit_eval_model(
                 m,
@@ -442,17 +647,30 @@ def run_nested_backtest(
             print(f"[fold {fold_i}/{len(outer_splits)}] tuning CAT...", flush=True)
             from src.modeling.cat_models import CatBoostTwoHeadModel
 
-            params, tune_score = _tune_cat(
-                X=X_tr,
-                ytot=yt_tr,
-                ymar=ym_tr,
-                feature_names=feats,
-                inner_folds=nested.inner_folds,
-                trials=nested.trials,
-                rng=rng,
-                log_prefix=f"[fold {fold_i}/{len(outer_splits)}] ",
-                start_ts=fold_start,
-            )
+            if nested.tuner == "optuna":
+                params, tune_score = _tune_cat_optuna(
+                    X=X_tr,
+                    ytot=yt_tr,
+                    ymar=ym_tr,
+                    feature_names=feats,
+                    inner_folds=nested.inner_folds,
+                    trials=nested.trials,
+                    seed=int(nested.seed + fold_i),
+                    timeout_s=int(nested.optuna_timeout_s),
+                    log_prefix=f"[fold {fold_i}/{len(outer_splits)}] ",
+                )
+            else:
+                params, tune_score = _tune_cat(
+                    X=X_tr,
+                    ytot=yt_tr,
+                    ymar=ym_tr,
+                    feature_names=feats,
+                    inner_folds=nested.inner_folds,
+                    trials=nested.trials,
+                    rng=rng,
+                    log_prefix=f"[fold {fold_i}/{len(outer_splits)}] ",
+                    start_ts=fold_start,
+                )
             m = CatBoostTwoHeadModel(feature_version="v1", **params)
             met = _fit_eval_model(
                 m,
@@ -514,9 +732,14 @@ def main() -> None:
     ap.add_argument("--inner-folds", type=int, default=3)
     ap.add_argument("--trials", type=int, default=15)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--tuner", choices=["random", "optuna"], default="random")
+    ap.add_argument("--optuna-timeout-s", type=int, default=0, help="Per-model tuner timeout in seconds (0 disables timeout)")
 
     ap.add_argument("--include-xgb", action="store_true")
     ap.add_argument("--include-cat", action="store_true")
+    ap.add_argument("--include-lgbm", action="store_true")
+    ap.add_argument("--target-total", type=str, default=None)
+    ap.add_argument("--target-margin", type=str, default=None)
 
     args = ap.parse_args()
 
@@ -525,9 +748,18 @@ def main() -> None:
         box_dir=args.box_dir,
         out_csv=args.out,
         outer=FoldSpec(train_min=args.train_min, test_size=args.test_size, step_size=args.step_size),
-        nested=NestedSpec(inner_folds=args.inner_folds, trials=args.trials, seed=args.seed),
+        nested=NestedSpec(
+            inner_folds=args.inner_folds,
+            trials=args.trials,
+            seed=args.seed,
+            tuner=args.tuner,
+            optuna_timeout_s=args.optuna_timeout_s,
+        ),
         include_xgb=args.include_xgb,
         include_cat=args.include_cat,
+        include_lgbm=args.include_lgbm,
+        target_total=args.target_total,
+        target_margin=args.target_margin,
     )
 
 

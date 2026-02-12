@@ -12,17 +12,11 @@
   },
   "required_models": [
     "ridge",
-    "elasticnet",
     "random_forest",
-    "gradient_boosting",
+    "gbt",
     "xgboost",
     "lightgbm",
-    "catboost",
-    "neural_network",
-    "quantile_gbm",
-    "huber",
-    "extra_trees",
-    "stacked_ensemble"
+    "catboost"
   ],
   "global_checks": {
     "fold_strategy": "nested_walk_forward",
@@ -57,7 +51,7 @@
         },
         {
           "name": "train",
-          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/pregame_team_v2.parquet --out reports/champion_runs/latest/pregame_fold_metrics.csv --include-xgb --include-cat",
+          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/pregame_team_v2.parquet --out reports/champion_runs/latest/pregame_fold_metrics.csv --include-xgb --include-cat --include-lgbm --target-total total --target-margin margin",
           "required_artifacts": [
             "reports/champion_runs/latest/pregame_fold_metrics.csv"
           ]
@@ -95,7 +89,7 @@
         },
         {
           "name": "train",
-          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/halftime_with_temporal_features_total.parquet --out reports/champion_runs/latest/halftime_fold_metrics.csv --include-xgb --include-cat",
+          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/halftime_with_temporal_features_total.parquet --out reports/champion_runs/latest/halftime_fold_metrics.csv --include-xgb --include-cat --include-lgbm --target-total h2_total --target-margin h2_margin",
           "required_artifacts": [
             "reports/champion_runs/latest/halftime_fold_metrics.csv"
           ]
@@ -133,7 +127,7 @@
         },
         {
           "name": "train",
-          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/q3_team_v2.parquet --out reports/champion_runs/latest/q3_fold_metrics.csv --include-xgb --include-cat",
+          "command": "python src/modeling/nested_walkforward_backtest.py --data data/processed/q3_team_v2.parquet --out reports/champion_runs/latest/q3_fold_metrics.csv --include-xgb --include-cat --include-lgbm --target-total q3_total --target-margin q3_margin",
           "required_artifacts": [
             "reports/champion_runs/latest/q3_fold_metrics.csv"
           ]

@@ -4,6 +4,7 @@ import argparse
 import importlib
 import json
 import os
+import re
 import shutil
 import sys
 from datetime import datetime, timezone
@@ -60,11 +61,62 @@ def run_preflight(repo_root: Path, out_json: Path) -> Path:
         repo_root / "src/pipelines/build_champion_leaderboard.py",
     ]
     checks: List[Dict[str, Any]] = []
+
+    cfg_path = repo_root / "config/champion_testing_v1.json"
+    cfg_payload: Dict[str, Any] = {}
+    if cfg_path.exists():
+        try:
+            cfg_payload = json.loads(cfg_path.read_text(encoding="utf-8"))
+        except Exception:
+            cfg_payload = {}
+
+    # Add dependency checks based on configured stage commands.
+    cmd_blob = "\n".join(
+        stage.get("command", "")
+        for state_cfg in cfg_payload.get("states", {}).values()
+        for stage in state_cfg.get("stages", [])
+    )
+    optional_by_flag = {
+        "--include-xgb": "xgboost",
+        "--include-cat": "catboost",
+        "--include-lgbm": "lightgbm",
+        "--tuner optuna": "optuna",
+    }
+    for marker, module_name in optional_by_flag.items():
+        if marker in cmd_blob and module_name not in required_modules:
+            required_modules.append(module_name)
+
     checks.append(_check_python())
     checks.extend(_check_module(m) for m in required_modules)
     checks.extend(_check_file(f) for f in required_files)
     checks.append(_check_executable("python"))
     checks.append(_check_dir_writable(repo_root / "reports" / "champion_runs"))
+
+    # Validate that state target declarations match stage command overrides.
+    target_arg_pattern = re.compile(r"--target-(total|margin)\s+([^\s]+)")
+    for state_name, state_cfg in cfg_payload.get("states", {}).items():
+        declared_targets = list(state_cfg.get("targets", []))
+        target_from_cmd: Dict[str, str] = {}
+        for stage in state_cfg.get("stages", []):
+            if str(stage.get("name", "")) != "train":
+                continue
+            cmd = str(stage.get("command", ""))
+            for kind, value in target_arg_pattern.findall(cmd):
+                target_from_cmd[kind] = value
+
+        total_declared = declared_targets[0] if len(declared_targets) > 0 else None
+        margin_declared = declared_targets[1] if len(declared_targets) > 1 else None
+        checks.append(
+            {
+                "name": f"target_alignment:{state_name}",
+                "ok": (
+                    target_from_cmd.get("total") == total_declared
+                    and target_from_cmd.get("margin") == margin_declared
+                ),
+                "declared": {"total": total_declared, "margin": margin_declared},
+                "from_train_command": target_from_cmd,
+            }
+        )
 
     payload = {
         "generated_at": datetime.now(timezone.utc).isoformat(),
