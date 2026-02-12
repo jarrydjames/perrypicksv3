@@ -2,6 +2,10 @@
 
 This is the push-to-run checklist for executing the champion system cleanly on a vibe-coding platform.
 
+For the full staged tuning runbook (random baseline → Optuna canary → full tune → gated promotion), see:
+
+- `docs/ROBUST_TUNING_PLAYBOOK.md`
+
 ## One-command entrypoint
 
 ```bash
@@ -55,3 +59,23 @@ scripts/vibe_run_champion_pipeline.sh --dry-run --skip-checks
 ```
 
 and fail the workflow if exit code is non-zero.
+
+## Fast progression commands (copy/paste)
+
+1. Wiring smoke:
+
+```bash
+scripts/vibe_run_champion_pipeline.sh --dry-run --skip-checks
+```
+
+2. Full champion cycle:
+
+```bash
+scripts/vibe_run_champion_pipeline.sh
+```
+
+3. Promote only after reviewing latest report and candidates:
+
+```bash
+scripts/vibe_run_champion_pipeline.sh --promote
+```
