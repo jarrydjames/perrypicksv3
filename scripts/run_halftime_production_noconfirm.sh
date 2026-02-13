@@ -1,21 +1,21 @@
 #!/bin/bash
-# Halftime Stage D: Production Run (Requires Manual Confirmation)
-# This script should ONLY be run after Stages A-C pass and you've reviewed results
+# Halftime Production Run - No Confirmation (Baseline Already Reviewed)
+# This runs the full 51-fold production test
 
 set -e
 
 echo "========================================"
-echo "HALFTIME STAGE D: PRODUCTION RUN"
+echo "HALFTIME PRODUCTION RUN (51 FOLDS)"
 echo "========================================"
 echo ""
-echo "⚠️ WARNING: This will take 6-8 hours to complete!"
+echo "⚠️ This will take 6-8 hours to complete!"
 echo ""
 echo "Configuration:"
 echo "  - 51 outer folds (full dataset)"
 echo "  - 5 inner folds"
 echo "  - 50 Optuna trials per model"
 echo "  - 30-minute timeout per model"
-echo "  - 2 models (XGBoost + CatBoost)"
+echo "  - 2 models (XGBoost + CatBoost for ensemble)"
 echo "  - Targets: h2_total, h2_margin"
 echo ""
 
@@ -26,30 +26,6 @@ OUT_FILE="reports/champion_runs/latest/${STATE}_fold_metrics.csv"
 TARGET_TOTAL="h2_total"
 TARGET_MARGIN="h2_margin"
 
-# Check if baseline exists
-if [ ! -f "$OUT_FILE" ]; then
-  echo "❌ ERROR: Baseline file not found. Run Stages A-C first."
-  exit 1
-fi
-
-echo "Current baseline file: $OUT_FILE"
-echo "Rows: $(wc -l < "$OUT_FILE")"
-echo ""
-
-read -p "Have you reviewed the baseline results from Stages A-C? (yes/no): " CONFIRM1
-if [ "$CONFIRM1" != "yes" ]; then
-  echo "❌ Aborted. Please review baseline results first."
-  exit 1
-fi
-
-read -p "Ready to start 6-8 hour production run? This will replace the baseline file. (yes/no): " CONFIRM2
-if [ "$CONFIRM2" != "yes" ]; then
-  echo "❌ Aborted by user."
-  exit 1
-fi
-
-echo ""
-echo "Starting production run..."
 echo "Start time: $(date)"
 echo ""
 
@@ -58,18 +34,23 @@ source .venv_catboost/bin/activate
 export PYTHONPATH="$(pwd)"
 
 # Backup baseline
-cp "$OUT_FILE" "${OUT_FILE}.baseline_backup"
-echo "✅ Baseline backed up to: ${OUT_FILE}.baseline_backup"
-echo ""
+if [ -f "$OUT_FILE" ]; then
+  cp "$OUT_FILE" "${OUT_FILE}.baseline_backup"
+  echo "✅ Baseline backed up to: ${OUT_FILE}.baseline_backup"
+  echo ""
+fi
 
 # Remove baseline output
 rm -f "$OUT_FILE"
+
+echo "Starting production run..."
+echo ""
 
 # Run full production test
 python src/modeling/nested_walkforward_backtest.py \
   --data "$DATA_FILE" \
   --out "$OUT_FILE" \
-  --include-xgb --include-cat --include-lgbm \
+  --include-xgb --include-cat \
   --target-total "$TARGET_TOTAL" \
   --target-margin "$TARGET_MARGIN" \
   --tuner optuna \
@@ -77,19 +58,19 @@ python src/modeling/nested_walkforward_backtest.py \
   --inner-folds 5 \
   --trials 50 \
   --seed 42 \
-  --train-min 500 \
+  --train-min 800 \
   --test-size 200 \
   --step-size 200
 
 if [ $? -ne 0 ]; then
   echo ""
-  echo "❌ STAGE D FAILED: Production run returned non-zero exit code"
+  echo "❌ PRODUCTION RUN FAILED"
   echo "Baseline backup available at: ${OUT_FILE}.baseline_backup"
   exit 1
 fi
 
 echo ""
-echo "✅ STAGE D PASSED: Production run completed successfully"
+echo "✅ PRODUCTION RUN COMPLETED SUCCESSFULLY"
 echo "End time: $(date)"
 echo ""
 
@@ -105,7 +86,7 @@ echo ""
 echo ""
 echo "========================================"
 echo "STAGE E: LEADERBOARD GENERATION"
-echo "========================================
+echo "========================================"
 echo ""
 
 python src/pipelines/build_champion_leaderboard.py \
@@ -123,7 +104,7 @@ echo "✅ STAGE E PASSED: Leaderboard generated successfully"
 echo ""
 echo "========================================"
 echo "ALL STAGES COMPLETED SUCCESSFULLY!"
-echo "========================================
+echo "========================================"
 echo ""
 echo "Results:"
 echo "  - Fold metrics: $OUT_FILE"
@@ -134,6 +115,6 @@ cat "reports/champion_runs/latest/${STATE}_leaderboard.csv" | column -t -s','
 echo ""
 echo "Next steps:"
 echo "  1. Review leaderboard for champion selection"
-echo "  2. Run pregame testing (same process)"
-echo "  3. Run Q3 testing (same process)"
+echo "  2. Analyze results for potential ensemble"
+echo "  3. Compare XGBoost vs CatBoost performance"
 echo ""
