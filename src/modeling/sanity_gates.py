@@ -35,9 +35,16 @@ BANNED_FEATURE_TOKENS = {
 }
 
 # Whitelist for allowed tokens (e.g., "points_allowed" might be valid)
+# These are feature names that contain banned tokens but are legitimate
 ALLOWED_TOKENS = {
-    # Add any legitimate feature names here that contain banned tokens
-    # e.g., "opponent_points_allowed", "team_points_scored_avg"
+    # Legitimate historical performance features (not leakage)
+    "away_pts_scored_avg_5",  # Average points scored in last 5 away games
+    "home_pts_scored_avg_5",  # Average points scored in last 5 home games
+    # Common patterns that are safe:
+    # - *_pts_scored_avg_* (historical scoring averages)
+    # - *_points_allowed_avg_* (historical defensive averages)
+    # - opp_* (opponent prefixes)
+    # Add any other legitimate feature names here that contain banned tokens
 }
 
 
