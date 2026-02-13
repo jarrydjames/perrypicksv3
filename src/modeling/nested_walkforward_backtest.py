@@ -596,6 +596,7 @@ def run_nested_backtest(
     include_lgbm: bool,
     target_total: str | None,
     target_margin: str | None,
+    max_folds: int | None = None,
 ) -> None:
     run_start = time.perf_counter()
     
@@ -644,6 +645,11 @@ def run_nested_backtest(
     diagnostics_list: List[Dict[str, any]] = []
 
     outer_splits = list(iter_walkforward_indices(len(df), spec=outer))
+    
+    # Limit folds if max_folds specified (for quick baseline)
+    if max_folds is not None and len(outer_splits) > max_folds:
+        print(f"Limiting to first {max_folds} folds (of {len(outer_splits)} total) for baseline testing")
+        outer_splits = outer_splits[:max_folds]
     
     # Determine state from target names
     state = "unknown"
@@ -952,6 +958,7 @@ def main() -> None:
     ap.add_argument("--train-min", type=int, default=800, help="Minimum training size (increased for stability)")
     ap.add_argument("--test-size", type=int, default=200)
     ap.add_argument("--step-size", type=int, default=200)
+    ap.add_argument("--max-folds", type=int, default=None, help="Maximum number of outer folds (None = all folds, use 5 for quick baseline)")
 
     ap.add_argument("--inner-folds", type=int, default=5, help="Inner folds (increased for stability)")
     ap.add_argument("--trials", type=int, default=30, help="Tuning trials (increased for better optimization)")
@@ -984,6 +991,7 @@ def main() -> None:
         include_lgbm=args.include_lgbm,
         target_total=args.target_total,
         target_margin=args.target_margin,
+        max_folds=args.max_folds,
     )
 
 

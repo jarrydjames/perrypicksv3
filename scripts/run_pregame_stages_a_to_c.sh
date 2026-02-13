@@ -70,6 +70,7 @@ python src/modeling/nested_walkforward_backtest.py \
   --target-total "$TARGET_TOTAL" \
   --target-margin "$TARGET_MARGIN" \
   --tuner random \
+  --max-folds 5 \
   --inner-folds 5 \
   --trials 30 \
   --seed 42 \
