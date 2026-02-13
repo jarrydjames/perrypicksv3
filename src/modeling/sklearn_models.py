@@ -5,10 +5,12 @@ from typing import List, Tuple
 
 import numpy as np
 from sklearn.ensemble import HistGradientBoostingRegressor, RandomForestRegressor
+from sklearn.feature_selection import VarianceThreshold
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import Ridge, ElasticNet
 from sklearn.neural_network import MLPRegressor
 from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 from src.modeling.base import BaseTwoHeadModel, TwoHeadFitResult
 from src.modeling.types_model import TrainedHead
@@ -23,18 +25,37 @@ def _with_imputer(est):
     ])
 
 
+def _with_stable_pipeline(est):
+    """Create stable pipeline for linear models.
+    
+    Components (in order):
+    1. SimpleImputer(median) - handle NaNs
+    2. VarianceThreshold(1e-10) - remove near-constant features
+    3. StandardScaler() - normalize features
+    4. Model
+    """
+    return Pipeline([
+        ("imputer", SimpleImputer(strategy="median")),
+        ("variance_threshold", VarianceThreshold(threshold=1e-10)),
+        ("scaler", StandardScaler()),
+        ("model", est),
+    ])
+
+
 class RidgeTwoHeadModel(BaseTwoHeadModel):
     name = "ridge"
     version = "1"
 
     def __init__(self, *, alpha: float = 2.0, feature_version: str = "v1"):
         super().__init__(feature_version=feature_version)
-        self.alpha = float(alpha)
+        # Enforce minimum alpha >= 0.05 for stability
+        self.alpha = max(0.05, float(alpha))
         self._fit: TwoHeadFitResult | None = None
 
     def fit(self, X: np.ndarray, feature_names: List[str], y_total: np.ndarray, y_margin: np.ndarray) -> "RidgeTwoHeadModel":
-        mt = _with_imputer(Ridge(alpha=self.alpha, random_state=0))
-        mm = _with_imputer(Ridge(alpha=self.alpha, random_state=0))
+        # Use solver='svd' for maximum stability
+        mt = _with_stable_pipeline(Ridge(alpha=self.alpha, solver='svd', random_state=0))
+        mm = _with_stable_pipeline(Ridge(alpha=self.alpha, solver='svd', random_state=0))
 
         mt.fit(X, y_total)
         mm.fit(X, y_margin)
@@ -202,16 +223,36 @@ class ElasticNetTwoHeadModel(BaseTwoHeadModel):
         *,
         alpha: float = 1.0,
         l1_ratio: float = 0.5,
+        max_iter: int = 20000,
         feature_version: str = "v1",
     ):
         super().__init__(feature_version=feature_version)
-        self.alpha = float(alpha)
+        # Enforce minimum alpha >= 0.05 for stability
+        self.alpha = max(0.05, float(alpha))
         self.l1_ratio = float(l1_ratio)
+        self.max_iter = int(max_iter)
         self._fit: TwoHeadFitResult | None = None
 
     def fit(self, X: np.ndarray, feature_names: List[str], y_total: np.ndarray, y_margin: np.ndarray) -> "ElasticNetTwoHeadModel":
-        mt = _with_imputer(ElasticNet(alpha=self.alpha, l1_ratio=self.l1_ratio, random_state=0))
-        mm = _with_imputer(ElasticNet(alpha=self.alpha, l1_ratio=self.l1_ratio, random_state=0))
+        # Use stable pipeline with higher max_iter and relaxed tol
+        mt = _with_stable_pipeline(
+            ElasticNet(
+                alpha=self.alpha,
+                l1_ratio=self.l1_ratio,
+                max_iter=self.max_iter,
+                tol=1e-3,  # Relaxed tolerance
+                random_state=0
+            )
+        )
+        mm = _with_stable_pipeline(
+            ElasticNet(
+                alpha=self.alpha,
+                l1_ratio=self.l1_ratio,
+                max_iter=self.max_iter,
+                tol=1e-3,  # Relaxed tolerance
+                random_state=0
+            )
+        )
 
         mt.fit(X, y_total)
         mm.fit(X, y_margin)

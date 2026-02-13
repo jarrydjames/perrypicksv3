@@ -13,6 +13,7 @@ import pandas as pd
 from src.modeling.backtest_utils import FoldSpec, attach_game_time_utc, brier, coverage, iter_walkforward_indices, mae, p_home_win, rmse
 from src.modeling.base import BaseTwoHeadModel
 from src.modeling.feature_columns import feature_columns
+from src.modeling.sanity_gates import compute_fold_diagnostics, run_all_sanity_gates, treat_warnings_as_errors
 from src.modeling.sklearn_models import ElasticNetTwoHeadModel, GBTTwoHeadModel, MLPTwoHeadModel, RandomForestTwoHeadModel, RidgeTwoHeadModel
 
 
@@ -597,7 +598,10 @@ def run_nested_backtest(
     target_margin: str | None,
 ) -> None:
     run_start = time.perf_counter()
-
+    
+    # Treat warnings as errors during training
+    treat_warnings_as_errors()
+    
     df = pd.read_parquet(parquet_path)
     df = attach_game_time_utc(df, box_dir=box_dir)
     df = df.sort_values("gameTimeUTC").reset_index(drop=True)
@@ -637,8 +641,18 @@ def run_nested_backtest(
     ]
 
     rows: List[Dict[str, object]] = []
+    diagnostics_list: List[Dict[str, any]] = []
 
     outer_splits = list(iter_walkforward_indices(len(df), spec=outer))
+    
+    # Determine state from target names
+    state = "unknown"
+    if "h2_" in resolved_total:
+        state = "halftime"
+    elif "remaining_" in resolved_total:
+        state = "q3"
+    elif resolved_total == "total":
+        state = "pregame"
 
     print(
         f"Nested backtest starting  n_rows={len(df)}  n_feats={len(feats)}  outer_folds={len(outer_splits)}  "
@@ -656,7 +670,52 @@ def run_nested_backtest(
         X_tr, X_te = X_all[tr], X_all[te]
         yt_tr, yt_te = y_total_all[tr], y_total_all[te]
         ym_tr, ym_te = y_margin_all[tr], y_margin_all[te]
-
+        
+        # ============================================
+        # SANITY GATES - Fail fast on invalid data
+        # ============================================
+        print(f"[fold {fold_i}] Running sanity gates...", flush=True)
+        try:
+            run_all_sanity_gates(
+                X_train=X_tr,
+                y_total_train=yt_tr,
+                y_margin_train=ym_tr,
+                feature_names=feats,
+                state=state,
+                fold_i=fold_i
+            )
+        except RuntimeError as e:
+            print(f"\n❌ FOLD {fold_i} SANITY GATE FAILED - STOPPING", flush=True)
+            print(f"Error: {e}", flush=True)
+            raise
+        
+        # Compute and store fold diagnostics
+        diagnostics = compute_fold_diagnostics(
+            X_train=X_tr,
+            y_total_train=yt_tr,
+            y_margin_train=ym_tr,
+            feature_names=feats,
+            fold_i=fold_i
+        )
+        diagnostics_list.append(diagnostics)
+        
+        # Log diagnostics summary
+        print(f"[fold {fold_i}] Diagnostics:", flush=True)
+        print(f"  - Zero-variance features: {diagnostics['zero_variance_features']}", flush=True)
+        print(f"  - Near-duplicate pairs: {len(diagnostics['near_duplicate_pairs'])}", flush=True)
+        print(f"  - Condition number: {diagnostics.get('condition_number', 'N/A')}", flush=True)
+        print(f"  - Y total: mean={diagnostics['y_total_mean']:.1f}, std={diagnostics['y_total_std']:.1f}", flush=True)
+        print(f"  - Y margin: mean={diagnostics['y_margin_mean']:.1f}, std={diagnostics['y_margin_std']:.1f}", flush=True)
+        
+        # Check condition number warning threshold
+        cond_num = diagnostics.get('condition_number')
+        if cond_num is not None and cond_num > 1e12:
+            print(f"\n⚠️ WARNING: Condition number {cond_num:.2e} > 1e12 - fold may be unstable", flush=True)
+        
+        # ============================================
+        # MODEL EVALUATION
+        # ============================================
+        
         # Evaluate fixed models
         for m in base_models:
             print(f"[fold {fold_i}/{len(outer_splits)}] eval {m.name}", flush=True)
@@ -852,6 +911,17 @@ def run_nested_backtest(
     res = pd.DataFrame(rows)
     out_csv.parent.mkdir(parents=True, exist_ok=True)
     res.to_csv(out_csv, index=False)
+    
+    # Save fold diagnostics
+    diagnostics_dir = out_csv.parent / "fold_diagnostics"
+    diagnostics_dir.mkdir(parents=True, exist_ok=True)
+    
+    for diag in diagnostics_list:
+        diag_file = diagnostics_dir / f"{state}_fold_{diag['fold']:02d}.json"
+        with open(diag_file, 'w') as f:
+            json.dump(diag, f, indent=2, default=str)
+    
+    print(f"Saved {len(diagnostics_list)} fold diagnostics to {diagnostics_dir}")
 
     print("\n=== Nested walk-forward backtest (fold-averaged) ===")
     g = res.groupby("model")
@@ -879,12 +949,12 @@ def main() -> None:
     ap.add_argument("--box-dir", type=Path, default=Path("data/raw/box"))
     ap.add_argument("--out", type=Path, default=Path("data/processed/nested_walkforward_backtest.csv"))
 
-    ap.add_argument("--train-min", type=int, default=1000)
+    ap.add_argument("--train-min", type=int, default=800, help="Minimum training size (increased for stability)")
     ap.add_argument("--test-size", type=int, default=200)
     ap.add_argument("--step-size", type=int, default=200)
 
-    ap.add_argument("--inner-folds", type=int, default=3)
-    ap.add_argument("--trials", type=int, default=15)
+    ap.add_argument("--inner-folds", type=int, default=5, help="Inner folds (increased for stability)")
+    ap.add_argument("--trials", type=int, default=30, help="Tuning trials (increased for better optimization)")
     ap.add_argument("--seed", type=int, default=0)
     ap.add_argument("--tuner", choices=["random", "optuna"], default="random")
     ap.add_argument("--optuna-timeout-s", type=int, default=0, help="Per-model tuner timeout in seconds (0 disables timeout)")

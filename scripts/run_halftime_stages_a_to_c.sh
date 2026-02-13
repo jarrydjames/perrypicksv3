@@ -69,10 +69,10 @@ python src/modeling/nested_walkforward_backtest.py \
   --target-total "$TARGET_TOTAL" \
   --target-margin "$TARGET_MARGIN" \
   --tuner random \
-  --inner-folds 3 \
-  --trials 10 \
+  --inner-folds 5 \
+  --trials 30 \
   --seed 42 \
-  --train-min 500 \
+  --train-min 800 \
   --test-size 200 \
   --step-size 200
 
