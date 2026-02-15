@@ -81,19 +81,34 @@ def _build_team_id_maps(hist_df: pd.DataFrame) -> Tuple[Dict[str, float], Dict[s
     tri_to_id: Dict[str, float] = {}
     city_name_to_tri: Dict[str, str] = {}
 
+    # Load the custom ID mapping (triCode -> 0-29)
+    import json
+    from pathlib import Path
+    custom_id_path = Path("data/processed/team_tricode_to_custom_id.json")
+    if custom_id_path.exists():
+        with open(custom_id_path, 'r') as f:
+            tri_to_custom_id = json.load(f)
+        # Convert to float for consistency
+        tri_to_id = {k: float(v) for k, v in tri_to_custom_id.items()}
+        print(f"  Loaded custom ID mapping for {len(tri_to_id)} teams")
+    else:
+        # Fallback: build from historical data (may not match refined temporal dataset)
+        for side in ["home", "away"]:
+            tri_col = f"{side}_tri"
+            id_col = f"{side}_team_id"
+
+            if tri_col in hist_df.columns and id_col in hist_df.columns:
+                pairs = hist_df[[tri_col, id_col]].dropna().drop_duplicates()
+                for _, row in pairs.iterrows():
+                    tri = str(row[tri_col]).upper().strip()
+                    team_id = pd.to_numeric(pd.Series([row[id_col]]), errors="coerce").iloc[0]
+                    if tri and pd.notna(team_id):
+                        tri_to_id[tri] = float(team_id)
+
     for side in ["home", "away"]:
         tri_col = f"{side}_tri"
-        id_col = f"{side}_team_id"
         city_col = f"{side}_city"
         name_col = f"{side}_name"
-
-        if tri_col in hist_df.columns and id_col in hist_df.columns:
-            pairs = hist_df[[tri_col, id_col]].dropna().drop_duplicates()
-            for _, row in pairs.iterrows():
-                tri = str(row[tri_col]).upper().strip()
-                team_id = pd.to_numeric(pd.Series([row[id_col]]), errors="coerce").iloc[0]
-                if tri and pd.notna(team_id):
-                    tri_to_id[tri] = float(team_id)
 
         if tri_col in hist_df.columns and city_col in hist_df.columns and name_col in hist_df.columns:
             triples = hist_df[[tri_col, city_col, name_col]].dropna().drop_duplicates()
@@ -113,18 +128,19 @@ def _extract_team_id(
     tri_to_id: Dict[str, float],
     city_name_to_tri: Dict[str, str],
 ) -> float:
-    """Extract robust team id from potentially variant CDN payloads."""
-    for key in ["teamId", "id", "team_id"]:
-        raw = team_payload.get(key)
-        if raw not in (None, ""):
-            parsed = pd.to_numeric(pd.Series([raw]), errors="coerce").iloc[0]
-            if pd.notna(parsed) and float(parsed) > 0:
-                return float(parsed)
-
+    """Extract robust team id from potentially variant CDN payloads.
+    
+    Priority:
+    1. Use triCode mapping (to get custom IDs 0-29)
+    2. Fallback to city+name mapping
+    3. Return 0 if not found
+    """
+    # First, try triCode (most reliable for custom ID mapping)
     tri = str(team_payload.get("teamTricode", "")).upper().strip()
     if tri and tri in tri_to_id:
         return float(tri_to_id[tri])
 
+    # Second, try city+name -> triCode -> ID
     city = str(team_payload.get("teamCity", "")).upper().strip()
     name = str(team_payload.get("teamName", "")).upper().strip()
     city_name = f"{city} {name}".strip()
@@ -226,15 +242,21 @@ def _extract_team_recency_features(
     target_dt: pd.Timestamp,
     out_prefix: str,
 ) -> Dict[str, float]:
-    """Build team recency features from latest leakage-safe historical row."""
-    defaults = {
-        f"{out_prefix}_{metric}": _safe_default(
-            hist_df,
-            f"{out_prefix}_{metric}",
-            0.0,
-        )
-        for metric in RECENCY_BASE_FEATURES
-    }
+    """Build team recency features from latest leakage-safe historical row.
+    
+    For refined temporal dataset, features are already calculated.
+    We just need to find the most recent game for this team and extract the features.
+    """
+    
+    # Get default values from historical medians
+    defaults = {}
+    for metric in RECENCY_BASE_FEATURES:
+        col_with_prefix = f"{out_prefix}_{metric}"
+        if col_with_prefix in hist_df.columns:
+            defaults[col_with_prefix] = _safe_default(hist_df, col_with_prefix, 0.0)
+        else:
+            defaults[col_with_prefix] = 0.0
+    
     defaults[f"{out_prefix}_team_id"] = float(team_id)
 
     if team_id <= 0:
@@ -247,6 +269,7 @@ def _extract_team_recency_features(
     latest_row = None
     latest_date = None
 
+    # Find the most recent game for this team before target date
     for side in ["home", "away"]:
         id_col = f"{side}_team_id"
         if id_col not in hist_df.columns:
@@ -267,21 +290,21 @@ def _extract_team_recency_features(
 
         if latest_date is None or row_date > latest_date:
             latest_date = row_date
-            latest_row = (side, row)
+            latest_row = row
 
     if latest_row is None:
         return defaults
 
-    source_side, source_row = latest_row
-
+    # Extract features from the latest row
     features = defaults.copy()
-    for metric in RECENCY_BASE_FEATURES:
-        source_col = f"{source_side}_{metric}"
-        target_col = f"{out_prefix}_{metric}"
-        if source_col in source_row:
-            val = pd.to_numeric(pd.Series([source_row[source_col]]), errors="coerce").iloc[0]
-            if pd.notna(val):
-                features[target_col] = float(val)
+    
+    # Get all columns that start with out_prefix (e.g., "home_efg", "home_pts_scored_avg_5")
+    for col in hist_df.columns:
+        if col.startswith(f"{out_prefix}_"):
+            if col in latest_row:
+                val = pd.to_numeric(pd.Series([latest_row[col]]), errors="coerce").iloc[0]
+                if pd.notna(val):
+                    features[col] = float(val)
 
     return features
 
@@ -561,7 +584,7 @@ def main(
     print(f"{'='*80}")
 
     print("\nLoading historical feature store...")
-    data_path = Path("data/processed/halftime_with_temporal_features_total.parquet")
+    data_path = Path("data/processed/halftime_with_refined_temporal.parquet")
     hist_df = pd.read_parquet(data_path)
     hist_df["game_date"] = pd.to_datetime(hist_df["game_date"], errors="coerce", utc=True)
     tri_to_id, city_name_to_tri = _build_team_id_maps(hist_df)
@@ -701,9 +724,16 @@ def main(
     mu_total, mu_margin = model.predict_heads(X_test)
     
     # Get win probability
+    # Model predicts H2 (second half) margin
+    # Full game margin = H1_margin (known) + H2_margin (predicted with uncertainty)
+    # Win prob = P(H1_margin + H2_margin > 0)
+    #          = P(H2_margin > -H1_margin)
     trained_heads = model.trained_heads()
     sig_margin = trained_heads.margin.residual_sigma * sigma_k_margin
-    p_win = 1 - norm.cdf(0, loc=mu_margin, scale=sig_margin)
+    
+    # Calculate probability that home wins the full game
+    h1_margin = results_df['h1_margin'].values
+    p_win = 1 - norm.cdf(-h1_margin, loc=mu_margin, scale=sig_margin)
     
     # Add predictions to results
     # Model predicts h2 (second half), so add h1 to get full game prediction
