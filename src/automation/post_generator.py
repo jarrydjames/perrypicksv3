@@ -186,30 +186,67 @@ class PostGenerator:
     def _format_bets_section(
         self, bets: List[Dict[str, Any]], platform: str
     ) -> str:
-        """
-        Format best bets section for post.
-        """
+        """Format best bets section with edge + probability gating details."""
         if not bets:
-            # No bets available - return informative message
             if platform == 'twitter':
-                return '\nNo bets with >6% edge available.\n'
-            else:
-                return '\n🎯 No bets with >6% edge available at this time.\n'
-        
+                return '\nNo bets passed edge + hit-probability thresholds.\n'
+            return '\n🎯 No bets passed edge + hit-probability thresholds at this time.\n'
+
         if platform == 'twitter':
-            section = 'Top Bets (by edge):\n\n'
-            for i, bet in enumerate(bets, 1):
-                section += f"{bet['side']} @ {bet['odds']} (edge {bet['edge']*100:+.1f}%)\n"
-                section += f"   P: {_format_probability(bet['probability'])}\n\n"
+            section = 'Top Bets (edge, then hit probability):\n\n'
+            for bet in bets:
+                edge_unit = bet.get('edge_unit', '%')
+                edge_value = float(bet.get('edge_value', 0.0))
+                edge_text = f"{edge_value:+.2f} pts" if edge_unit == 'pts' else f"{edge_value*100:+.1f}%"
+                model_pred = bet.get('model_prediction', 'n/a')
+                section += f"{bet['game']} | {bet['type']} {bet['side']} @ {bet['odds']}\n"
+                section += (
+                    f"   Model: {model_pred} | Edge: {edge_text} "
+                    f"| P(hit): {_format_probability(bet['hit_probability'])} | Tier: {bet['confidence_tier']}\n\n"
+                )
         else:
-            section = '🎯 Best Bets (Top 3 by Edge):\n\n'
+            section = '🎯 Best Bets (edge, then hit probability):\n\n'
             for i, bet in enumerate(bets, 1):
                 emoji = '🔥' if i == 1 else ('✅' if i == 2 else '💰')
-                section += f"{emoji} {i}. {bet['type']} {bet['side']} @ {bet['odds']} (edge {bet['edge']*100:+.1f}%)\n"
-                section += f"   P: {_format_probability(bet['probability'])}\n\n"
-        
+                edge_unit = bet.get('edge_unit', '%')
+                edge_value = float(bet.get('edge_value', 0.0))
+                edge_text = f"{edge_value:+.2f} pts" if edge_unit == 'pts' else f"{edge_value*100:+.1f}%"
+                model_pred = bet.get('model_prediction', 'n/a')
+                section += f"{emoji} {i}. {bet['game']}\n"
+                section += f"   Bet: {bet['type']} {bet['side']} @ {bet['odds']}\n"
+                section += f"   Model: {model_pred} | Edge: {edge_text}\n"
+                section += f"   Hit Probability: {_format_probability(bet['hit_probability'])} | Confidence: {bet['confidence_tier']}\n\n"
+
+        avg_hit_prob = sum(float(b.get('hit_probability', 0.0)) for b in bets) / len(bets)
+        tier_counts: Dict[str, int] = {}
+        edge_by_type: Dict[str, List[float]] = {}
+        for bet in bets:
+            tier = str(bet.get('confidence_tier', 'No bet'))
+            tier_counts[tier] = tier_counts.get(tier, 0) + 1
+            btype = str(bet.get('type', 'Unknown'))
+            edge_by_type.setdefault(btype, []).append(float(bet.get('edge_value', 0.0)))
+
+        tier_summary = ', '.join(f"{tier}:{count}" for tier, count in sorted(tier_counts.items()))
+        edge_summary = ', '.join(
+            f"{btype} {sum(vals)/len(vals):+.2f}{' pts' if btype in {'Total','Spread'} else '%'}"
+            for btype, vals in sorted(edge_by_type.items())
+        )
+
+        if platform == 'twitter':
+            section += (
+                f"Summary: {len(bets)} bets | avg P(hit) {_format_probability(avg_hit_prob)} "
+                f"| edge by type [{edge_summary}] | tiers {tier_summary}\n"
+            )
+        else:
+            section += (
+                f"📊 Summary: {len(bets)} bets recommended\n"
+                f"   Average Hit Probability: {_format_probability(avg_hit_prob)}\n"
+                f"   Average Edge by Type: {edge_summary}\n"
+                f"   Confidence Distribution: {tier_summary}\n"
+            )
+
         return section
-    
+
     def _generate_twitter_pregame(
         self, away_team, home_team, total, margin,
         home_win_prob, model, prediction
