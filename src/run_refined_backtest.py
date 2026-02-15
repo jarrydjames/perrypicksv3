@@ -1,5 +1,5 @@
 """
-Simple backtest to calculate temporal feature improvement percentage.
+Backtest with refined temporal features - target: match 48hr CatBoost tuning accuracy.
 """
 import pandas as pd
 import numpy as np
@@ -36,6 +36,7 @@ def get_features(df: pd.DataFrame) -> list:
         'h1_events', 'h1_n_2pt', 'h1_n_3pt', 'h1_n_turnover',
         'h1_n_rebound', 'h1_n_foul', 'h1_n_timeout', 'h1_n_sub',
         'home_efg', 'away_efg', 'h2_total', 'h2_margin',
+        'final_total', 'final_margin',  # These are targets, not features!
         'market_total_line', 'market_home_spread_line',
         'market_home_team_total_line', 'market_away_team_total_line',
         'home_tri', 'away_tri', 'home_team_id', 'away_team_id'
@@ -51,7 +52,7 @@ def get_features(df: pd.DataFrame) -> list:
     
     return numeric_features
 
-def run_backtest(df: pd.DataFrame, test_size: float = 0.2, model_type: str = 'gbt') -> dict:
+def run_backtest(df: pd.DataFrame, test_size: float = 0.2) -> dict:
     """Run backtest and return metrics."""
     
     features = get_features(df)
@@ -100,47 +101,63 @@ def run_backtest(df: pd.DataFrame, test_size: float = 0.2, model_type: str = 'gb
         'margin_rmse': np.sqrt(mean_squared_error(y_test_margin, pred_margin))
     }
     
-    return metrics
+    return metrics, model_total, model_margin, features
 
 def main():
     print("=" * 70)
-    print("SIMPLE BACKTEST: TEMPORAL FEATURES")
+    print("REFINED TEMPORAL FEATURES BACKTEST")
+    print("Target: Match 48hr CatBoost Tuning Accuracy")
     print("=" * 70)
+    print()
     
-    # Load data
-    print("\nLoading data...")
-    df = load_data('data/processed/halftime_with_temporal_features_total.parquet')
+    # CatBoost tuning targets
+    catboost_metrics = {
+        'total_mae': 7.96,
+        'margin_mae': 3.85,
+        'total_rmse': 10.87
+    }
+    
+    print("CatBoost Tuning Results (48hr):")
+    print(f"  Total MAE:   {catboost_metrics['total_mae']:.2f}")
+    print(f"  Margin MAE:  {catboost_metrics['margin_mae']:.2f}")
+    print(f"  Total RMSE:  {catboost_metrics['total_rmse']:.2f}")
+    print()
+    
+    # Load data with refined temporal features
+    print("Loading data with refined temporal features...")
+    df = pd.read_parquet('data/processed/halftime_with_refined_temporal.parquet')
     print(f"  Games: {len(df)}")
     print(f"  Features: {len(df.columns)}")
     
-    # Get temporal feature count
-    temporal_cols = [col for col in df.columns if 'avg_5' in col or 'streak_5' in col or 'days_since' in col]
+    # Count temporal features
+    temporal_cols = [col for col in df.columns if any(x in col for x in ['avg_', 'ewm_', 'streak', 'trend', 'std_', 'days'])]
     print(f"  Temporal features: {len(temporal_cols)}")
+    print()
     
     # Run backtest
-    print("\nRunning backtest...")
-    metrics = run_backtest(df, test_size=0.2)
+    print("Running backtest...")
+    metrics, model_total, model_margin, features = run_backtest(df, test_size=0.2)
     
     print("\n" + "=" * 70)
-    print("TEMPORAL FEATURES: BACKTEST RESULTS")
+    print("REFINED TEMPORAL FEATURES: RESULTS")
     print("=" * 70)
     
     print(f"\nTest set: {int(len(df) * 0.2)} games (last 20%)")
+    print(f"Features used: {len(features)}")
     print(f"\nMetrics:")
-    print(f"  Total MAE:  {metrics['total_mae']:.4f}")
-    print(f"  Margin MAE: {metrics['margin_mae']:.4f}")
+    print(f"  Total MAE:   {metrics['total_mae']:.4f}")
+    print(f"  Margin MAE:  {metrics['margin_mae']:.4f}")
     print(f"  Total RMSE:  {metrics['total_rmse']:.4f}")
     print(f"  Margin RMSE: {metrics['margin_rmse']:.4f}")
     
-    # Load baseline for comparison (run on same data without temporal features)
+    # Load baseline for comparison
     print("\n" + "=" * 70)
     print("BASELINE: NO TEMPORAL FEATURES (SAME TEST SET)")
     print("=" * 70)
     
-    # Load halftime data without temporal features
     baseline_df = pd.read_parquet('data/processed/halftime_team_v2.parquet')
     
-    # Add game_date and team info for proper sorting
+    # Add game_date for proper sorting
     import json
     with open("data/processed/game_ids_2025.json", "r") as f:
         schedule = json.load(f)
@@ -158,45 +175,66 @@ def main():
     baseline_df['game_date'] = baseline_df['game_id'].map(game_dates)
     baseline_df = baseline_df.sort_values('game_date').reset_index(drop=True)
     
-    print(f"\nRunning baseline backtest (no temporal features)...")
-    baseline_metrics = run_backtest(baseline_df, test_size=0.2)
+    print(f"\nRunning baseline backtest...")
+    baseline_metrics, _, _, _ = run_backtest(baseline_df, test_size=0.2)
     
-    print(f"\nBaseline Metrics (same test set, no temporal features):")
-    print(f"  Total MAE:  {baseline_metrics['total_mae']:.4f}")
-    print(f"  Margin MAE: {baseline_metrics['margin_mae']:.4f}")
+    print(f"\nBaseline Metrics:")
+    print(f"  Total MAE:   {baseline_metrics['total_mae']:.4f}")
+    print(f"  Margin MAE:  {baseline_metrics['margin_mae']:.4f}")
     print(f"  Total RMSE:  {baseline_metrics['total_rmse']:.4f}")
     print(f"  Margin RMSE: {baseline_metrics['margin_rmse']:.4f}")
     
-    # Calculate improvement
+    # Calculate improvement vs CatBoost
     print("\n" + "=" * 70)
-    print("IMPROVEMENT CALCULATION")
+    print("COMPARISON: REFINED TEMPORAL vs CATBOOST")
     print("=" * 70)
     
-    def calc_improvement(baseline, temporal, metric_name):
-        if baseline > 0:
-            improvement = (baseline - temporal) / baseline * 100
-            status = "✅ IMPROVEMENT" if improvement > 0 else "❌ WORSENED"
-            return improvement, status
+    def calc_improvement(target, actual):
+        if target > 0:
+            diff = actual - target
+            pct = (diff / target) * 100
+            return diff, pct
         else:
-            return 0.0, "N/A"
+            return 0.0, 0.0
     
-    print(f"\n{'Metric':30} | Baseline | Temporal | Change | % Improv")
-    print("-" * 80)
+    print(f"\n{'Metric':20} | {'CatBoost':10} | {'Refined':10} | {'Diff':8} | {'% Diff':8}")
+    print("-" * 70)
     
-    metrics_to_compare = [
-        ("Total MAE", 'total_mae'),
-        ("Margin MAE", 'margin_mae'),
-        ("Total RMSE", 'total_rmse'),
-        ("Margin RMSE", 'margin_rmse')
-    ]
+    for metric_name, catboost_val in catboost_metrics.items():
+        refined_val = metrics[metric_name]
+        diff, pct = calc_improvement(catboost_val, refined_val)
+        status = "✅" if refined_val <= catboost_val else "⚠️"
+        print(f"{metric_name:20} | {catboost_val:10.2f} | {refined_val:10.2f} | {diff:+8.2f} | {pct:+8.2f}% {status}")
     
-    for name, key in metrics_to_compare:
-        baseline_val = float(baseline_metrics[key])
-        temporal_val = float(metrics[key])
-        change = baseline_val - temporal_val
-        improvement, status = calc_improvement(baseline_val, temporal_val, name)
-        
-        print(f"{name:30} | {baseline_val:8.4f} | {temporal_val:8.4f} | {change:+7.4f} | {improvement:+6.2f}%")
+    # Improvement vs baseline
+    print("\n" + "=" * 70)
+    print("COMPARISON: REFINED vs BASELINE")
+    print("=" * 70)
+    
+    print(f"\n{'Metric':20} | {'Baseline':10} | {'Refined':10} | {'Change':8} | {'% Change':8}")
+    print("-" * 70)
+    
+    for metric_name in ['total_mae', 'margin_mae', 'total_rmse', 'margin_rmse']:
+        baseline_val = baseline_metrics[metric_name]
+        refined_val = metrics[metric_name]
+        change = baseline_val - refined_val
+        pct = (change / baseline_val * 100) if baseline_val > 0 else 0
+        status = "✅" if refined_val < baseline_val else "⚠️"
+        print(f"{metric_name:20} | {baseline_val:10.2f} | {refined_val:10.2f} | {change:+8.2f} | {pct:+8.2f}% {status}")
+    
+    # Feature importance
+    print("\n" + "=" * 70)
+    print("TOP 15 MOST IMPORTANT FEATURES (Total Model)")
+    print("=" * 70)
+    
+    importance_df = pd.DataFrame({
+        'feature': features,
+        'importance': model_total.feature_importances_
+    }).sort_values('importance', ascending=False)
+    
+    print("\nTop 15 features:")
+    for i, row in importance_df.head(15).iterrows():
+        print(f"  {row['feature']:40} {row['importance']:8.4f}")
     
     print("\n" + "=" * 70)
     
@@ -204,16 +242,15 @@ def main():
     results_df = pd.DataFrame([{
         'baseline_total_mae': baseline_metrics['total_mae'],
         'baseline_margin_mae': baseline_metrics['margin_mae'],
-        'baseline_total_rmse': baseline_metrics['total_rmse'],
-        'baseline_margin_rmse': baseline_metrics['margin_rmse'],
-        'temporal_total_mae': metrics['total_mae'],
-        'temporal_margin_mae': metrics['margin_mae'],
-        'temporal_total_rmse': metrics['total_rmse'],
-        'temporal_margin_rmse': metrics['margin_rmse']
+        'refined_total_mae': metrics['total_mae'],
+        'refined_margin_mae': metrics['margin_mae'],
+        'catboost_total_mae': catboost_metrics['total_mae'],
+        'catboost_margin_mae': catboost_metrics['margin_mae'],
+        'features_used': len(features)
     }])
     
-    results_df.to_csv('reports/temporal_backtest_results.csv', index=False)
-    print(f"\nResults saved to: reports/temporal_backtest_results.csv")
+    results_df.to_csv('reports/refined_temporal_backtest_results.csv', index=False)
+    print(f"\nResults saved to: reports/refined_temporal_backtest_results.csv")
     print("=" * 70)
 
 if __name__ == '__main__':

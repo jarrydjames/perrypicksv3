@@ -1,0 +1,2 @@
+original_total_mae,original_margin_mae,refined_total_mae,refined_margin_mae,catboost_target_total_mae,catboost_target_margin_mae,original_features,refined_features
+12.48136701508363,8.64788590386993,10.99335228298725,7.928826882246392,7.96,3.85,22,115
