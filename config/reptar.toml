@@ -1,0 +1,83 @@
+# REPTAR Configuration
+# ====================
+# This file enforces REPTAR usage for all halftime predictions.
+#
+# DO NOT MODIFY unless you know what you're doing!
+# Changing this file may break halftime predictions.
+
+[model]
+name = "REPTAR"
+version = "1.0.0"
+code = "REPTAR"
+description = "Reptar - The Halftime Prediction Model"
+
+[data]
+# CRITICAL: Always use refined temporal features
+features_path = "data/processed/halftime_with_refined_temporal.parquet"
+team_id_map_path = "data/processed/team_tricode_to_custom_id.json"
+metrics_path = "reports/champion_runs/latest/halftime_fold_metrics.csv"
+
+[features]
+# Feature count (do not change)
+expected_count = 132
+min_count = 100
+
+[parameters]
+# Model parameters (do not change)
+topk_folds = 5
+target_fold = 51
+sigma_calib_frac = 0.15
+
+[performance]
+# Performance thresholds (validation)
+min_win_accuracy = 0.58
+max_brier_score = 0.25
+max_total_mae = 9.0
+max_margin_mae = 6.0
+
+[guardrails]
+# Guardrail settings
+enforce_reptar = true
+validate_on_load = true
+strict_mode = true
+require_team_id_map = true
+require_refined_features = true
+
+[validation]
+# Validation settings
+check_data_exists = true
+check_team_id_map = true
+check_feature_columns = true
+check_metrics_file = true
+
+[failsafes]
+# Failsafe settings
+fallback_enabled = false  # Never fallback to old model
+error_on_mismatch = true  # Error if data doesn't match REPTAR requirements
+log_violations = true     # Log all violations
+
+[logging]
+# Logging settings
+log_predictions = true
+log_performance = true
+log_errors = true
+log_file = "logs/reptar_predictions.log"
+
+[metadata]
+# Model metadata
+created_date = "2026-02-15"
+author = "Perry (Code Puppy)"
+performance_baseline = "75% win accuracy, 0.19 Brier score (Feb 9-11, 2026)"
+notes = """
+REPTAR Performance (24 games, Feb 9-11 2026):
+- Win Accuracy: 75.0%
+- Total MAE: 8.33
+- Margin MAE (excl outliers): 7.02
+- Brier Score: 0.1905
+
+Key Improvements:
+1. Fixed win probability calculation (was inverted)
+2. Fixed team ID mapping (triCode -> custom IDs 0-29)
+3. Integrated refined temporal features (139 features)
+4. Robust feature extraction
+"""
