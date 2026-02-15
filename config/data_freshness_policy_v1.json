@@ -1,0 +1,59 @@
+{
+  "version": "data_freshness_policy_v1",
+  "datasets": {
+    "pregame": {
+      "path": "data/processed/pregame_team_v2.parquet",
+      "date_columns": ["game_date", "gameTimeUTC", "date", "game_datetime"],
+      "required_columns": ["game_id", "season_end_yy", "home_team_id", "away_team_id"],
+      "recency_feature_columns": [
+        "home_pts_scored_avg_5",
+        "home_pts_allowed_avg_5",
+        "away_pts_scored_avg_5",
+        "away_pts_allowed_avg_5"
+      ],
+      "max_null_pct_per_feature": 25,
+      "min_rows": 1500,
+      "required_seasons": [25, 26],
+      "min_games_current_season": 200,
+      "freshness_days": 7
+    },
+    "halftime": {
+      "path": "data/processed/halftime_with_temporal_features_total.parquet",
+      "date_columns": ["game_date", "gameTimeUTC", "date", "game_datetime"],
+      "required_columns": ["game_id", "season_end_yy", "h1_total", "h2_total", "home_team_id", "away_team_id"],
+      "recency_feature_columns": [
+        "home_pts_scored_avg_5",
+        "home_pts_allowed_avg_5",
+        "home_margin_avg_5",
+        "home_current_streak_5",
+        "home_days_since_last",
+        "home_is_back_to_back",
+        "away_pts_scored_avg_5",
+        "away_pts_allowed_avg_5",
+        "away_margin_avg_5",
+        "away_current_streak_5",
+        "away_days_since_last",
+        "away_is_back_to_back"
+      ],
+      "max_null_pct_per_feature": 20,
+      "min_rows": 3000,
+      "required_seasons": [25, 26],
+      "min_games_current_season": 300,
+      "freshness_days": 3
+    },
+    "q3": {
+      "path": "data/processed/q3_team_v2.parquet",
+      "date_columns": ["game_date", "gameTimeUTC", "date", "game_datetime"],
+      "required_columns": ["game_id", "season_end_yy", "q3_total", "home_team_id", "away_team_id"],
+      "recency_feature_columns": [
+        "home_pts_scored_avg_5",
+        "away_pts_scored_avg_5"
+      ],
+      "max_null_pct_per_feature": 30,
+      "min_rows": 1000,
+      "required_seasons": [25, 26],
+      "min_games_current_season": 150,
+      "freshness_days": 7
+    }
+  }
+}

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
+import sys
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict
 
 
 def _load_json(path: Path) -> Dict[str, Any]:
@@ -21,7 +23,7 @@ def _safe_import_pandas():
         raise RuntimeError("pandas is required for refresh-cycle data checks") from exc
 
 
-def _dataset_freshness_check(dataset_path: Path, holdout_days: int, skip_checks: bool=False) -> Dict[str, Any]:
+def _dataset_freshness_check(dataset_path: Path, holdout_days: int, skip_checks: bool = False) -> Dict[str, Any]:
     result: Dict[str, Any] = {
         "path": str(dataset_path),
         "exists": dataset_path.exists(),
@@ -65,7 +67,7 @@ def _dataset_freshness_check(dataset_path: Path, holdout_days: int, skip_checks:
     return result
 
 
-def _new_data_volume_check(dataset_path: Path, minimum_new_games: int, skip_checks: bool=False) -> Dict[str, Any]:
+def _new_data_volume_check(dataset_path: Path, minimum_new_games: int, skip_checks: bool = False) -> Dict[str, Any]:
     result: Dict[str, Any] = {
         "path": str(dataset_path),
         "minimum_new_games_to_retrain": int(minimum_new_games),
@@ -100,10 +102,38 @@ def _leaderboard_presence_check(path: Path) -> Dict[str, Any]:
     }
 
 
+def _run_data_freshness_audit(data_policy: Path, output_path: Path) -> Dict[str, Any]:
+    cmd = [
+        sys.executable,
+        "src/data/data_freshness_audit.py",
+        "--policy",
+        str(data_policy),
+        "--out",
+        str(output_path),
+    ]
+    completed = subprocess.run(cmd, check=False, capture_output=True, text=True)
+    if completed.returncode != 0:
+        return {
+            "ok": False,
+            "error": "audit_execution_failed",
+            "returncode": completed.returncode,
+            "stdout": completed.stdout,
+            "stderr": completed.stderr,
+        }
+    if not output_path.exists():
+        return {
+            "ok": False,
+            "error": "audit_report_missing",
+        }
+    return _load_json(output_path)
+
+
 def evaluate_refresh_readiness(
     policy_path: Path,
     output_path: Path,
-    skip_checks: bool=False,
+    data_policy_path: Path,
+    data_audit_output_path: Path,
+    skip_checks: bool = False,
 ) -> Path:
     policy = _load_json(policy_path)
 
@@ -119,6 +149,7 @@ def evaluate_refresh_readiness(
         "drift_triggers": policy.get("drift_triggers", {}),
         "rollout": policy.get("rollout", {}),
         "states": {},
+        "data_freshness_audit": None,
         "recommendation": "unknown",
         "ok": True,
     }
@@ -145,6 +176,24 @@ def evaluate_refresh_readiness(
         if not state_ok:
             report["ok"] = False
 
+    if data_policy_path.exists():
+        audit = _run_data_freshness_audit(data_policy_path, data_audit_output_path)
+        report["data_freshness_audit"] = {
+            "policy": str(data_policy_path),
+            "report": str(data_audit_output_path),
+            "ok": bool(audit.get("ok", False)),
+            "summary": audit,
+        }
+        if not audit.get("ok", False):
+            report["ok"] = False
+    else:
+        report["data_freshness_audit"] = {
+            "policy": str(data_policy_path),
+            "ok": False,
+            "error": "policy_missing",
+        }
+        report["ok"] = False
+
     if report["ok"] and all(v["ready_for_full_retrain"] for v in report["states"].values()):
         report["recommendation"] = "full_retrain"
     elif report["ok"] and all(v["ready_for_calibration_only"] for v in report["states"].values()):
@@ -168,15 +217,33 @@ def main() -> None:
         help="Refresh policy JSON path",
     )
     parser.add_argument(
+        "--data-policy",
+        type=Path,
+        default=Path("config/data_freshness_policy_v1.json"),
+        help="Data freshness policy JSON path",
+    )
+    parser.add_argument(
         "--out",
         type=Path,
         default=Path("reports/champion_runs/refresh_readiness.json"),
         help="Output report JSON",
     )
+    parser.add_argument(
+        "--data-audit-out",
+        type=Path,
+        default=Path("reports/champion_runs/data_freshness_audit.json"),
+        help="Output report JSON for data freshness audit",
+    )
     parser.add_argument("--skip-checks", action="store_true", help="Skip dataframe-dependent checks")
     args = parser.parse_args()
 
-    out = evaluate_refresh_readiness(args.policy, args.out, skip_checks=bool(args.skip_checks))
+    out = evaluate_refresh_readiness(
+        args.policy,
+        args.out,
+        data_policy_path=args.data_policy,
+        data_audit_output_path=args.data_audit_out,
+        skip_checks=bool(args.skip_checks),
+    )
     print(f"Refresh readiness report written to: {out}")
 
 

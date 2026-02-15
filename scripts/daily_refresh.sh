@@ -250,6 +250,35 @@ else
     echo -e "\n${YELLOW}[5/5]${NC} ${YELLOW}Skipping deployment (--skip-deploy)${NC}"
 fi
 
+
+###############################################################################
+# STEP 6: DATA QUALITY GATES
+###############################################################################
+
+echo -e "
+${YELLOW}[6/6]${NC} ${GREEN}Running data freshness + readiness gates...${NC}"
+
+AUDIT_CMD="python3 "$PROJECT_DIR/src/data/data_freshness_audit.py" \
+    --policy "$PROJECT_DIR/config/data_freshness_policy_v1.json" \
+    --out "$PROJECT_DIR/reports/champion_runs/data_freshness_audit.json" \
+    --strict"
+
+READINESS_CMD="python3 "$PROJECT_DIR/src/pipelines/champion_refresh_cycle.py" \
+    --policy "$PROJECT_DIR/config/champion_refresh_policy_v1.json" \
+    --data-policy "$PROJECT_DIR/config/data_freshness_policy_v1.json" \
+    --out "$PROJECT_DIR/reports/champion_runs/refresh_readiness.json" \
+    --data-audit-out "$PROJECT_DIR/reports/champion_runs/data_freshness_audit.json""
+
+if [ "$DRY_RUN" = true ]; then
+    echo -e "${YELLOW}  Dry run: $AUDIT_CMD${NC}"
+    echo -e "${YELLOW}  Dry run: $READINESS_CMD${NC}"
+else
+    cd "$PROJECT_DIR"
+    eval "$AUDIT_CMD"
+    eval "$READINESS_CMD"
+    echo -e "${GREEN}  ✅ Data quality gates passed${NC}"
+fi
+
 ###############################################################################
 # SUMMARY
 ###############################################################################
@@ -265,6 +294,7 @@ echo -e "${GREEN}  2. Build temporal features${NC}"
 echo -e "${GREEN}  3. Merge with halftime stats${NC}"
 echo -e "${GREEN}  4. Retrain model${NC}"
 echo -e "${GREEN}  5. Deploy to production${NC}"
+echo -e "${GREEN}  6. Data freshness + readiness gates${NC}"
 echo -e "\n${GREEN}Production models: $PRODUCTION_DIR${NC}"
 if [ "$POST_DISCORD" = true ]; then
     echo -e "${GREEN}Discord posting: enabled${NC}"
