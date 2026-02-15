@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import sys
 import json
+import argparse
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List
@@ -39,6 +40,97 @@ CDN_BOX = "https://cdn.nba.com/static/json/liveData/boxscore/boxscore_{gid}.json
 METRICS_PATH = Path("reports/champion_runs/latest/halftime_fold_metrics.csv")
 OUTPUT_DIR = Path("reports/backtest")
 TARGET_FOLD = 51  # Latest production fold
+
+RECENCY_BASE_FEATURES = [
+    "pts_scored_avg_5",
+    "pts_allowed_avg_5",
+    "margin_avg_5",
+    "current_streak_5",
+    "days_since_last",
+    "is_back_to_back",
+    "efg",
+    "tor",
+    "tpar",
+    "ftr",
+    "orbp",
+]
+
+
+def _safe_default(hist_df: pd.DataFrame, feature_name: str, fallback: float) -> float:
+    """Get a robust default value from historical data when possible."""
+    if feature_name not in hist_df.columns:
+        return float(fallback)
+
+    series = pd.to_numeric(hist_df[feature_name], errors="coerce").dropna()
+    if series.empty:
+        return float(fallback)
+    return float(series.median())
+
+
+def _extract_team_recency_features(
+    hist_df: pd.DataFrame,
+    team_id: float,
+    target_dt: pd.Timestamp,
+    out_prefix: str,
+) -> Dict[str, float]:
+    """Build team recency features from latest leakage-safe historical row."""
+    defaults = {
+        f"{out_prefix}_{metric}": _safe_default(
+            hist_df,
+            f"{out_prefix}_{metric}",
+            0.0,
+        )
+        for metric in RECENCY_BASE_FEATURES
+    }
+    defaults[f"{out_prefix}_team_id"] = float(team_id)
+
+    if team_id <= 0:
+        return defaults
+
+    game_date_col = "game_date" if "game_date" in hist_df.columns else None
+    if game_date_col is None:
+        return defaults
+
+    latest_row = None
+    latest_date = None
+
+    for side in ["home", "away"]:
+        id_col = f"{side}_team_id"
+        if id_col not in hist_df.columns:
+            continue
+
+        subset = hist_df[hist_df[id_col] == team_id].copy()
+        if subset.empty:
+            continue
+
+        subset[game_date_col] = pd.to_datetime(subset[game_date_col], errors="coerce", utc=True)
+        subset = subset[subset[game_date_col] < target_dt]
+        if subset.empty:
+            continue
+
+        idx = subset[game_date_col].idxmax()
+        row = subset.loc[idx]
+        row_date = row[game_date_col]
+
+        if latest_date is None or row_date > latest_date:
+            latest_date = row_date
+            latest_row = (side, row)
+
+    if latest_row is None:
+        return defaults
+
+    source_side, source_row = latest_row
+
+    features = defaults.copy()
+    for metric in RECENCY_BASE_FEATURES:
+        source_col = f"{source_side}_{metric}"
+        target_col = f"{out_prefix}_{metric}"
+        if source_col in source_row:
+            val = pd.to_numeric(pd.Series([source_row[source_col]]), errors="coerce").iloc[0]
+            if pd.notna(val):
+                features[target_col] = float(val)
+
+    return features
 
 
 def fetch_game_data(game_id: str) -> Dict[str, Any]:
@@ -70,7 +162,7 @@ def fetch_game_data(game_id: str) -> Dict[str, Any]:
     }
 
 
-def extract_halftime_features(game_data: Dict) -> Dict[str, float]:
+def extract_halftime_features(game_data: Dict, hist_df: pd.DataFrame, target_dt: pd.Timestamp) -> Dict[str, float]:
     """Extract STRICT halftime-only features.
     
     ENFORCED RULES:
@@ -149,35 +241,14 @@ def extract_halftime_features(game_data: Dict) -> Dict[str, float]:
     features["h1_n_timeout"] = float(h1_n_timeout)
     features["h1_n_turnover"] = float(h1_n_turnover)
     
-    # Placeholder for rolling stats (would come from database in production)
-    features["home_pts_scored_avg_5"] = 115.0
-    features["home_pts_allowed_avg_5"] = 112.0
-    features["home_margin_avg_5"] = 3.0
-    features["home_current_streak_5"] = 0.0
-    features["home_days_since_last"] = 2.0
-    features["home_is_back_to_back"] = 0.0
-    features["home_efg"] = 0.52
-    features["home_tor"] = 0.12
-    features["home_tpar"] = 0.35
-    features["home_ftr"] = 0.25
-    features["home_orbp"] = 0.25
-    features["home_team_id"] = 0.0
+    home_team_id = float(box.get("game", {}).get("homeTeam", {}).get("teamId", 0) or 0)
+    away_team_id = float(box.get("game", {}).get("awayTeam", {}).get("teamId", 0) or 0)
+
+    features.update(_extract_team_recency_features(hist_df, home_team_id, target_dt, "home"))
+    features.update(_extract_team_recency_features(hist_df, away_team_id, target_dt, "away"))
     
-    features["away_pts_scored_avg_5"] = 113.0
-    features["away_pts_allowed_avg_5"] = 114.0
-    features["away_margin_avg_5"] = -1.0
-    features["away_current_streak_5"] = 0.0
-    features["away_days_since_last"] = 2.0
-    features["away_is_back_to_back"] = 0.0
-    features["away_efg"] = 0.51
-    features["away_tor"] = 0.13
-    features["away_tpar"] = 0.34
-    features["away_ftr"] = 0.24
-    features["away_orbp"] = 0.24
-    features["away_team_id"] = 0.0
-    
-    features["season"] = 26.0
-    features["game_date"] = 20260211.0
+    features["season"] = float(target_dt.year % 100)
+    features["game_date"] = float(target_dt.strftime("%Y%m%d"))
     
     return features
 
@@ -226,7 +297,7 @@ def load_production_model_params() -> Dict:
     return params
 
 
-def main():
+def main(target_date: str = "2026-02-11"):
     """Main entry point."""
     
     print("="*80)
@@ -237,7 +308,7 @@ def main():
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     
     # Target date
-    target_date = "2026-02-11"
+    target_dt = pd.to_datetime(target_date, utc=True)
     
     print(f"\n📅 Target Date: {target_date}")
     print(f"\n{'='*80}")
@@ -262,6 +333,11 @@ def main():
     print(f"\n{'='*80}")
     print("STEP 2: LOADING PRODUCTION MODEL")
     print(f"{'='*80}")
+
+    print("\nLoading historical feature store...")
+    data_path = Path("data/processed/halftime_with_temporal_features_total.parquet")
+    hist_df = pd.read_parquet(data_path)
+    hist_df["game_date"] = pd.to_datetime(hist_df["game_date"], errors="coerce", utc=True)
     
     params = load_production_model_params()
     print(f"\nProduction parameters (fold {TARGET_FOLD}):")
@@ -292,7 +368,7 @@ def main():
         
         # Extract halftime features
         print(f"  Extracting halftime features...")
-        h1_features = extract_halftime_features(game_data)
+        h1_features = extract_halftime_features(game_data, hist_df, target_dt)
         
         # Get final results (for evaluation)
         final_results = get_final_results(game_data)
@@ -321,12 +397,7 @@ def main():
     
     # Load historical data for training
     print(f"\nLoading historical data...")
-    DATA_PATH = Path("data/processed/halftime_with_temporal_features_total.parquet")
-    hist_df = pd.read_parquet(DATA_PATH)
-    hist_df['game_date'] = pd.to_datetime(hist_df['game_date'])
-    
     # Filter to before target date
-    target_dt = pd.to_datetime(target_date).tz_localize('UTC')
     train_df = hist_df[hist_df['game_date'] < target_dt].copy()
     
     print(f"  Training on {len(train_df)} historical games")
@@ -500,4 +571,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(description="Run ESPN+NBA-CDN halftime backtest")
+    parser.add_argument("--date", default="2026-02-11", help="Target date in YYYY-MM-DD")
+    args = parser.parse_args()
+    main(target_date=args.date)
