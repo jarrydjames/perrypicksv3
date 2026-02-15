@@ -204,10 +204,13 @@ def extract_oof_predictions() -> pd.DataFrame:
             trained_heads = model.trained_heads()
             sig_margin = trained_heads.margin.residual_sigma
             
-            # Compute win probability using normal CDF approximation
-            # P(home wins) = P(margin > 0) = 1 - CDF(0 | mu, sigma)
+            # 🦖 REPTAR: Compute win probability using CORRECT formula
+            # P(home wins) = P(H1_margin + H2_margin > 0)
+            #              = P(H2_margin > -H1_margin)
+            #              = 1 - CDF(-H1_margin | mu_H2, sigma)
+            h1_margin = X_test['h1_margin'].values
             from scipy.stats import norm
-            p_win = 1 - norm.cdf(0, loc=mu_margin, scale=sig_margin)
+            p_win = 1 - norm.cdf(-h1_margin, loc=mu_margin, scale=sig_margin)
             
             # Store predictions
             for i in range(len(test_idx)):

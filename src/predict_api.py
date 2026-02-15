@@ -448,7 +448,7 @@ def predict_game(
                     'margin_q90': margin_q90,
                     'total_q10': total_q10,
                     'total_q90': total_q90,
-                    'home_win_prob': None,
+                    'home_win_prob': None,  # Will be calculated by REPTAR below
                     'margin_sd': margin_sd,
                     'total_sd': total_sd,
                     'model_used': 'HALFTIME_V2_CI',
@@ -458,6 +458,22 @@ def predict_game(
                     'mode_requested': mode,
                     'status': 'success',
                 }
+                
+                # 🦖 Calculate win probability using REPTAR
+                try:
+                    from src.reptar_integration import enrich_halftime_prediction
+                    result = enrich_halftime_prediction(result)
+                    logger.info(f"🦖 REPTAR win probability: {result['home_win_prob']:.2%}")
+                except Exception as e:
+                    logger.warning(f"REPTAR win prob calculation failed: {e}, using fallback")
+                    # Fallback: simple probability based on margin
+                    h1_margin = h1_home - h1_away
+                    pred_final_margin = result.get('pred_final_margin', 0)
+                    if margin_sd is not None and margin_sd > 0:
+                        # Use old formula as fallback (less accurate)
+                        result['home_win_prob'] = 1.0 - norm.cdf(0, loc=pred_final_margin, scale=margin_sd)
+                    else:
+                        result['home_win_prob'] = None
                 
                 # Copy odds from raw_result if already fetched (by predict_from_game_id_v2_ci)
                 # The halftime model fetches odds with full team names, so we preserve them

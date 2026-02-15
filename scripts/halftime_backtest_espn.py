@@ -585,6 +585,13 @@ def main(
 
     print("\nLoading historical feature store...")
     data_path = Path("data/processed/halftime_with_refined_temporal.parquet")
+    
+    # 🦖 REPTAR GUARDRAIL: Verify we're using REPTAR data
+    if "refined_temporal" not in str(data_path):
+        print("  ⚠️  WARNING: Not using REPTAR refined temporal features!")
+    else:
+        print("  ✅ Using REPTAR refined temporal features")
+    
     hist_df = pd.read_parquet(data_path)
     hist_df["game_date"] = pd.to_datetime(hist_df["game_date"], errors="coerce", utc=True)
     tri_to_id, city_name_to_tri = _build_team_id_maps(hist_df)
@@ -723,17 +730,19 @@ def main(
     print(f"\nGenerating predictions for {len(results_df)} games...")
     mu_total, mu_margin = model.predict_heads(X_test)
     
-    # Get win probability
+    # 🦖 REPTAR: Get win probability using CORRECT formula
     # Model predicts H2 (second half) margin
     # Full game margin = H1_margin (known) + H2_margin (predicted with uncertainty)
     # Win prob = P(H1_margin + H2_margin > 0)
     #          = P(H2_margin > -H1_margin)
+    #          = 1 - norm.cdf(-H1_margin, loc=H2_margin, scale=sigma)
     trained_heads = model.trained_heads()
     sig_margin = trained_heads.margin.residual_sigma * sigma_k_margin
     
-    # Calculate probability that home wins the full game
+    # Calculate probability that home wins the full game using REPTAR formula
     h1_margin = results_df['h1_margin'].values
     p_win = 1 - norm.cdf(-h1_margin, loc=mu_margin, scale=sig_margin)
+    print(f"  ✅ Using REPTAR win probability formula")
     
     # Add predictions to results
     # Model predicts h2 (second half), so add h1 to get full game prediction
