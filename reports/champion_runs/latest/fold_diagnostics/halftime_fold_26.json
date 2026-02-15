@@ -1,0 +1,137 @@
+{
+  "fold": 26,
+  "n_train": 5800,
+  "n_features": 38,
+  "feature_names": [
+    "away_current_streak_5",
+    "away_days_since_last",
+    "away_efg",
+    "away_ftr",
+    "away_is_back_to_back",
+    "away_margin_avg_5",
+    "away_orbp",
+    "away_pts_allowed_avg_5",
+    "away_pts_scored_avg_5",
+    "away_team_id",
+    "away_tor",
+    "away_tpar",
+    "game_date",
+    "h1_away",
+    "h1_events",
+    "h1_home",
+    "h1_margin",
+    "h1_n_2pt",
+    "h1_n_3pt",
+    "h1_n_foul",
+    "h1_n_rebound",
+    "h1_n_sub",
+    "h1_n_timeout",
+    "h1_n_turnover",
+    "h1_total",
+    "home_current_streak_5",
+    "home_days_since_last",
+    "home_efg",
+    "home_ftr",
+    "home_is_back_to_back",
+    "home_margin_avg_5",
+    "home_orbp",
+    "home_pts_allowed_avg_5",
+    "home_pts_scored_avg_5",
+    "home_team_id",
+    "home_tor",
+    "home_tpar",
+    "season"
+  ],
+  "zero_variance_features": 0,
+  "near_duplicate_pairs": [],
+  "top_total_correlations": [
+    [
+      "home_efg",
+      0.3209927982241995
+    ],
+    [
+      "away_efg",
+      0.3113934314352409
+    ],
+    [
+      "away_tor",
+      0.20082035556336003
+    ],
+    [
+      "away_ftr",
+      0.16850073405116106
+    ],
+    [
+      "h1_events",
+      0.1678038539339994
+    ],
+    [
+      "away_pts_allowed_avg_5",
+      0.15148498029870755
+    ],
+    [
+      "home_pts_allowed_avg_5",
+      0.15148498029870755
+    ],
+    [
+      "home_ftr",
+      0.14884476471034033
+    ],
+    [
+      "away_pts_scored_avg_5",
+      0.14094068529960194
+    ],
+    [
+      "home_pts_scored_avg_5",
+      0.14094068529960194
+    ]
+  ],
+  "top_margin_correlations": [
+    [
+      "away_efg",
+      0.38180719227586113
+    ],
+    [
+      "home_efg",
+      0.37406331377423735
+    ],
+    [
+      "away_orbp",
+      0.14937536499990756
+    ],
+    [
+      "home_orbp",
+      0.13542938863138254
+    ],
+    [
+      "away_team_id",
+      0.11746801609899502
+    ],
+    [
+      "away_tor",
+      0.11239300899265581
+    ],
+    [
+      "home_tor",
+      0.10350705715592898
+    ],
+    [
+      "h1_margin",
+      0.09589866019572796
+    ],
+    [
+      "h1_home",
+      0.06797260160272256
+    ],
+    [
+      "home_ftr",
+      0.06648396999357113
+    ]
+  ],
+  "condition_number": 2.6036309017357744e+16,
+  "min_singular_value": 2.0631514146984697,
+  "y_total_mean": 112.96827586206896,
+  "y_total_std": 15.596563297166488,
+  "y_margin_mean": 0.9586206896551724,
+  "y_margin_std": 11.465917026994255
+}

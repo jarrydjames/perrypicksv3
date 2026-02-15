@@ -1,6 +1,6 @@
 {
   "pregame": {
-    "status": "pending_manual_selection",
+    "status": "eligible",
     "leaderboard": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/pregame_leaderboard.csv",
     "targets": [
       "total",
@@ -8,21 +8,15 @@
     ],
     "required_models": [
       "ridge",
-      "elasticnet",
       "random_forest",
-      "gradient_boosting",
+      "gbt",
       "xgboost",
       "lightgbm",
-      "catboost",
-      "neural_network",
-      "quantile_gbm",
-      "huber",
-      "extra_trees",
-      "stacked_ensemble"
+      "catboost"
     ]
   },
   "halftime": {
-    "status": "pending_manual_selection",
+    "status": "eligible",
     "leaderboard": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/halftime_leaderboard.csv",
     "targets": [
       "h2_total",
@@ -30,39 +24,27 @@
     ],
     "required_models": [
       "ridge",
-      "elasticnet",
       "random_forest",
-      "gradient_boosting",
+      "gbt",
       "xgboost",
       "lightgbm",
-      "catboost",
-      "neural_network",
-      "quantile_gbm",
-      "huber",
-      "extra_trees",
-      "stacked_ensemble"
+      "catboost"
     ]
   },
   "q3": {
-    "status": "pending_manual_selection",
+    "status": "eligible",
     "leaderboard": "/Users/jarrydhawley/Desktop/Predictor/PerryPicks v3/reports/champion_runs/latest/q3_leaderboard.csv",
     "targets": [
-      "q3_total",
-      "q3_margin"
+      "remaining_total",
+      "remaining_margin"
     ],
     "required_models": [
       "ridge",
-      "elasticnet",
       "random_forest",
-      "gradient_boosting",
+      "gbt",
       "xgboost",
       "lightgbm",
-      "catboost",
-      "neural_network",
-      "quantile_gbm",
-      "huber",
-      "extra_trees",
-      "stacked_ensemble"
+      "catboost"
     ]
   }
 }
