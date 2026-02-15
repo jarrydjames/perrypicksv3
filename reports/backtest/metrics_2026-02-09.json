@@ -1,0 +1,23 @@
+{
+  "test_date": "2026-02-09",
+  "n_games": 10,
+  "mae_total": 4.910865648676679,
+  "rmse_total": 5.811714306944429,
+  "mae_margin": 9.383230621346398,
+  "rmse_margin": 11.046426777199184,
+  "win_accuracy": 0.8,
+  "brier_score": 0.19356386035108744,
+  "sigma_k_total": 3.0,
+  "sigma_k_margin": 3.0,
+  "params_selection": "topk",
+  "params_topk": 5,
+  "selected_param_folds": [
+    42,
+    40,
+    46,
+    51,
+    43
+  ],
+  "feature_health_ok": false,
+  "feature_health_path": "reports/backtest/feature_health_2026-02-09.json"
+}

@@ -1,0 +1,76 @@
+{
+  "features": {
+    "home_team_id": {
+      "exists_in_train": true,
+      "exists_in_inference": true,
+      "train_median": 15.0,
+      "train_std": 8.695815955262361,
+      "infer_zero_rate": 0.0,
+      "infer_unique": 10,
+      "infer_min": 3.0,
+      "infer_max": 29.0
+    },
+    "away_team_id": {
+      "exists_in_train": true,
+      "exists_in_inference": true,
+      "train_median": 14.0,
+      "train_std": 8.688428587297873,
+      "infer_zero_rate": 0.1,
+      "infer_unique": 9,
+      "infer_min": 0.0,
+      "infer_max": 25.0
+    },
+    "home_pts_scored_avg_5": {
+      "exists_in_train": true,
+      "exists_in_inference": true,
+      "train_median": 58.2,
+      "train_std": 4.0654715332596885,
+      "infer_zero_rate": 0.0,
+      "infer_unique": 10,
+      "infer_min": 50.6,
+      "infer_max": 63.6
+    },
+    "away_pts_scored_avg_5": {
+      "exists_in_train": true,
+      "exists_in_inference": true,
+      "train_median": 58.4,
+      "train_std": 4.307657786882365,
+      "infer_zero_rate": 0.0,
+      "infer_unique": 10,
+      "infer_min": 46.0,
+      "infer_max": 67.8
+    },
+    "home_efg": {
+      "exists_in_train": true,
+      "exists_in_inference": true,
+      "train_median": 0.5439560439560439,
+      "train_std": 0.0649758810300672,
+      "infer_zero_rate": 0.0,
+      "infer_unique": 10,
+      "infer_min": 0.4734042553191489,
+      "infer_max": 0.6575342465753424
+    },
+    "away_efg": {
+      "exists_in_train": true,
+      "exists_in_inference": true,
+      "train_median": 0.54,
+      "train_std": 0.06392229900382239,
+      "infer_zero_rate": 0.0,
+      "infer_unique": 9,
+      "infer_min": 0.43373493975903615,
+      "infer_max": 0.5609756097560976
+    }
+  },
+  "issues": [
+    "away_team_id contains zero values"
+  ],
+  "constant_numeric_features": [
+    "home_current_streak_5",
+    "away_current_streak_5",
+    "season",
+    "game_date"
+  ],
+  "constant_numeric_rate": 0.04040404040404041,
+  "ok": false,
+  "n_inference_rows": 10
+}
