@@ -1,0 +1,5 @@
+test,comparison,t_statistic,p_value,significant,mean_diff,std_diff,dm_statistic
+Paired t-test (CatBoost vs XGBoost),CatBoost vs XGBoost,-4.240886452673523,2.2460294344963447e-05,True,-0.10435610956181506,2.48507803825858,
+Diebold-Mariano (CatBoost vs XGBoost),CatBoost vs XGBoost,,0.0004016671297426555,True,,,-3.5389860162988036
+Paired t-test (Ensemble_50 vs CatBoost),Ensemble_50 vs CatBoost,0.10450816317214374,0.9167743126217622,False,0.0026130850754426723,1.262374614381866,
+Diebold-Mariano (Ensemble_50 vs CatBoost),Ensemble_50 vs CatBoost,,0.11805406400873464,False,,,1.5629937537600165
