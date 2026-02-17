@@ -1,0 +1,7 @@
+{
+  "champion": "ensemble",
+  "reason": "Models within 0.5 composite score - ensemble selected",
+  "catboost_composite": 0.7583650364842582,
+  "xgboost_composite": 0.766713467043024,
+  "ensemble_composite": 0.7643826460713317
+}

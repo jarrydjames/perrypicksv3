@@ -1,0 +1,59 @@
+================================================================================
+PHASE 2B: CatBoost vs XGBoost Comparison
+================================================================================
+
+CatBoost results: reports/phase2b_catboost_retuning/catboost_tuning_summary.csv
+XGBoost results: reports/phase2_pregame/fold_metrics.csv
+Output directory: reports/phase2b_final
+
+
+Loading results...
+CatBoost folds: 13
+XGBoost folds: 12
+
+Comparing folds...
+Warning: XGBoost missing fold 13
+
+Selecting champion...
+
+=== Champion Selection ===
+CatBoost composite score: 0.7584
+XGBoost composite score: 0.7667
+
+🏆 Champion: ensemble
+Reason: Models within 0.5 composite score - ensemble selected
+
+Ensemble metrics:
+  MAE Total: 15.34
+  MAE Margin: 11.24
+  Brier Win: 0.2327
+  Composite: 0.7644
+
+Generating summary...
+
+=== Generating Summary ===
+
+=== Fold-Averaged Metrics ===
+
+Metric               CatBoost        XGBoost         Winner    
+------------------------------------------------------------
+MAE Total                     15.37          15.32 xgboost   
+MAE Margin                    11.22          11.26 catboost  
+Brier Win                    0.2303         0.2351 catboost  
+
+Composite Score              0.7584         0.7667 catboost  
+
+=== Fold Stability (Std Dev) ===
+CatBoost: 0.0347
+XGBoost: 0.0381
+Winner: CatBoost (more stable)
+
+Comparison table saved to: reports/phase2b_final/phase2_model_comparison.csv
+Fold comparison saved to: reports/phase2b_final/phase2_fold_comparison.csv
+Champion selection saved to: reports/phase2b_final/champion_selection.json
+CatBoost tuning summary saved to: reports/phase2b_final/catboost_tuning_summary.csv
+
+✅ PHASE 2B COMPLETE
+
+Final Champion: ensemble
+Reason: Models within 0.5 composite score - ensemble selected
