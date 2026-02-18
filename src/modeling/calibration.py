@@ -1,19 +1,16 @@
 from __future__ import annotations
 
-"""Calibration helpers (dev/offline tooling).
-
-We keep this separate from Streamlit runtime code.
-
-- Numeric calibration is already computed via ECE/Brier in backtests.
-- This module provides reliability curve bins + optional matplotlib plots.
-"""
+"""Calibration helpers for pregame win-probability models."""
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, Tuple
+from typing import Iterable
 
 import numpy as np
 import pandas as pd
+from sklearn.isotonic import IsotonicRegression
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import brier_score_loss, log_loss
 
 
 @dataclass(frozen=True)
@@ -23,9 +20,57 @@ class CalibrationCurve:
     count: np.ndarray
 
 
-def calibration_curve_bins(*, y_true: Iterable[float], p_pred: Iterable[float], n_bins: int = 10) -> CalibrationCurve:
-    """Compute a reliability curve using equal-width bins over [0,1]."""
+@dataclass(frozen=True)
+class CalibrationEvaluation:
+    method: str
+    brier: float
+    log_loss: float
 
+
+class PlattScaler:
+    """Simple Platt scaling wrapper (logistic regression on raw probabilities)."""
+
+    def __init__(self):
+        self.model = LogisticRegression(max_iter=2000)
+
+    def fit(self, p_raw: Iterable[float], y_true: Iterable[int]) -> "PlattScaler":
+        X = np.asarray(list(p_raw), dtype=float).reshape(-1, 1)
+        y = np.asarray(list(y_true), dtype=int)
+        self.model.fit(X, y)
+        return self
+
+    def predict(self, p_raw: Iterable[float]) -> np.ndarray:
+        X = np.asarray(list(p_raw), dtype=float).reshape(-1, 1)
+        return self.model.predict_proba(X)[:, 1]
+
+
+class IsotonicCalibrator:
+    def __init__(self):
+        self.model = IsotonicRegression(out_of_bounds="clip")
+
+    def fit(self, p_raw: Iterable[float], y_true: Iterable[int]) -> "IsotonicCalibrator":
+        x = np.asarray(list(p_raw), dtype=float)
+        y = np.asarray(list(y_true), dtype=int)
+        self.model.fit(x, y)
+        return self
+
+    def predict(self, p_raw: Iterable[float]) -> np.ndarray:
+        x = np.asarray(list(p_raw), dtype=float)
+        return np.asarray(self.model.predict(x), dtype=float)
+
+
+def evaluate_calibration(y_true: Iterable[int], p_pred: Iterable[float], method: str) -> CalibrationEvaluation:
+    y = np.asarray(list(y_true), dtype=int)
+    p = np.asarray(list(p_pred), dtype=float)
+    p = np.clip(p, 1e-6, 1.0 - 1e-6)
+    return CalibrationEvaluation(
+        method=method,
+        brier=float(brier_score_loss(y, p)),
+        log_loss=float(log_loss(y, np.column_stack([1 - p, p]))),
+    )
+
+
+def calibration_curve_bins(*, y_true: Iterable[float], p_pred: Iterable[float], n_bins: int = 10) -> CalibrationCurve:
     y = np.asarray(list(y_true), dtype=float)
     p = np.asarray(list(p_pred), dtype=float)
 
@@ -33,10 +78,7 @@ def calibration_curve_bins(*, y_true: Iterable[float], p_pred: Iterable[float], 
         raise ValueError("y_true and p_pred must have same shape")
 
     p = np.clip(p, 0.0, 1.0)
-
-    # Bin edges including 0 and 1
     edges = np.linspace(0.0, 1.0, int(n_bins) + 1)
-    # digitize returns 1..n_bins
     idx = np.digitize(p, edges, right=True)
     idx = np.clip(idx, 1, int(n_bins))
 
@@ -59,26 +101,16 @@ def calibration_curve_bins(*, y_true: Iterable[float], p_pred: Iterable[float], 
 
 
 def calibration_curve_df(curve: CalibrationCurve) -> pd.DataFrame:
-    return pd.DataFrame(
-        {
-            "prob_pred": curve.prob_pred,
-            "prob_true": curve.prob_true,
-            "count": curve.count,
-        }
-    )
+    return pd.DataFrame({"prob_pred": curve.prob_pred, "prob_true": curve.prob_true, "count": curve.count})
 
 
 def save_reliability_plot(*, curve: CalibrationCurve, out_path: Path, title: str) -> None:
-    """Save a reliability plot. Requires matplotlib (dev dependency)."""
-
-    import matplotlib.pyplot as plt  # dev-only
+    import matplotlib.pyplot as plt
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-
     df = calibration_curve_df(curve).dropna().copy()
 
     fig, ax = plt.subplots(figsize=(6, 5))
-
     ax.plot([0, 1], [0, 1], "--", color="gray", linewidth=1, label="Perfect")
     ax.plot(df["prob_pred"], df["prob_true"], "o-", label="Model")
 
